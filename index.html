@@ -41,39 +41,51 @@ button, input, textarea, select { font: inherit; }
 .section-title span { font-size: 12px; color: var(--muted); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 15px; box-shadow: 0 3px 14px rgba(0,0,0,.025); position: relative; }
 
-/* 快捷操作 */
-.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
-.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 9px 0; font-size: 14px; color: #333; cursor: pointer; transition: background .2s, transform .1s; font-weight: 600; }
-.chip:hover { background: var(--soft); }
-.chip:active { transform: scale(.96); }
-
 /* 录入区域 */
+.composer { margin-top: 14px; }
 .input-wrap { position: relative; }
-.composer textarea { width: 100%; min-height: 128px; height: 128px; resize: none; border: 0; outline: 0; font-size: 16px; line-height: 1.6; background: transparent; color: var(--ink); }
-.composer textarea::placeholder { color: #a5a5a0; font-size: 14px; }
+.composer textarea { width: 100%; min-height: 166px; height: 166px; resize: none; border: 0; outline: 0; font-size: 16px; line-height: 1.6; background: transparent; color: var(--ink); }
+.composer textarea::placeholder { color: #a5a5a0; font-size: 13.5px; line-height: 1.65; }
 .img-chip { display: none; align-items: center; gap: 8px; margin: 6px 0 2px; padding: 6px 8px 6px 6px; background: var(--soft); border-radius: 12px; font-size: 13px; width: fit-content; max-width: 100%; }
 .img-chip.show { display: flex; }
 .img-chip img { width: 30px; height: 30px; object-fit: cover; border-radius: 8px; }
 .img-chip button { border: 0; background: #d6d6d2; border-radius: 50%; width: 22px; height: 22px; line-height: 1; cursor: pointer; font-size: 13px; color: #333; padding: 0; }
 
+/* 快捷操作：位于输入框与按钮之间 */
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 0; }
+.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 0; font-size: 14px; color: #333; cursor: pointer; transition: background .2s, transform .1s; font-weight: 600; }
+.chip:hover { background: var(--soft); }
+.chip:active { transform: scale(.96); }
+
 /* 按钮区域：上传与记录等高、水平对齐 */
 .actions { display: flex; gap: 10px; align-items: stretch; margin-top: 10px; height: 48px; }
+.actions > * { margin: 0; align-self: stretch; }
 .btn { border: 0; border-radius: 14px; padding: 0 15px; font-weight: 650; background: #e6e6e2; color: var(--ink); cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; height: 100%; }
 .btn:active { opacity: .8; }
 .btn.secondary { background: var(--soft); color: var(--ink); }
 .btn.send { flex: 1; background: var(--ink); color: #fff; font-size: 16px; font-weight: 600; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
-.actions > * { margin: 0; align-self: stretch; }
 .upload-plus { width: 48px; margin: 0; padding: 0; flex-shrink: 0; background: var(--soft); }
 .upload-plus.has { background: var(--ink); color: #fff; }
 .upload-plus .plus { font-size: 30px; font-weight: 500; line-height: 1; transform: translateY(-2px); }
 
+/* 状态行 */
+.status-line { font-size: 12px; color: var(--muted); margin: 10px 4px 0; min-height: 17px; text-align: center; line-height: 1.5; }
+.status-line.busy { color: var(--blue); animation: pulse 1.2s ease-in-out infinite; }
+.status-line.ok { color: var(--green); }
+.status-line.err { color: var(--red); }
+@keyframes pulse { 50% { opacity: .45; } }
+
 /* 识别预览 */
 #previewArea { display: none; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
-#previewArea h3 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+#previewArea h3 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#previewArea h3 .src { font-size: 11px; font-weight: 500; color: var(--muted); background: var(--soft); border-radius: 6px; padding: 2px 7px; }
 .preview-item { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; line-height: 1.5; }
 .preview-item:last-child { border-bottom: none; }
 .preview-item small { display: block; color: var(--muted); margin-top: 2px; }
+.preview-warn { margin-top: 10px; font-size: 12px; color: #9a5b00; background: #fff3dc; border-radius: 10px; padding: 8px 10px; line-height: 1.55; }
+.preview-ocr { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.preview-ocr pre { white-space: pre-wrap; word-break: break-all; background: var(--soft); border-radius: 10px; padding: 8px 10px; margin: 6px 0 0; max-height: 140px; overflow: auto; font-family: inherit; }
 .badge { display: inline-block; font-size: 11px; background: #e3efe3; color: var(--green); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
 .badge.warn { background: #f3e2e2; color: var(--red); }
 .preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; height: 48px; }
@@ -121,7 +133,8 @@ label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px
 .field { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: var(--card); padding: 12px; outline: none; }
 .ai-only { padding: 13px; background: #f1f1ee; border-radius: 14px; color: #555; font-size: 13px; line-height: 1.65; }
 .empty { text-align: center; color: var(--muted); padding: 28px 10px; font-size: 13px; }
-.toast { position: fixed; z-index: 20; left: 50%; bottom: 105px; transform: translate(-50%, 15px); background: #d8d8d4; color: #111; padding: 10px 15px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; max-width: 90vw; text-align: center; }
+.stat-big { font-size: 28px; font-weight: 750; letter-spacing: -.5px; }
+.toast { position: fixed; z-index: 20; left: 50%; bottom: 105px; transform: translate(-50%, 15px); background: #d8d8d4; color: #111; padding: 10px 15px; border-radius: 16px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; max-width: 90vw; text-align: center; line-height: 1.5; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 input[type=file] { display: none; }
 .tabbar { position: fixed; z-index: 10; bottom: calc(12px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(calc(100% - 24px), 436px); background: rgba(214,214,210,.96); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-radius: 25px; padding: 6px; display: grid; grid-template-columns: repeat(3, 1fr); box-shadow: 0 10px 32px rgba(0,0,0,.25); }
@@ -148,20 +161,21 @@ input[type=file] { display: none; }
         </div>
       </div>
 
-      <!-- 快捷操作 -->
-      <div class="quick" id="quickChips">
-        <button class="chip" data-q="收入">收入</button>
-        <button class="chip" data-q="支出">支出</button>
-        <button class="chip" data-q="转账">转账</button>
-        <button class="chip" data-q="还款">还款</button>
-      </div>
-
       <div class="card composer" id="composerCard">
         <div class="input-wrap">
-          <textarea id="command" enterkeyhint="done" placeholder="输入 # 创建标签&#10;输入 @ 引用标签或账户&#10;输入 （） 创建账户，括号内为账户名&#10;输入 \ ，之后的内容为备注&#10;内容前键入 // 表示删除其之后的内容"></textarea>
+          <textarea id="command" enterkeyhint="done" placeholder="创建#标签名 → 创建标签；创建（账户名）→ 创建账户&#10;删除#标签名 → 删除标签；删除@账户名 → 删除账户&#10;输入 @ 引用标签或账户，# 引用标签&#10;输入 \ ，之后的内容为备注&#10;从＝起点，到＝终点：从A转账到B 500&#10;从A支出 25 #标签 ｜ 收入 500 到A&#10;从A还款到信用卡B 500"></textarea>
           <div id="mentionDropdown" class="mention-dropdown"></div>
         </div>
-        <div class="img-chip" id="imgChip"><img id="imgThumb" alt=""><span>图片已选择，将识别账户 / 金额 / 消费</span><button id="imgRemove" aria-label="移除图片">✕</button></div>
+        <div class="img-chip" id="imgChip"><img id="imgThumb" alt=""><span>图片已选择：AI 先识别文字，再解析账务</span><button id="imgRemove" aria-label="移除图片">✕</button></div>
+
+        <!-- 快捷操作：输入框与按钮之间 -->
+        <div class="quick" id="quickChips">
+          <button class="chip" data-q="收入">收入</button>
+          <button class="chip" data-q="支出">支出</button>
+          <button class="chip" data-q="转账">转账</button>
+          <button class="chip" data-q="还款">还款</button>
+        </div>
+
         <div class="actions">
           <label for="imageInput" class="btn upload-plus" id="uploadBtn" aria-label="上传图片">
             <span class="plus" aria-hidden="true">+</span>
@@ -171,10 +185,16 @@ input[type=file] { display: none; }
         </div>
       </div>
 
+      <!-- 状态与 AI 调用次数（始终可见） -->
+      <div id="statusLine" class="status-line"></div>
+
       <!-- 预览确认区域 -->
       <div id="previewArea">
-        <h3>🤖 识别结果</h3>
+        <h3>🤖 识别结果 <span class="src" id="previewSrc"></span></h3>
         <div id="previewList"></div>
+        <div id="previewWarn"></div>
+        <div id="previewSyntax"></div>
+        <div id="previewOcr"></div>
         <div class="preview-actions">
           <button id="cancelBtn" class="btn secondary">取消</button>
           <button id="confirmBtn" class="btn send">确认入账</button>
@@ -222,14 +242,31 @@ input[type=file] { display: none; }
       <div class="card">
         <label>API 地址</label><input class="field" id="apiBase" value="https://api.deepseek.com">
         <label>文本模型</label><input class="field" id="textModel" value="deepseek-chat">
-        <label>图片模型（需支持图片输入）</label><input class="field" id="visionModel" value="deepseek-flash">
+        <label>图片模型（需支持图片输入，用于识别图片文字）</label><input class="field" id="visionModel" value="deepseek-flash">
         <label>API Key</label><input class="field" id="apiKey" type="password" placeholder="sk-...">
         <label><input id="rememberKey" type="checkbox"> 在本机保存 API Key</label>
+        <label><input id="alwaysAI" type="checkbox"> 所有文字都交给 AI 解析（默认：简单内容本地处理，复杂内容才调用 AI）</label>
         <button id="saveApi" class="btn send" style="width:100%;margin-top:14px;height:48px">保存连接</button>
       </div>
 
-      <div class="section-title"><h2>AI 自动管理</h2></div>
-      <div class="ai-only">账户创建、删除、标签、转账 / 还款、月预算、日预算等均可通过文字或图片智能识别。例如：<br>「从微信支出 25 #咖啡」<br>「工资到招行 8000」<br>「转账 招行到微信 500」<br>上传银行卡 / 账单截图可自动创建账户。未配置 API Key 时使用本地规则解析（不支持图片）。</div>
+      <div class="section-title"><h2>AI 调用统计</h2><span id="statsHint"></span></div>
+      <div class="card">
+        <div class="stat-big" id="statsAI">0 次</div>
+        <div id="statsText" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
+        <button id="resetStats" class="btn secondary" style="width:100%;margin-top:12px;height:42px;font-size:14px">重置计数</button>
+      </div>
+
+      <div class="section-title"><h2>输入语法</h2></div>
+      <div class="ai-only">
+        <b>「从」＝起点，「到」＝终点</b>，也是动作的一部分：<br>
+        • 支出：<b>从微信支出 25 #咖啡 \拿铁</b><br>
+        • 收入：<b>收入 8000 到招行 #工资</b><br>
+        • 转账：<b>从招行转账 500 到微信</b><br>
+        • 还款：<b>从招行还款 1000 到招商信用卡</b><br>
+        • 创建 / 删除：<b>创建#咖啡</b>、<b>创建（招行 余额5000）</b>、<b>删除#咖啡</b>、<b>删除@招行</b><br>
+        • 预算：<b>月预算 5000</b>、<b>日预算 100</b>；指定日期：在行内加 <b>2026-11-03</b><br>
+        简单内容由本地规则直接处理；解析不出来（口语化、多笔、相对日期、图片）时，由 AI 先转写成上面的标准语法，再交给同一套本地规则记账，并在预览里展示转写结果。
+      </div>
 
       <div class="section-title"><h2>数据管理</h2></div>
       <div class="card">
@@ -258,7 +295,8 @@ const DB = {
   tx: [],
   tags: [],
   budget: { daily: 0, monthly: 0, dailyOverrides: [] },
-  settings: { apiBase: 'https://api.deepseek.com', textModel: 'deepseek-chat', visionModel: 'deepseek-flash', rememberKey: false, apiKey: '' }
+  stats: { aiCalls: 0, localRuns: 0 },
+  settings: { apiBase: 'https://api.deepseek.com', textModel: 'deepseek-chat', visionModel: 'deepseek-flash', rememberKey: false, alwaysAI: false, apiKey: '' }
 };
 
 const PRESET_TAGS = ['加油','饮料','早餐','午餐','晚餐','保养','车险','过路费','房租','水电费','咖啡','电话费'];
@@ -266,7 +304,7 @@ const icons = { 早餐:'🥐',午餐:'🍱',晚餐:'🍲',餐饮:'🍜',饮料:'
 const categoryRules = [['早餐',/早餐|早饭|包子|豆浆|油条/],['午餐',/午餐|午饭|中饭|工作餐/],['晚餐',/晚餐|晚饭|夜宵/],['咖啡',/咖啡|拿铁|美式|卡布奇诺/],['饮料',/饮料|奶茶|果汁|可乐|矿泉水|水(?!电)/],['零食',/零食|饼干|薯片|巧克力/],['餐饮',/餐|饭|面|外卖|火锅|烧烤/],['加油',/加油|汽油|柴油|油费/],['交通',/打车|出租车|滴滴|地铁|公交|停车|过路费|高速费/],['购物',/购物|买了|购买|淘宝|京东/],['日用',/日用|纸巾|洗衣液|清洁/],['住房',/房租|租金|物业|房贷/],['水电',/水费|电费|燃气|宽带/],['娱乐',/电影|游戏|演出|KTV/],['医疗',/药|医院|诊所|体检/],['教育',/课程|学费|书籍|培训/],['旅行',/机票|酒店|旅行|旅游/],['收入',/工资|奖金|收入|报销|退款/]];
 
 const money = n => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const uid = () => crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random().toString(16).slice(2);
+const uid = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + Math.random().toString(16).slice(2);
 const IDB_NAME = 'flow_ledger_db_v3';
 
 /* ---------- 存储 ---------- */
@@ -312,6 +350,7 @@ async function load() {
     DB.tx = Array.isArray(x.tx) ? x.tx : [];
     DB.tags = Array.isArray(x.tags) ? x.tags : [];
     DB.budget = x.budget || { daily: 0, monthly: 0, dailyOverrides: [] };
+    DB.stats = { ...DB.stats, ...(x.stats || {}) };
     DB.settings = { ...DB.settings, ...(x.settings || {}) };
   }
   if (!DB.settings.rememberKey) DB.settings.apiKey = sessionStorage.getItem('flow_api_key') || '';
@@ -323,13 +362,13 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
 /* ---------- 账户（自动创建 + 去重） ---------- */
 const CREDIT_RE = /信用卡|信用|花呗|白条|credit|贷记/i;
 const guessType = n => CREDIT_RE.test(n || '') ? 'credit' : 'cash';
-const cleanName = s => String(s || '').replace(/[（）()@#]/g, '').trim();
+const cleanName = s => String(s || '').replace(/[（）()@＠#＃]/g, '').trim();
 const norm = s => cleanName(s).replace(/\s+/g, '').toLowerCase();
 
 function findAccount(name, type) {
@@ -377,7 +416,7 @@ function applyDelta(a, delta) {
 }
 
 function addTag(t) {
-  t = String(t || '').replace(/^#/, '').trim();
+  t = String(t || '').replace(/^[#＃]/, '').trim();
   if (t && !DB.tags.includes(t)) DB.tags.push(t);
   return t;
 }
@@ -386,159 +425,374 @@ function categoryOf(s) { for (const [name, re] of categoryRules) if (re.test(s))
 function dateKey(d) { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
 function now() { return new Date(); }
 
-/* ---------- AI 解析 ---------- */
-const SYSTEM_PROMPT = `你是个人财务记账助手，同时能解析银行卡/账单/消费截图。把用户输入解析为 JSON，格式必须为 {"actions":[...]}，只输出 JSON。
+/* ================= 本地规则解析 ================= */
+const ST = '[^\\s，,。;；\\d]';                       // 账户名可用字符
+const TAGCH = '[^\\s#＃@＠（）()\\\\＼]';              // 标签 / 引用名可用字符
+const COMPLEX_RE = /预算|每天|每日|每月|每周|昨天|昨日|前天|明天|上周|下周|本周|上个月|\d{1,2}月\d{1,2}[日号]|\d{4}[-/.年]\d{1,2}|分别|以及|还有|另外|共|总共|合计|平均/;
+const mm = (s, p) => { const r = s.match(new RegExp(p)); return r ? r[1] : ''; };
 
-action 类型：
-1. "expense" 支出：account, amount, category, tags(数组), note
-2. "income" 收入：account, amount, category, tags, note
-3. "transfer" 转账：from, to, amount, note
-4. "repayment" 还款：from(资金账户), to(信用卡账户), amount, note
-5. "account" 创建/更新账户：account, account_type("cash"=资金账户 / "credit"=信用卡), balance(资金账户为余额；信用卡为已用额度), limit(信用卡额度)
-6. "budget" 月预算：amount
-7. "daily_budget" 日预算：amount, 可选 start_date, end_date (YYYY-MM-DD)
-8. "delete_account"：account ；"delete_tag"：tag
-
-输入语法：
-- #xxx 是标签（放入 tags，并可作为 category）；@xxx 引用已有标签或账户；（xxx）或(xxx) 表示创建账户，括号内为账户名（可带余额/额度）。
-- 反斜杠 \\ 之后的内容是备注（note）。
-- 内容前出现 // 表示删除其后内容指向的账户或标签，返回 delete_account / delete_tag。
-- 关键词：支出/消费/花了 → expense；收入/工资/到账 → income；转账 → transfer；还款 → repayment。
-
-关键规则：
-- “从微信支出50”→ account="微信"；“工资到招行 8000”→ account="招行"；“从A转账到B”→ from=A,to=B。账户名取自用户原话，不要擅自替换成已有账户；若与已有账户名相同或明显是同一账户（如“微信”与“微信零钱”）请使用已有账户的名字，避免重复创建；不存在的账户系统会自动创建。
-- 未说明账户时 account 留空字符串。
-- 图片：识别银行卡名称/类型/余额/额度，返回 "account" 动作；若是消费账单/订单截图，返回对应 expense / income 动作（金额取实付）。
-- 金额一律为正数。
-
-当前日期：`;
-
-function extractJSON(s) {
-  s = String(s || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
-  try { return JSON.parse(s); } catch (_) {}
-  const m = s.match(/\{[\s\S]*\}/);
-  if (m) return JSON.parse(m[0]);
-  throw new Error('AI 返回格式无法解析');
-}
-
-async function apiParse(text, image) {
-  const s = DB.settings;
-  if (!s.apiKey) throw new Error('请先配置 API Key');
-  const ctx = `${dateKey(now())}\n已有账户：${JSON.stringify(DB.accounts.map(a => ({ name: a.name, type: a.type })))}\n已有标签：${JSON.stringify(DB.tags)}`;
-  const userText = '用户输入：' + (text || '请解析图片中的账户、余额、额度或消费信息。');
-  const content = image ? [
-    { type: 'text', text: userText },
-    { type: 'image_url', image_url: { url: image } }
-  ] : userText;
-
-  const res = await fetch(s.apiBase.replace(/\/$/, '') + '/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.apiKey },
-    body: JSON.stringify({
-      model: image ? s.visionModel : s.textModel,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT + ctx },
-        { role: 'user', content }
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' }
-    })
-  });
-
-  if (!res.ok) {
-    let detail = '';
-    try { detail = (await res.json()).error?.message || ''; } catch (_) {}
-    throw new Error('API 请求失败 ' + res.status + (detail ? '：' + detail : ''));
-  }
-  const data = await res.json();
-  return extractJSON(data.choices?.[0]?.message?.content);
-}
-
-/* ---------- 本地规则解析（无 API 时的兜底） ---------- */
 function parseAccountSpec(s) {
-  s = s.trim();
+  s = String(s || '').trim();
   const lim = (s.match(/额度\s*[:：]?\s*(\d+(?:\.\d+)?)/) || [])[1];
   const s2 = s.replace(/额度\s*[:：]?\s*\d+(?:\.\d+)?/, ' ');
   const bal = (s2.match(/(\d+(?:\.\d+)?)/) || [])[1];
   const name = s2.replace(/(?:余额|已用|欠款|欠)?\s*[:：]?\s*\d+(?:\.\d+)?\s*元?/, ' ').replace(/余额|已用|欠款/g, '').trim().split(/\s+/)[0];
   return { name: cleanName(name), balance: bal != null ? Number(bal) : null, limit: lim ? Number(lim) : 0, type: guessType(s) };
 }
+const specToAction = b => ({ action: 'account', account: b.name, account_type: b.type, balance: b.balance, limit: b.limit });
 
-function localParse(raw) {
-  let text = raw.trim();
-  const actions = [];
+// 手动命令：创建 / 删除（也兼容旧的 // 删除）
+function parseManual(text) {
+  let del = false;
+  let m = text.match(/^(?:创建|新建|新增|添加)\s*/);
+  if (!m) { m = text.match(/^(?:删除|移除|去掉)\s*/) || text.match(/^\/\/\s*/); del = !!m; }
+  if (!m) return null;
+  const rest = text.slice(m[0].length).trim();
+  const tagRe = new RegExp('[#＃](' + TAGCH + '+)', 'g');
+  const atRe = new RegExp('[@＠](' + TAGCH + '+)', 'g');
+  const tagNames = [...rest.matchAll(tagRe)].map(x => x[1]);
+  const brackets = [...rest.matchAll(/[（(]([^）)]*)[）)]/g)].map(x => x[1]).filter(x => x.trim());
+  const ats = [...rest.matchAll(atRe)].map(x => x[1]);
+  let loose = rest.replace(tagRe, ' ').replace(/[（(][^）)]*[）)]/g, ' ').replace(atRe, ' ').trim();
+  let kind = null;
+  const lm = loose.match(/^(标签|账户|账号|银行卡|卡)\s*(.*)$/);
+  if (lm) { kind = lm[1] === '标签' ? 'tag' : 'account'; loose = lm[2].trim(); }
 
-  // 1) // 删除
-  if (text.startsWith('//')) {
-    const target = cleanName(text.slice(2));
-    if (!target) return { actions };
-    if (findAccount(target)) actions.push({ action: 'delete_account', account: findAccount(target).name });
-    else if (DB.tags.includes(target)) actions.push({ action: 'delete_tag', tag: target });
-    return { actions };
+  const actions = [], errors = [];
+  if (!del) {
+    tagNames.forEach(t => actions.push({ action: 'create_tag', tag: t }));
+    brackets.forEach(b => { const s = parseAccountSpec(b); if (s.name) actions.push(specToAction(s)); });
+    ats.forEach(n => actions.push(specToAction({ name: n, type: guessType(n), balance: null, limit: 0 })));
+    if (loose) {
+      if (kind === 'tag') loose.split(/\s+/).forEach(t => actions.push({ action: 'create_tag', tag: t.replace(/^[#＃]/, '') }));
+      else if (kind === 'account') { const s = parseAccountSpec(loose); if (s.name) actions.push(specToAction(s)); }
+      else if (!actions.length) errors.push('创建时请用 # 指定标签名，或用 （） 指定账户名');
+    }
+    if (!actions.length && !errors.length) errors.push('创建什么？例如「创建#咖啡」「创建（招行 余额5000）」');
+  } else {
+    const delByName = n => {
+      const a = findAccount(n);
+      if (a) actions.push({ action: 'delete_account', account: a.name });
+      else if (DB.tags.includes(n)) actions.push({ action: 'delete_tag', tag: n });
+      else errors.push(`没有找到「${n}」`);
+    };
+    tagNames.forEach(t => { if (DB.tags.includes(t)) actions.push({ action: 'delete_tag', tag: t }); else errors.push(`没有标签 #${t}`); });
+    [...brackets, ...ats].forEach(delByName);
+    if (loose) {
+      if (kind === 'tag') loose.split(/\s+/).forEach(t => { t = t.replace(/^[#＃]/, ''); if (DB.tags.includes(t)) actions.push({ action: 'delete_tag', tag: t }); else errors.push(`没有标签 #${t}`); });
+      else loose.split(/\s+/).forEach(delByName);
+    }
+    if (!actions.length && !errors.length) errors.push('删除什么？例如「删除#咖啡」「删除@招行」');
+  }
+  return { actions, confident: true, manual: true, error: actions.length ? '' : errors.join('；') };
+}
+
+function localParseCore(raw) {
+  const text0 = String(raw || '').trim();
+  const out = (actions, confident, extra = {}) => ({ actions, confident, ...extra });
+
+  const manual = parseManual(text0);
+  if (manual) return manual;
+
+  // 预算（日预算可带 YYYY-MM-DD，范围用“到”连接）
+  if (/预算/.test(text0)) {
+    const dates = text0.match(/\d{4}-\d{2}-\d{2}/g) || [];
+    const t1 = text0.replace(/\d{4}-\d{2}-\d{2}/g, ' ');
+    const bm = t1.match(/(月预算|每月预算|日预算|每日预算|每天预算)\D{0,6}?(\d+(?:\.\d+)?)/);
+    if (bm && !/\d{1,2}月\d{1,2}[日号]|明天|昨天|本周|下周|上周/.test(t1) && !(dates.length && /月/.test(bm[1]))) {
+      const a = { action: /月/.test(bm[1]) ? 'budget' : 'daily_budget', amount: Number(bm[2]) };
+      if (a.action === 'daily_budget' && dates.length) { a.start_date = dates[0]; a.end_date = dates[1] || dates[0]; }
+      return out([a], true);
+    }
+    return out([], false);
   }
 
-  // 2) \ 备注
-  let note = '';
+  let text = text0, note = '';
   const bs = text.search(/[\\＼]/);
   if (bs >= 0) { note = text.slice(bs + 1).trim(); text = text.slice(0, bs).trim(); }
 
-  // 3) （账户）
   const bracketSpecs = [];
   text = text.replace(/[（(]([^）)]*)[）)]/g, (_, inner) => { if (inner.trim()) bracketSpecs.push(parseAccountSpec(inner)); return ' '; });
 
-  // 4) #标签
-  const tags = [...text.matchAll(/#([\w\u4e00-\u9fff-]+)/g)].map(m => m[1]);
-  text = text.replace(/#[\w\u4e00-\u9fff-]+/g, ' ');
+  const tags = [];
+  text = text.replace(/[#＃]([\w一-鿿-]+)/g, (_, t) => { tags.push(t); return ' '; });
 
-  // 5) @引用（账户优先，其次标签，未知按账户处理）
-  const mentionAccounts = [];
-  text = text.replace(/@([^\s，,。;；#@（）()]+)/g, (_, n) => {
-    if (findAccount(n)) mentionAccounts.push(n);
+  const mentions = [];
+  text = text.replace(new RegExp('[@＠](' + TAGCH + '+)', 'g'), (_, n) => {
+    if (findAccount(n)) mentions.push(n);
     else if (DB.tags.includes(n)) tags.push(n);
-    else mentionAccounts.push(n);
+    else mentions.push(n);
     return ' ';
   });
 
-  const body = text.trim();
-  const amountMatch = body.match(/(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元|块)?/);
-  const amount = amountMatch ? Number(amountMatch[1]) : 0;
-  const stop = '[^\\s，,。;；\\d]';
-
-  // 仅有括号账户：创建账户
+  const body = text.replace(/\s+/g, ' ').trim();
+  const nums = [...body.matchAll(/\d+(?:\.\d+)?/g)];
+  const amount = nums.length ? Number(nums[0][0]) : 0;
+  const bodyNoAmt = body.replace(/(?:¥|￥)?\s*\d+(?:\.\d+)?\s*(?:元|块|rmb|RMB)?/, ' ').replace(/\s+/g, ' ').trim();
   const hasKeyword = /支出|消费|花|付|收入|工资|到账|收到|奖金|转账|转到|转入|转出|还款|还/.test(body);
+
+  // 仅括号：创建账户
   if (bracketSpecs.length && !(hasKeyword && amount > 0)) {
-    bracketSpecs.forEach(b => b.name && actions.push({ action: 'account', account: b.name, account_type: b.type, balance: b.balance, limit: b.limit }));
-    return { actions };
+    return out(bracketSpecs.filter(b => b.name).map(specToAction), true);
   }
-  bracketSpecs.forEach(b => b.name && actions.push({ action: 'account', account: b.name, account_type: b.type, balance: b.balance, limit: b.limit }));
+  const bracketActs = bracketSpecs.filter(b => b.name).map(specToAction);
+  const bracketAcc = (bracketSpecs[0] && bracketSpecs[0].name) || '';
 
-  const fallbackAcc = (bracketSpecs[0] && bracketSpecs[0].name) || mentionAccounts[0] || '';
+  // 仅 #标签：创建标签
+  if (!amount && tags.length && !bodyNoAmt) {
+    return out([...bracketActs, ...tags.map(t => ({ action: 'create_tag', tag: t }))], true);
+  }
+  if (!amount) {
+    return out([], false, { error: '没有找到金额。例如「从微信支出 25 #咖啡」「工资到招行 8000」；复杂内容请配置 API Key 交给 AI' });
+  }
+
+  const kinds = [/支出|消费|花了|花费|付款|支付/, /收入|工资|到账|收到|奖金|报销|退款|入账|进账/, /转账|转到|转入|转出|转给|汇款/, /还款|还.{0,6}卡|还花呗|还白条/].filter(r => r.test(body)).length;
+  const complex = COMPLEX_RE.test(body) || nums.length > 1 || kinds > 1 || /[;；\n]/.test(text0) || body.length > 40;
+  const fallbackAcc = bracketAcc || mentions[0] || '';
   const category = tags[0] || categoryOf(body);
-  const title = note || tags.join(' ') || (category !== '其他' ? category : body.replace(/^(支出|收入|转账|还款)\s*/, '').replace(/[\d.¥￥元块]+/g, '').trim());
+  const title = note || tags.join(' ') || (category !== '其他' ? category : bodyNoAmt.replace(/^(支出|收入|转账|还款)\s*/, '').trim());
+  const arrowRe = new RegExp('(?:从)?\\s*(' + ST + '+?)\\s*(?:→|->|到|至|给)\\s*(' + ST + '+)');
+  const credTok = /信用卡|花呗|白条/;
 
-  if (/还款|还(?!有)/.test(body)) {
-    const from = (body.match(new RegExp('从\\s*(' + stop + '+?)\\s*(?:还|转)')) || [])[1] || (body.match(new RegExp('(' + stop + '+?)\\s*(?:→|->|还到|还款到)')) || [])[1] || fallbackAcc;
-    let to = (body.match(new RegExp('(?:还款到|还到|还款|还)\\s*(' + stop + '+?)(?=\\s|\\d|$)')) || [])[1];
-    if (!to || to === from) to = (body.match(/(?:→|->|到|至)\s*([^\s，,。\d]+)/) || [])[1] || '信用卡';
-    actions.push({ action: 'repayment', from: from || '默认钱包', to, amount, note: note || '还款' });
-  } else if (/转账|转到|转入|转出|转给|汇款/.test(body)) {
-    let from = (body.match(new RegExp('从\\s*(' + stop + '+?)\\s*(?:转账?|汇)')) || [])[1];
-    let to = (body.match(/(?:转账?|汇款?)?\s*(?:到|至|给|→|->)\s*([^\s，,。\d]+)/) || [])[1];
-    if (!from) from = (body.match(new RegExp('(?:转账|转)\\s*(' + stop + '+?)\\s*(?:→|->|到|至|给)')) || [])[1] || fallbackAcc;
-    actions.push({ action: 'transfer', from: from || '默认钱包', to: to || '储蓄卡', amount, note: note || '转账' });
-  } else if (/收入|工资|到账|收到|奖金|报销|退款/.test(body)) {
-    const acc = (body.match(new RegExp('(?:到|入|进)\\s*(' + stop + '+?)(?=\\s|\\d|$)')) || [])[1]
-      || (body.match(new RegExp('(' + stop + '+?)\\s*(?:收入|到账|收到)')) || [])[1]
-      || fallbackAcc;
-    const acct = acc && !/^(收入|支出|工资|奖金)$/.test(acc) ? acc : '默认钱包';
-    actions.push({ action: 'income', account: acct, amount, category: tags[0] || (/工资|奖金|报销|退款/.test(body) ? '收入' : categoryOf(body)), tags, note: title });
-  } else if (amount > 0) {
-    const acc = (body.match(new RegExp('从\\s*(' + stop + '+?)\\s*(?:里|中)?\\s*(?:支出|消费|花费|花了?|付款|支付|付|扣除|扣款|转出)')) || [])[1]
-      || (body.match(new RegExp('(' + stop + '+?)\\s*(?:支付|付款)')) || [])[1]
-      || fallbackAcc;
-    actions.push({ action: 'expense', account: acc || '', amount, category, tags, note: title });
+  const isRepay = /还款|还.{0,6}卡|还花呗|还白条/.test(body);
+  const isTransfer = !isRepay && /转账|转到|转入|转出|转给|汇款/.test(body);
+  const isIncome = !isRepay && !isTransfer && /收入|工资|到账|收到|奖金|报销|退款|入账|进账/.test(body);
+
+  if (isRepay) {
+    let from = '', to = '', r;
+    if ((r = bodyNoAmt.match(new RegExp('从\\s*(' + ST + '+?)\\s*还款?\\s*(?:到|至)?\\s*(' + ST + '*(?:信用卡|花呗|白条)' + ST + '*)')))) { from = r[1]; to = r[2]; }
+    else {
+      const b = bodyNoAmt.replace(/还款|还/g, ' ').replace(/\s+/g, ' ').trim();
+      if ((r = b.match(arrowRe))) { from = r[1]; to = r[2]; }
+      else {
+        const toks = b.split(' ').filter(Boolean);
+        const tk = toks.find(t => credTok.test(t));
+        if (tk) to = tk.replace(/^[到至给]/, '');
+        const f = b.match(new RegExp('从\\s*(' + ST + '+)'));
+        if (f) from = f[1]; else { const other = toks.find(t => t !== tk); if (other) from = other; }
+      }
+    }
+    from = from || fallbackAcc;
+    return out([...bracketActs, { action: 'repayment', from: from || '默认钱包', to: to || '信用卡', amount, note: note || '还款' }], !!to && !complex);
   }
-  return { actions };
+
+  if (isTransfer) {
+    const b = bodyNoAmt.replace(/转账|转入|转出|转到|转给|汇款|转/g, ' ').replace(/\s+/g, ' ').trim();
+    let from = '', to = '';
+    const r = b.match(arrowRe);
+    if (r) { from = r[1]; to = r[2]; }
+    else {
+      to = mm(b, '(?:到|至|给|→|->)\\s*(' + ST + '+)');
+      from = mm(b, '从\\s*(' + ST + '+)');
+    }
+    from = from || fallbackAcc;
+    if (!to && mentions.length > 1) to = mentions[1];
+    return out([...bracketActs, { action: 'transfer', from: from || '默认钱包', to: to || '储蓄卡', amount, note: note || '转账' }], !!(from && to) && !complex);
+  }
+
+  if (isIncome) {
+    const b2 = body.replace(/到账|入账|进账|收入|收到/g, ' ');
+    let acc = mm(b2, '(?:到|存入|入|进)\\s*(' + ST + '+?)(?=\\s|\\d|$)');
+    if (!acc) {
+      acc = mm(body, '(' + ST + '+?)\\s*(?:收入|到账|收到)');
+      if (/^(工资|奖金|报销|退款|薪水|红包|收入)$/.test(acc)) acc = '';
+    }
+    acc = acc || fallbackAcc;
+    return out([...bracketActs, { action: 'income', account: acc || '', amount, category: tags[0] || (/工资|奖金|报销|退款/.test(body) ? '收入' : categoryOf(body)), tags, note: title }], !complex);
+  }
+
+  let acc = mm(body, '从\\s*(' + ST + '+?)\\s*(?:里|中)?\\s*(?:支出|消费|花费|花了?|付款|支付|付|扣除|扣款|转出)')
+    || mm(body, '用\\s*(' + ST + '+?)\\s*(?:支付|付款|付|买|消费)')
+    || fallbackAcc;
+  return out([...bracketActs, { action: 'expense', account: acc || '', amount, category, tags, note: title }], !complex);
+}
+
+/* ---------- 入口：支持 YYYY-MM-DD 指定账务日期 ---------- */
+function localParse(raw) {
+  let text = String(raw || '');
+  let date = '';
+  if (!/预算/.test(text) && !/^\s*(?:创建|新建|新增|添加|删除|移除|去掉|\/\/)/.test(text)) {
+    const m = text.match(/\d{4}-\d{2}-\d{2}/);
+    if (m) { date = m[0]; text = text.replace(/\d{4}-\d{2}-\d{2}/g, ' '); }
+  }
+  const r = localParseCore(text);
+  if (date) r.actions.forEach(a => { if (NEEDS_AMOUNT.includes(a.action)) a.date = date; });
+  return r;
+}
+
+const NEEDS_AMOUNT = ['expense', 'income', 'transfer', 'repayment'];
+
+function validateActions(actions) {
+  for (const a of actions) {
+    if (NEEDS_AMOUNT.includes(a.action) && !(Number(a.amount) > 0)) throw new Error('有一条记录缺少金额');
+    if ((a.action === 'budget' || a.action === 'daily_budget') && !(Number(a.amount) > 0)) throw new Error('预算缺少金额');
+    if (a.action === 'account' && !cleanName(a.account)) throw new Error('未识别到账户名');
+    if ((a.action === 'create_tag' || a.action === 'delete_tag') && !a.tag) throw new Error('未识别到标签名');
+    if (a.action === 'delete_account' && !cleanName(a.account)) throw new Error('未识别到账户名');
+  }
+}
+
+// 解析 AI 转写出的“标准语法”文本：逐行交给本地解析器
+function parseSyntaxLines(raw) {
+  const lines = String(raw || '').replace(/```[a-z]*/gi, '').split(/\n+/)
+    .map(l => l.replace(/^\s*(?:[-*•]|\d+[.、)])\s*/, '').trim()).filter(Boolean);
+  const actions = [], bad = [];
+  for (const l of lines) {
+    if (/^无法识别/.test(l)) throw new Error('AI 无法转写：' + (l.replace(/^无法识别[:：]?\s*/, '') || '内容不明确'));
+    const r = localParse(l);
+    if (r.actions.length) actions.push(...r.actions); else bad.push(l);
+  }
+  return { lines, actions, bad };
+}
+/*PURE_END*/
+
+/* ================= AI 调用（带状态与累计次数） ================= */
+const SYNTAX_PROMPT = `你是记账语法转写器。把用户的自然语言（以及图片 OCR 文字）改写成「标准记账语法」，每个动作一行。只输出这些行，不要解释、不要编号、不要代码块。
+
+标准语法（“从”表示起点/付款账户，“到”表示终点/收款账户）：
+- 支出：从<账户>支出 <金额> #标签 \\备注
+- 收入：收入 <金额> 到<账户> #标签 \\备注
+- 转账：从<账户>转账 <金额> 到<账户> \\备注
+- 还款：从<账户>还款 <金额> 到<信用卡账户> \\备注
+- 创建标签：创建#标签名
+- 创建/更新账户：创建（账户名 余额5000）；信用卡：创建（账户名 额度20000 已用3000）
+- 删除标签：删除#标签名；删除账户：删除@账户名
+- 月预算：月预算 5000；日预算：日预算 100；指定日期的日预算：日预算 100 2026-11-05 到 2026-11-07
+- 指定日期的账务：在该行任意位置加 YYYY-MM-DD，如：从微信支出 30 #交通 2026-11-03
+
+规则：
+1. 金额写阿拉伯数字，不带单位。
+2. 账户名取自用户原话，不含数字和括号；与已有账户明显是同一个（如“微信”与“微信零钱”）时用已有账户名；没提到账户就省略“从<账户>”/“到<账户>”，如：支出 25 #咖啡。
+3. 标签优先使用已有标签；商户、用途等细节放在 \\ 之后作为备注。
+4. “昨天/前天/上周五”等相对日期，按当前日期换算成 YYYY-MM-DD。
+5. 一句话包含多笔账务时拆成多行。
+6. 图片 OCR：银行卡信息 → 创建账户（名称用“银行名+卡类型”，如 招商银行储蓄卡 / 招商银行信用卡）；支付成功页或账单 → 支出/收入（金额取实付，商户放备注，支付方式作为账户）。
+7. 完全无法转写时只输出一行：无法识别：<原因>
+
+当前日期：`;
+
+const OCR_PROMPT = '请完整、逐行提取这张图片里所有可见的文字（包括银行名称、卡类型、卡号尾号、金额、余额、额度、日期、商户、支付方式等）。只输出提取到的文字本身，不要解释，不要总结。';
+
+let run = { calls: 0 };
+const aiCountText = () => `AI 累计调用 ${DB.stats.aiCalls} 次`;
+
+function setStatus(msg, kind = '') {
+  const el = $('#statusLine');
+  el.textContent = msg;
+  el.className = 'status-line ' + kind;
+}
+function statusIdle() { setStatus(`本地规则优先 · ${aiCountText()}`); }
+
+function extractJSON(s) {
+  s = String(s || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try { return JSON.parse(s); } catch (_) {}
+  const m = s.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
+  throw new Error('AI 返回的内容无法解析');
+}
+
+async function callAI({ model, messages, json, step }) {
+  const s = DB.settings;
+  if (!s.apiKey) throw new Error('请先在设置中配置 API Key');
+  DB.stats.aiCalls++; run.calls++;
+  save();
+  setStatus(`🤖 AI 调用中 · ${step} · 本次第 ${run.calls} 次 · 累计 ${DB.stats.aiCalls} 次`, 'busy');
+  renderStats();
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 60000);
+  try {
+    const body = { model, messages, temperature: 0.1 };
+    if (json) body.response_format = { type: 'json_object' };
+    const res = await fetch(s.apiBase.replace(/\/$/, '') + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.apiKey },
+      body: JSON.stringify(body),
+      signal: ctrl.signal
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error?.message || ''; } catch (_) {}
+      throw new Error('API 请求失败 ' + res.status + (detail ? '：' + detail : ''));
+    }
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || '';
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('AI 请求超时（60 秒）');
+    if (e instanceof TypeError) throw new Error('网络请求失败，请检查网络、API 地址或跨域设置');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function ocrImage(image) {
+  const content = await callAI({
+    model: DB.settings.visionModel,
+    messages: [{ role: 'user', content: [{ type: 'text', text: OCR_PROMPT }, { type: 'image_url', image_url: { url: image } }] }],
+    json: false,
+    step: '步骤 1/2：识别图片文字'
+  });
+  return String(content || '').trim();
+}
+
+async function aiToSyntax(text, ocr, feedback, step) {
+  const ctx = `${dateKey(now())}\n已有账户：${JSON.stringify(DB.accounts.map(a => ({ name: a.name, type: a.type })))}\n已有标签：${JSON.stringify(DB.tags)}`;
+  let user = '用户输入：' + (text || '（无）');
+  if (ocr) user += '\n\n图片 OCR 文字（可能有错字或噪声，请合理推断）：\n' + ocr;
+  const messages = [{ role: 'system', content: SYNTAX_PROMPT + ctx }, { role: 'user', content: user }];
+  if (feedback) {
+    messages.push({ role: 'assistant', content: feedback.prev });
+    messages.push({ role: 'user', content: '下面这些行不符合标准语法，程序无法解析：\n' + feedback.bad.join('\n') + '\n请严格按标准语法重新输出全部行。' });
+  }
+  return String(await callAI({ model: DB.settings.textModel, messages, json: false, step }) || '');
+}
+
+// AI 把自然语言转写为标准语法 → 本地解析 → 仍有无法解析的行则让 AI 修正一次
+async function viaAI(text, ocr) {
+  let out = await aiToSyntax(text, ocr, null, ocr ? '步骤 2/2：转写为标准语法' : '转写为标准语法');
+  let p = parseSyntaxLines(out);
+  if (p.bad.length) {
+    out = await aiToSyntax(text, ocr, { prev: out, bad: p.bad }, '修正语法');
+    p = parseSyntaxLines(out);
+  }
+  if (!p.actions.length) throw new Error('AI 转写后仍无法解析' + (p.bad[0] ? '：' + p.bad[0] : ''));
+  return { actions: p.actions, syntax: p.lines.join('\n'), warn: p.bad.length ? `有 ${p.bad.length} 行无法解析，已忽略：${p.bad.join('；')}` : '' };
+}
+
+/* ---------- 路由：简单 → 本地；复杂 / 图片 → AI ---------- */
+async function recognize(text, image) {
+  const s = DB.settings, hasKey = !!s.apiKey;
+
+  if (image) {
+    if (!hasKey) throw new Error('图片识别需要先在设置中配置 API Key');
+    const ocr = await ocrImage(image);
+    if (!ocr) throw new Error('没有从图片中识别到文字');
+    const r = await viaAI(text, ocr);
+    return { ...r, source: 'ai', ocr };
+  }
+
+  const local = localParse(text);
+  if (local.manual) {
+    if (!local.actions.length) throw new Error(local.error);
+    return { actions: local.actions, source: 'local' };
+  }
+  if (local.confident && local.actions.length && !(s.alwaysAI && hasKey)) {
+    return { actions: local.actions, source: 'local' };
+  }
+
+  if (hasKey) {
+    try {
+      const r = await viaAI(text, '');
+      return { ...r, source: 'ai' };
+    } catch (e) {
+      if (local.actions.length) return { actions: local.actions, source: 'local', warn: `AI 调用失败（${e.message}），已采用本地解析，请核对` };
+      throw e;
+    }
+  }
+
+  if (local.actions.length) return { actions: local.actions, source: 'local', warn: '内容较复杂，本地规则可能不准；在设置中配置 API Key 后，AI 会先把它转写成标准语法再记录，请仔细核对' };
+  throw new Error(local.error || '没能识别出内容。请使用标准语法，如「从微信支出 25 #咖啡」；复杂内容请在设置中配置 API Key');
 }
 
 /* ---------- 图片处理 ---------- */
@@ -558,11 +812,11 @@ function compressImage(file) {
       const img = new Image();
       img.onerror = reject;
       img.onload = () => {
-        const max = 1400, k = Math.min(1, max / Math.max(img.width, img.height));
+        const max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
         const c = document.createElement('canvas');
         c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        resolve(c.toDataURL('image/jpeg', 0.85));
+        resolve(c.toDataURL('image/jpeg', 0.88));
       };
       img.src = fr.result;
     };
@@ -572,16 +826,21 @@ function compressImage(file) {
 
 /* ---------- 预览 & 入账 ---------- */
 let pendingActions = null;
-const NEEDS_AMOUNT = ['expense', 'income', 'transfer', 'repayment'];
+let busy = false;
 
 function newBadge(name, type) { return findAccount(name, type) ? '' : '<span class="badge">新建账户</span>'; }
 
-function showPreview(actions) {
+function showPreview(r) {
+  const actions = r.actions;
   pendingActions = actions;
   $('#composerCard').style.display = 'none';
   $('#previewArea').style.display = 'block';
+  $('#previewSrc').textContent = r.source === 'ai' ? `AI 转写 · 本次调用 ${run.calls} 次` : '本地规则 · 未调用 AI';
+  $('#previewWarn').innerHTML = r.warn ? `<div class="preview-warn">⚠️ ${esc(r.warn)}</div>` : '';
+  $('#previewSyntax').innerHTML = r.syntax ? `<details class="preview-ocr" open><summary>AI 转写成的标准语法</summary><pre>${esc(r.syntax)}</pre></details>` : '';
+  $('#previewOcr').innerHTML = r.ocr ? `<details class="preview-ocr"><summary>查看 AI 识别到的图片文字</summary><pre>${esc(r.ocr)}</pre></details>` : '';
   $('#previewList').innerHTML = actions.map(a => {
-    const note = a.note ? `<small>备注：${esc(a.note)}</small>` : '';
+    const note = (a.note ? `<small>备注：${esc(a.note)}</small>` : '') + (a.date ? `<small>日期：${esc(a.date)}</small>` : '');
     const tg = a.tags?.length ? ' ' + a.tags.map(t => '#' + esc(t)).join(' ') : '';
     let html = '';
     switch (a.action) {
@@ -596,6 +855,7 @@ function showPreview(actions) {
         html = `👤 <b>${findAccount(a.account, t) ? '更新账户' : '创建账户'}</b> ${esc(a.account)}（${t === 'credit' ? '信用卡' : '资金账户'}）<small>${[bal, lim].filter(Boolean).join('　')}</small>`;
         break;
       }
+      case 'create_tag': html = `🏷️ <b>创建标签</b> #${esc(a.tag)}${DB.tags.includes(a.tag) ? '<span class="badge warn">已存在</span>' : ''}`; break;
       case 'budget': html = `🎯 <b>月预算</b> ${money(a.amount)}`; break;
       case 'daily_budget': html = `📅 <b>日预算</b> ${money(a.amount)}${a.start_date ? `<small>${esc(a.start_date)} ~ ${esc(a.end_date || a.start_date)}</small>` : ''}`; break;
       case 'delete_account': html = `🗑️ <b>删除账户</b> ${esc(a.account)} <span class="badge warn">含其全部记录</span>`; break;
@@ -607,7 +867,8 @@ function showPreview(actions) {
 }
 
 function applyOne(p) {
-  const amt = Number(p.amount || 0), date = now().toISOString();
+  const amt = Number(p.amount || 0);
+  const date = (p.date && /^\d{4}-\d{2}-\d{2}$/.test(p.date)) ? new Date(p.date + 'T12:00:00').toISOString() : now().toISOString();
   switch (p.action) {
     case 'daily_budget':
       if (!p.start_date && !p.end_date) DB.budget.daily = amt;
@@ -617,6 +878,7 @@ function applyOne(p) {
       }
       break;
     case 'budget': DB.budget.monthly = amt; break;
+    case 'create_tag': addTag(p.tag); break;
     case 'delete_tag': DB.tags = DB.tags.filter(t => t !== p.tag); break;
     case 'delete_account': {
       const a = findAccount(p.account);
@@ -653,39 +915,31 @@ function applyOne(p) {
 }
 
 async function handleParse() {
+  if (busy) return;
   const text = $('#command').value.trim();
   if (!text && !imageData) return toast('请输入内容或上传图片');
-  if (imageData && !DB.settings.apiKey) return toast('图片识别需要先在设置中配置 API Key');
-
+  busy = true;
   const btn = $('#parseBtn');
   btn.textContent = '识别中…'; btn.disabled = true;
+  run = { calls: 0 };
 
   try {
-    let result;
-    if (DB.settings.apiKey) {
-      try { result = await apiParse(text, imageData); }
-      catch (e) {
-        if (imageData || !text) throw e;
-        toast('AI 不可用，已改用本地规则');
-        result = localParse(text);
-      }
+    setStatus(imageData ? '准备调用 AI…' : '本地解析中…', 'busy');
+    const r = await recognize(text, imageData);
+    validateActions(r.actions);
+    if (r.source === 'local') {
+      DB.stats.localRuns++; save();
+      setStatus(`✓ 已用本地规则解析（未调用 AI）· ${aiCountText()}`, 'ok');
     } else {
-      result = localParse(text);
+      setStatus(`✓ AI 解析完成 · 本次调用 ${run.calls} 次 · ${aiCountText()}`, 'ok');
     }
-
-    const actions = (Array.isArray(result) ? result : (result.actions || []))
-      .filter(a => a && a.action)
-      .map(a => ({ ...a, action: String(a.action).toLowerCase() }));
-    if (!actions.length) throw new Error('未识别到有效动作');
-
-    for (const a of actions) {
-      if (NEEDS_AMOUNT.includes(a.action) && !(Number(a.amount) > 0)) throw new Error('未识别到金额');
-      if (a.action === 'account' && !cleanName(a.account)) throw new Error('未识别到账户名');
-    }
-    showPreview(actions);
+    showPreview(r);
+    renderStats();
   } catch (e) {
+    setStatus(`✗ ${e.message}${run.calls ? ` · 本次已调用 AI ${run.calls} 次 · ${aiCountText()}` : ''}`, 'err');
     toast('解析失败：' + e.message);
   } finally {
+    busy = false;
     btn.textContent = '记录'; btn.disabled = false;
   }
 }
@@ -696,6 +950,7 @@ async function confirmActions() {
   btn.textContent = '入账中…'; btn.disabled = true;
   try {
     for (const a of pendingActions) applyOne(a);
+    DB.tx.sort((x, y) => new Date(y.date) - new Date(x.date));
     await save();
     toast('已成功记录');
     pendingActions = null;
@@ -703,6 +958,7 @@ async function confirmActions() {
     $('#composerCard').style.display = 'block';
     $('#command').value = '';
     setImage('');
+    statusIdle();
     render();
   } catch (e) {
     toast('入账失败');
@@ -722,6 +978,13 @@ function calc() {
 
 const getTotal = arr => arr.reduce((s, t) => s + t.amount, 0);
 const byCat = arr => Object.entries(arr.reduce((o, t) => (o[t.category] = (o[t.category] || 0) + t.amount, o), {})).sort((a, b) => b[1] - a[1]);
+
+function renderStats() {
+  const ai = DB.stats.aiCalls, loc = DB.stats.localRuns;
+  $('#statsAI').textContent = ai + ' 次';
+  $('#statsText').textContent = `累计调用 AI ${ai} 次（识别图片时每张图占 2 次）；本地规则解析 ${loc} 次。`;
+  $('#statsHint').textContent = DB.settings.apiKey ? '已配置' : '未配置 Key';
+}
 
 function renderSummary() {
   const exp = DB.tx.filter(t => t.type === 'expense');
@@ -750,6 +1013,7 @@ function render() {
   $('#txCount').textContent = DB.tx.length + ' 笔';
   $('#accountCount').textContent = DB.accounts.length + ' 个账户';
   $('#apiStatus').textContent = DB.settings.apiKey ? '已配置' : '未配置';
+  renderStats();
 
   $('#recentList').innerHTML = DB.tx.slice(0, 30).map(t => {
     const where = t.account || ((t.from || '') + ' → ' + (t.to || ''));
@@ -884,7 +1148,7 @@ function updateSuggest() {
   let items = [];
   if (ch === '#') {
     items = DB.tags.filter(t => t.toLowerCase().includes(ql)).map(t => ({ value: t, label: '#' + t, hint: '标签' }));
-    if (q && !DB.tags.includes(q)) items.push({ value: q, label: '＋ 创建标签 #' + q, hint: '新建' });
+    if (q && !DB.tags.includes(q)) items.push({ value: q, label: '＋ 新标签 #' + q, hint: '新建' });
   } else {
     items = [
       ...DB.accounts.filter(a => a.name.toLowerCase().includes(ql)).map(a => ({ value: a.name, label: a.name, hint: a.type === 'credit' ? '信用卡' : '账户' })),
@@ -947,6 +1211,7 @@ $('#cancelBtn').onclick = () => {
   pendingActions = null;
   $('#previewArea').style.display = 'none';
   $('#composerCard').style.display = 'block';
+  statusIdle();
 };
 
 $('#imageInput').onchange = async e => {
@@ -971,12 +1236,22 @@ $('#saveApi').onclick = async () => {
   DB.settings.textModel = $('#textModel').value.trim();
   DB.settings.visionModel = $('#visionModel').value.trim();
   DB.settings.rememberKey = $('#rememberKey').checked;
+  DB.settings.alwaysAI = $('#alwaysAI').checked;
   DB.settings.apiKey = $('#apiKey').value.trim();
   if (DB.settings.rememberKey) sessionStorage.removeItem('flow_api_key');
   else sessionStorage.setItem('flow_api_key', DB.settings.apiKey);
   await save();
   render();
   toast('API 设置已保存');
+};
+
+$('#resetStats').onclick = async () => {
+  if (!confirm('确定把 AI 调用次数清零吗？')) return;
+  DB.stats = { aiCalls: 0, localRuns: 0 };
+  await save();
+  renderStats();
+  statusIdle();
+  toast('已重置计数');
 };
 
 $('#exportBtn').onclick = () => {
@@ -1001,6 +1276,7 @@ $('#importInput').onchange = e => {
       DB.tx = data.tx || [];
       DB.tags = [...new Set([...PRESET_TAGS, ...(data.tags || [])])];
       DB.budget = data.budget || { daily: 0, monthly: 0, dailyOverrides: [] };
+      DB.stats = { ...DB.stats, ...(data.stats || {}) };
       const keep = DB.settings.apiKey;
       DB.settings = { ...DB.settings, ...(data.settings || {}), apiKey: keep };
       await save();
@@ -1008,7 +1284,9 @@ $('#importInput').onchange = e => {
       $('#textModel').value = DB.settings.textModel;
       $('#visionModel').value = DB.settings.visionModel;
       $('#rememberKey').checked = DB.settings.rememberKey;
+      $('#alwaysAI').checked = DB.settings.alwaysAI;
       render();
+      statusIdle();
       toast('导入成功');
     } catch (_) { toast('文件格式错误'); }
     finally { e.target.value = ''; }
@@ -1035,8 +1313,10 @@ async function init() {
   $('#visionModel').value = DB.settings.visionModel;
   $('#apiKey').value = DB.settings.apiKey;
   $('#rememberKey').checked = DB.settings.rememberKey;
+  $('#alwaysAI').checked = DB.settings.alwaysAI;
 
   render();
+  statusIdle();
 }
 init();
 </script>
