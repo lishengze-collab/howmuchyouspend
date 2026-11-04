@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f7f7f5"><title>Flow Ledger</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fbfbfa;--ink:#151515;--muted:#6f6f6f;--line:#e3e3df;--soft:#ededeb;--red:#c83f3f;--blue:#2367c9;--shadow:0 8px 28px rgba(0,0,0,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Segoe UI",sans-serif}
+body{padding:0 0 calc(94px + env(safe-area-inset-bottom))}
+button,input,textarea,select{font:inherit}
+.app{width:min(100%,460px);margin:auto;min-height:100vh}
+.top{position:sticky;top:0;z-index:5;padding:calc(14px + env(safe-area-inset-top)) 18px 12px;background:rgba(247,247,245,.92);backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,0,0,.05)}
+.brand{display:flex;justify-content:space-between;align-items:flex-end}
+.brand h1{font-size:24px;margin:0;font-weight:760;letter-spacing:-.6px}
+.brand small{color:var(--muted);font-size:12px}
+.content{padding:calc(12px + env(safe-area-inset-top)) 16px 16px}
+.view{display:none}
+.view.active{display:block}
+.hero{background:#e9e9e6;color:var(--ink);border-radius:24px;padding:20px;box-shadow:var(--shadow)}
+.eyebrow{font-size:12px;color:#5f5f5f;text-transform:uppercase;letter-spacing:.12em}
+.amount{font-size:38px;font-weight:750;letter-spacing:-1.2px;margin:8px 0 14px}
+.hero-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hero-stat{background:#f7f7f5;border-radius:15px;padding:12px}
+.hero-stat b{display:block;font-size:17px;margin-top:4px}
+.expense{color:var(--red)!important}
+.income{color:var(--blue)!important}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 10px}
+.section-title h2{font-size:16px;margin:0}
+.section-title span{font-size:12px;color:var(--muted)}
+.card{background:#fbfbfa;border:1px solid var(--line);border-radius:20px;padding:15px;box-shadow:0 3px 14px rgba(0,0,0,.025)}
+.composer textarea{width:100%;min-height:126px;height:126px;max-height:126px;resize:none;overflow-y:auto;border:0;outline:0;font-size:17px;line-height:1.55;background:transparent;color:var(--ink)}
+.quick{display:flex;gap:8px;overflow:auto;margin:14px 0;padding:0;scrollbar-width:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#fbfbfa;border-radius:999px;padding:8px 11px;font-size:13px;color:#444}
+.actions{display:grid;grid-template-columns:1fr 3fr;gap:9px;align-items:center}
+.actions>*{height:46px;min-height:46px;max-height:46px;min-width:0;margin:0;align-self:center}
+.actions .btn.icon{width:100%;height:46px;padding:0;font-size:30px;line-height:1;display:grid;place-items:center}
+.actions .btn.grow{height:46px;display:grid;place-items:center;padding:0}
+.actions .upload-plus{display:flex!important;align-items:center;justify-content:center;padding:0;overflow:hidden;line-height:1;font-size:0}
+.actions .upload-plus .plus{display:block;font-size:34px;font-weight:800;line-height:1;transform:translateY(-1px)}
+.btn{border:0;border-radius:14px;padding:12px 15px;font-weight:650;background:#e6e6e2;color:var(--ink)}
+.btn.secondary{background:var(--soft);color:var(--ink)}
+.btn.icon{width:45px;padding:0;display:grid;place-items:center;font-size:19px}
+.btn.grow{flex:1}
+.preview{margin-top:12px;background:#f3f3f0;border-radius:15px;padding:12px;font-size:13px;line-height:1.5;display:none}
+.preview.show{display:block}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--soft)}
+.row:last-child{border-bottom:0}
+.left{display:flex;align-items:center;gap:11px;min-width:0}
+.ico{width:38px;height:38px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:19px}
+.meta{min-width:0}
+.meta b,.meta span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta span{font-size:12px;color:var(--muted);margin-top:3px}
+.value{text-align:right;font-weight:700}
+.value small{display:block;color:var(--muted);font-weight:400;margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{background:#fbfbfa;border:1px solid var(--line);border-radius:18px;padding:14px}
+.metric span{font-size:12px;color:var(--muted)}
+.metric b{display:block;font-size:21px;margin-top:5px}
+.overview-hero .metric small{line-height:1.35;min-height:16px}
+.bar{height:7px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:11px}
+.bar i{display:block;height:100%;background:#8f8f8b;border-radius:99px}
+.bar i.over{background:var(--red)}
+.chart{display:flex;height:150px;align-items:flex-end;gap:8px;padding:12px 0 28px;overflow:visible}
+.chart div{flex:1;background:#dcdcd8;border-radius:7px 7px 3px 3px;min-height:5px;position:relative}
+.chart div:last-child{background:#9a9a95}
+.chart div em{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-style:normal;font-size:10px;color:var(--muted)}
+label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px}
+.field{width:100%;border:1px solid var(--line);border-radius:13px;background:#fbfbfa;padding:12px;outline:none}
+.note{font-size:12px;color:var(--muted);line-height:1.55;margin:10px 2px}
+.notice{font-size:12px;border-left:3px solid #888;padding:9px 11px;background:#f1f1ee;border-radius:4px 10px 10px 4px;line-height:1.5}
+.tabbar{position:fixed;z-index:10;bottom:calc(12px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(calc(100% - 24px),436px);background:rgba(214,214,210,.96);backdrop-filter:blur(18px);border-radius:25px;padding:6px;display:grid;grid-template-columns:repeat(3,1fr);box-shadow:0 10px 32px rgba(0,0,0,.25)}
+.tab{border:0;background:transparent;color:#3f3f3f;border-radius:19px;padding:11px 8px;font-size:13px;font-weight:650}
+.tab.active{background:#f7f7f5;color:#111}
+.empty{text-align:center;color:var(--muted);padding:28px 10px;font-size:13px}
+.toast{position:fixed;z-index:20;left:50%;bottom:105px;transform:translate(-50%,15px);background:#d8d8d4;color:#111;padding:10px 15px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:.2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+input[type=file]{display:none}
+@media(min-width:700px){body{padding-top:20px}.app{border:1px solid var(--line);border-radius:32px;overflow:hidden;min-height:850px;box-shadow:var(--shadow)}}
+.hint{font-size:12px;color:var(--muted);line-height:1.7;margin:10px 2px 0}
+.dist{display:grid;gap:11px}
+.dist-row{display:grid;grid-template-columns:minmax(72px,auto) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.dist-track{height:8px;background:#e6e6e2;border-radius:99px;overflow:hidden}
+.dist-fill{height:100%;background:#9b9b96;border-radius:99px}
+.dist-value{font-weight:700;white-space:nowrap}
+.overview-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(108px,auto);gap:10px}
+.overview-hero .metric{min-width:0;height:100%;display:flex;flex-direction:column;justify-content:center}
+.overview-hero .metric:first-child{grid-column:auto}
+.month-chart{display:flex;height:160px;align-items:flex-end;gap:7px;padding:10px 0 28px}
+.month-chart div{flex:1;min-width:0;background:#cececa;border-radius:6px 6px 2px 2px;position:relative;min-height:4px}
+.month-chart em{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap}
+.ai-only{padding:13px;background:#f1f1ee;border-radius:14px;color:#555;font-size:13px;line-height:1.65}
+textarea::placeholder{color:#92928e;opacity:1}
+.recent-scroll{height:252px;min-height:252px;max-height:252px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#bdbdb8 transparent}
+.recent-scroll::-webkit-scrollbar{width:5px}
+.recent-scroll::-webkit-scrollbar-thumb{background:#bdbdb8;border-radius:9px}
+.ai-summary{margin-top:18px}
+.summary-body{min-height:98px;font-size:13px;line-height:1.7;color:#444;white-space:pre-wrap}
+.summary-meta{font-size:11px;color:var(--muted);margin-top:8px}
+.summary-loading{color:var(--muted)}
+.day-stat{margin-top:10px}
+</style></head>
+<body><main class="app">
+
+<section class="content">
+<div id="inputView" class="view active">
+  <div class="hero"><div class="eyebrow">当前可用资金</div><div class="amount" id="availableHero">¥0.00</div><div class="hero-row"><div class="hero-stat"><span>本月支出</span><b class="expense" id="monthExpense">¥0</b></div><div class="hero-stat"><span>本月收入</span><b class="income" id="monthIncome">¥0</b></div></div></div>
+
+  <div class="quick"><button class="chip">☕ 咖啡 25 @微信</button><button class="chip">💰 工资收入 8000 到工资卡</button><button class="chip">↔️ 从微信转账500到储蓄卡</button><button class="chip">💳 用储蓄卡还信用卡1000</button></div>
+  <div class="card composer"><textarea id="command" placeholder="#标签  @引用账户  （创建账户）\n支出/转入/转出/收入/还款 金额\n\\ 后面的内容作为备注\n日预算100 / 今天日预算150 / 11月5日至10日每天预算200\n//#、//@、//（）删除相关信息"></textarea><div id="preview" class="preview"></div><div class="actions"><label for="imageInput" class="btn secondary icon upload-plus" aria-label="上传图片"><span class="plus" aria-hidden="true">+</span></label><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp"><div id="autoStatus" class="btn secondary grow" style="text-align:center;pointer-events:none">等待输入</div></div></div>
+
+  <div class="section-title"><h2>最近记录</h2><span id="txCount">0 笔</span></div><div class="card recent-scroll" id="recentList"></div>
+    <div class="section-title ai-summary"><h2>AI 消费总结</h2><span id="summaryRange">今日 · 本周 · 本月</span></div><div class="card"><div id="aiSummary" class="summary-body">暂无消费数据</div><div id="summaryMeta" class="summary-meta"></div></div>
+</div>
+<div id="overviewView" class="view">
+    <div class="grid2 overview-hero"><div class="metric"><span>可用金额</span><b id="overviewAvailable">¥0.00</b></div><div class="metric"><span>月预算剩余</span><b id="budgetRemaining">¥0.00</b></div><div class="metric"><span>当日消费</span><b class="expense" id="todayExpense">¥0.00</b></div><div class="metric"><span>日预算剩余</span><b id="dailyBudgetRemaining">¥0.00</b><small id="dailyBudgetDetail" style="display:block;color:var(--muted);margin-top:5px"></small></div></div><span id="totalAssets" hidden></span><span id="creditDebt" hidden></span>
+    <div class="section-title"><h2>可用金额分布</h2><span id="accountCount">0 个账户</span></div><div class="card dist" id="availableDist"></div>
+    <div class="section-title"><h2>当日消费占比</h2><span id="todayExpenseText">¥0.00</span></div><div class="card dist" id="todayDist"></div>
+    <div class="section-title"><h2>当月消费占比</h2><span id="monthExpenseText">¥0.00</span></div><div class="card dist" id="monthDist"></div>
+    <div class="section-title"><h2>每月消费趋势</h2><span>近 6 个月</span></div><div class="card"><div id="monthlyTrend" class="month-chart"></div></div>
+    <div class="section-title"><h2>账户明细</h2><span></span></div><div class="card" id="accountList"></div>
+    <span id="budgetText" hidden></span><span id="budgetDetail" hidden></span><span id="budgetPct" hidden></span><i id="budgetBar" hidden></i><div id="trendChart" hidden></div><div id="categoryList" hidden></div>
+  </div>
+  <div id="settingsView" class="view">
+    <div class="section-title"><h2>AI 连接</h2><span id="apiStatus">未配置</span></div><div class="card">
+      <label>API 地址</label><input class="field" id="apiBase" value="https://api.deepseek.com">
+      <label>文本模型</label><input class="field" id="textModel" value="deepseek-chat">
+      <label>图片模型</label><input class="field" id="visionModel" value="deepseek-flash">
+      <label>API Key</label><input class="field" id="apiKey" type="password" placeholder="sk-...">
+      <label><input id="rememberKey" type="checkbox"> 在本机保存 API Key</label>
+      <button id="saveApi" class="btn" style="width:100%;margin-top:14px">保存连接</button>
+    </div>
+    <div class="section-title"><h2>AI 自动管理</h2></div><div class="ai-only">账户创建、账户删除、标签、交易类型、月预算、固定日预算、指定日期或期间的日预算、账户引用、备注与日期时间均通过录入文字或图片自动识别，不再提供手动账户和预算控件。</div>
+    <div class="section-title"><h2>数据管理</h2></div><div class="card"><button id="exportBtn" class="btn secondary" style="width:100%">导出本地 JSON 备份</button><label for="importInput" class="btn secondary" style="display:block;text-align:center;margin-top:9px;color:#151515">导入 JSON 备份</label><input id="importInput" type="file" accept="application/json"><button id="clearBtn" class="btn" style="width:100%;margin-top:9px;background:#e0d6d6;color:#7f2020">清空全部本地数据</button></div>
+  </div>
+</section></main>
+<nav class="tabbar"><button class="tab active" data-view="inputView">录入</button><button class="tab" data-view="overviewView">总览</button><button class="tab" data-view="settingsView">设置</button></nav><div id="toast" class="toast"></div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const DB={accounts:[],tx:[],tags:[],budget:{daily:0,monthly:0,dailyOverrides:[]},settings:{apiBase:'https://api.deepseek.com',textModel:'deepseek-chat',visionModel:'deepseek-flash',rememberKey:false,apiKey:'',timeOffsetMs:0,timeZone:'Asia/Kuala_Lumpur',lastTimeSync:0,lastSummaryKey:'',lastSummaryText:'',lastSummaryAt:0}};
+const DEFAULT_SETTINGS={apiBase:'https://api.deepseek.com',textModel:'deepseek-chat',visionModel:'deepseek-flash',rememberKey:false,apiKey:'',timeOffsetMs:0,timeZone:'Asia/Kuala_Lumpur',lastTimeSync:0,lastSummaryKey:'',lastSummaryText:'',lastSummaryAt:0};
+const DEFAULT_BUDGET={daily:0,monthly:0,dailyOverrides:[]};
+const PRESET_TAGS=['加油','饮料','早餐','午餐','晚餐','保养','车险','过路费','房租','水电费','咖啡','电话费'];
+const icons={早餐:'🥐',午餐:'🍱',晚餐:'🍲',餐饮:'🍜',饮料:'🥤',咖啡:'☕',零食:'🍪',交通:'🚕',加油:'⛽',保养:'🔧',车险:'🚗',过路费:'🛣️',房租:'🏠',水电费:'💡',电话费:'📱',购物:'🛍️',日用:'🧻',住房:'🏠',水电:'💡',娱乐:'🎬',医疗:'💊',教育:'📚',旅行:'✈️',收入:'💰',转账:'↔️',还款:'💳',其他:'•'};
+const categoryRules=[['早餐',/早餐|早饭|包子|豆浆|油条/],['午餐',/午餐|午饭|中饭|工作餐/],['晚餐',/晚餐|晚饭|夜宵/],['咖啡',/咖啡|拿铁|美式|卡布奇诺/],['饮料',/饮料|奶茶|果汁|可乐|矿泉水|水(?!电)/],['零食',/零食|饼干|薯片|巧克力/],['餐饮',/餐|饭|面|外卖|火锅|烧烤/],['加油',/加油|汽油|柴油|油费/],['交通',/打车|出租车|滴滴|地铁|公交|停车|过路费|高速费/],['购物',/购物|买了|购买|淘宝|京东/],['日用',/日用|纸巾|洗衣液|清洁/],['住房',/房租|租金|物业|房贷/],['水电',/水费|电费|燃气|宽带/],['娱乐',/电影|游戏|演出|KTV/],['医疗',/药|医院|诊所|体检/],['教育',/课程|学费|书籍|培训/],['旅行',/机票|酒店|旅行|旅游/],['收入',/工资|奖金|收入|报销|退款/]];
+const money=n=>'¥'+Number(n||0).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+function uid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random().toString(16).slice(2)}
+const IDB_NAME='flow_ledger_db',IDB_STORE='state';
+function openIDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(IDB_NAME,1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(IDB_STORE))db.createObjectStore(IDB_STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+function normalizeDB(x={}){
+  DB.accounts=Array.isArray(x.accounts)?x.accounts:[];
+  DB.tx=Array.isArray(x.tx)?x.tx:[];
+  DB.tags=Array.isArray(x.tags)?x.tags:[];
+  DB.budget={...DEFAULT_BUDGET,...(x.budget||{})};
+  DB.budget.daily=Number(DB.budget.daily)||0;
+  DB.budget.monthly=Number(DB.budget.monthly)||0;
+  DB.budget.dailyOverrides=Array.isArray(DB.budget.dailyOverrides)?DB.budget.dailyOverrides:[];
+  DB.settings={...DEFAULT_SETTINGS,...(x.settings||{})};
+  DB.settings.timeOffsetMs=Number(DB.settings.timeOffsetMs)||0;
+  DB.settings.lastTimeSync=Number(DB.settings.lastTimeSync)||0;
+  DB.settings.lastSummaryAt=Number(DB.settings.lastSummaryAt)||0;
+}
+async function save(){const snapshot=JSON.parse(JSON.stringify(DB));if(!snapshot.settings.rememberKey)snapshot.settings.apiKey='';try{const db=await openIDB();await new Promise((resolve,reject)=>{const tx=db.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).put(snapshot,'ledger');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();localStorage.setItem('flow_ledger_storage_marker','indexeddb')}catch(e){localStorage.setItem('flow_ledger_v1',JSON.stringify(snapshot))}}
+async function load(){let x=null;try{const db=await openIDB();x=await new Promise((resolve,reject)=>{const r=db.transaction(IDB_STORE).objectStore(IDB_STORE).get('ledger');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});db.close()}catch(e){}if(!x){try{x=JSON.parse(localStorage.getItem('flow_ledger_v1'))}catch(e){}}normalizeDB(x||{});if(!DB.settings.rememberKey)DB.settings.apiKey=sessionStorage.getItem('flow_api_key')||'';else sessionStorage.removeItem('flow_api_key')}
+function exportSnapshot(){const snapshot=JSON.parse(JSON.stringify(DB));snapshot.settings.apiKey='';return snapshot}
+async function clearStorage(){try{await new Promise(resolve=>{const r=indexedDB.deleteDatabase(IDB_NAME);r.onsuccess=r.onerror=r.onblocked=()=>resolve()})}catch(e){}localStorage.removeItem('flow_ledger_v1');localStorage.removeItem('flow_ledger_storage_marker');sessionStorage.removeItem('flow_api_key')}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
+function account(name,type='cash',balance=0,limit=0){let a=DB.accounts.find(x=>x.name===name);if(!a){a={id:uid(),name,type,balance:Number(balance),limit:Number(limit),used:type==='credit'?Number(balance):0,aliases:[],isDefault:false};DB.accounts.push(a)}return a}
+function ensureDemo(){DB.tags=[...new Set([...PRESET_TAGS,...(DB.tags||[])])]}
+function categoryOf(s){for(const [name,re] of categoryRules)if(re.test(s))return name;return'其他'}
+function accountAliases(a){return [a.name,...(a.aliases||[])].filter(Boolean)}
+function detectMentionedAccount(text){const lower=text.toLowerCase();return DB.accounts.find(a=>accountAliases(a).some(n=>lower.includes(String(n).toLowerCase())))}
+function inferAccount(text,category,type){const direct=detectMentionedAccount(text);if(direct)return direct.name;const eligible=DB.accounts.filter(a=>type==='repayment'?a.type!=='credit':true);const scored=eligible.map(a=>{let score=0;for(const t of DB.tx.slice(0,100)){const same=(t.account===a.name||t.from===a.name);if(!same)continue;if(t.category===category)score+=4;else score+=1}if(a.isDefault)score+=3;return[a,score]}).sort((x,y)=>y[1]-x[1]);return scored[0]?.[0]?.name||DB.accounts[0]?.name||''}
+function aiContext(){return JSON.stringify({accounts:DB.accounts.map(a=>({name:a.name,type:a.type,aliases:a.aliases||[],isDefault:!!a.isDefault})),recentPatterns:DB.tx.slice(0,30).map(t=>({account:t.account||t.from||'',category:t.category,note:t.note}))})}
+function dateKey(d){const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`}
+  function parseBudgetDate(s,base=calibratedNow()){const t=String(s||'').trim();if(!t)return null;if(t==='今天'||t==='今日')return dateKey(base);if(t==='明天'){const d=new Date(base);d.setDate(d.getDate()+1);return dateKey(d)};if(t==='后天'){const d=new Date(base);d.setDate(d.getDate()+2);return dateKey(d)};let m=t.match(/(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})日?/);if(m)return dateKey(new Date(+m[1],+m[2]-1,+m[3]));m=t.match(/(\d{1,2})[-/.月](\d{1,2})日?/);if(m)return dateKey(new Date(base.getFullYear(),+m[1]-1,+m[2]));return null}
+  function setDailyBudget(amount,startDate='',endDate=''){DB.budget.dailyOverrides=Array.isArray(DB.budget.dailyOverrides)?DB.budget.dailyOverrides:[];if(!startDate&&!endDate){DB.budget.daily=Number(amount)||0;return}const start=parseBudgetDate(startDate)||dateKey(calibratedNow()),end=parseBudgetDate(endDate)||start;DB.budget.dailyOverrides.push({id:uid(),amount:Number(amount)||0,startDate:start<=end?start:end,endDate:start<=end?end:start,createdAt:calibratedNow().toISOString()})}
+  function effectiveDailyBudget(d=calibratedNow()){const key=dateKey(d),list=(DB.budget.dailyOverrides||[]).filter(x=>x.startDate<=key&&x.endDate>=key).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));return{amount:Number(list[0]?.amount??DB.budget.daily??0),source:list[0]?'specified':'default',rule:list[0]||null}}
+  function localParse(raw){
+   const noteParts=raw.split('\\'), text=noteParts.shift().trim(), note=noteParts.join('\\').trim();
+   const actions=[];
+   for(const m of text.matchAll(/\/\/#([\w\u4e00-\u9fff-]+)/g))actions.push({action:'delete_tag',tag:m[1],summary:'删除标签 #'+m[1]});
+   for(const m of text.matchAll(/\/\/@([^\s，,。#（）()]+)/g))actions.push({action:'delete_account',account:m[1],summary:'删除账户 '+m[1]});
+   for(const m of text.matchAll(/\/\/（([^）]+)）|\/\/\(([^)]+)\)/g))actions.push({action:'delete_account',account:(m[1]||m[2]).trim(),summary:'删除账户 '+(m[1]||m[2]).trim()});
+   const clean=text.replace(/\/\/[#@][^\s，,。]+/g,'').replace(/\/\/（[^）]+）|\/\/\([^)]+\)/g,'');
+   const tags=[...clean.matchAll(/#([\w\u4e00-\u9fff-]+)/g)].map(m=>m[1]); tags.forEach(t=>{if(!DB.tags.includes(t))DB.tags.push(t)});
+   const creates=[...clean.matchAll(/（([^）]+)）|\(([^)]+)\)/g)].map(m=>(m[1]||m[2]).trim()).filter(Boolean);
+   const nums=[...clean.matchAll(/(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元)?/g)].map(m=>Number(m[1])); const amount=nums[0]||0;
+   creates.forEach(name=>actions.push({action:'account',account:name,account_type:/信用卡/.test(clean)?'credit':'cash',amount:/余额|已用/.test(clean)?amount:0,limit:(clean.match(/额度\s*(\d+(?:\.\d+)?)/)||[])[1]||0,summary:'创建账户 '+name}));
+   const refs=[...clean.matchAll(/@([^\s，,。#（）()]+)/g)].map(m=>m[1]);
+   const transferFromTo=clean.match(/(?:从\s*)?([^\s，,。]+?)\s*(?:转账|转)\s*(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元)?\s*(?:到|至)\s*([^\s，,。]+)/);
+   const repayFromTo=clean.match(/(?:用\s*)?([^\s，,。]+?)\s*(?:还款|还)\s*([^\s，,。0-9]+?)\s*(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元)?/);
+   const category=tags[0]||categoryOf(clean), summary=note||clean.replace(/[@#（）()]/g,'').trim().slice(0,48);
+   if(/日预算|每日预算|每天预算/.test(clean)){const range=clean.match(/(?:从)?\s*(今天|今日|明天|后天|\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?|\d{1,2}[-/.月]\d{1,2}日?)\s*(?:到|至|—|~)\s*(今天|今日|明天|后天|\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?|\d{1,2}[-/.月]\d{1,2}日?)/);const single=!range&&clean.match(/(今天|今日|明天|后天|\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?|\d{1,2}[-/.月]\d{1,2}日?)/);actions.push({action:'daily_budget',amount,start_date:range?.[1]||single?.[1]||'',end_date:range?.[2]||single?.[1]||'',summary:'设置日预算 '+amount});return actions}
+   if(/月预算|每月预算/.test(clean)){actions.push({action:'budget',amount,summary:'设置月预算 '+amount});return actions}
+   if(/还款|还信用卡/.test(clean)){const amt=repayFromTo?Number(repayFromTo[3]):amount;actions.push({action:'repayment',from:repayFromTo?.[1]||refs[0]||'',to:repayFromTo?.[2]||refs[1]||DB.accounts.find(a=>a.type==='credit')?.name||'',amount:amt,category:'还款',summary,note});return actions}
+   if(/转出|转账/.test(clean)){const amt=transferFromTo?Number(transferFromTo[2]):amount;actions.push({action:'transfer',from:transferFromTo?.[1]||refs[0]||'',to:transferFromTo?.[3]||refs[1]||'',amount:amt,category:'转账',summary,note});return actions}
+   if(/转入/.test(clean)&&refs.length>1){actions.push({action:'transfer',from:refs[0],to:refs[1],amount,category:'转账',summary,note});return actions}
+   if(/收入|工资|奖金|报销|退款|入账|收到/.test(clean)){actions.push({action:'income',account:refs[0]||inferAccount(clean,category,'income'),amount,category:tags[0]||'收入',tags,summary,note});return actions}
+   if(/支出|消费|支付|买|花费|付款/.test(clean)||amount>0){actions.push({action:'expense',account:refs[0]||inferAccount(clean,category,'expense'),amount,category,tags,summary,note});return actions}
+   return actions
+  }
+  const SYSTEM=`你是个人财务记账与银行截图解析器，只返回JSON。支持 actions 数组。动作 action 可为 account、delete_account、delete_tag、budget、daily_budget、expense、income、transfer、repayment。语法：#名称是标签；@名称是账户引用；（名称）是创建账户；//#标签、//@账户、//（账户）是删除；反斜杠之后是备注。支出、转入、转出、收入、还款、月预算是强意图关键字；例如“月预算3000”返回 budget；“每天预算100”返回不带日期的 daily_budget；“今天日预算150”返回 start_date 和 end_date 为今天；“11月5日至11月10日每天预算200”返回对应期间。未指定日期的日预算是固定默认值，指定日期或期间只在范围内覆盖默认值。识别自然语言意图时仍须遵循这些显式符号。每个交易返回 amount、account/from/to、category、tags、summary、note。截图可识别账户、余额、信用额度和交易。账户间转账不计消费。`;
+
+async function apiParse(text,image){const s=DB.settings;if(!s.apiKey) throw new Error('NO_KEY');let content=image?[{type:'text',text:SYSTEM+'\n可用账户及本机历史模式：'+aiContext()+'\n用户输入：'+text},{type:'image_url',image_url:{url:image,detail:'high'}}]:SYSTEM+'\n可用账户及本机历史模式：'+aiContext()+'\n用户输入：'+text;const r=await fetch(s.apiBase.replace(/\/$/,'')+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.apiKey},body:JSON.stringify({model:image?s.visionModel:s.textModel,messages:[{role:'user',content}],temperature:0,response_format:{type:'json_object'}})});updateTimeFromHeader(r);if(!r.ok)throw new Error('API '+r.status);const j=await r.json();return JSON.parse(j.choices[0].message.content)}
+let pending=null,imageData='',autoTimer=null,processing=false,lastPayload='';
+function normalizeActions(r){return Array.isArray(r)?r:(Array.isArray(r?.actions)?r.actions:[r]).filter(Boolean)}
+function validAction(x){if(!x||!['account','delete_account','delete_tag','budget','daily_budget','expense','income','transfer','repayment'].includes(x.action))return false;if(x.action==='account'||x.action==='delete_account')return !!String(x.account||'').trim();if(x.action==='delete_tag')return !!String(x.tag||'').trim();if(x.action==='budget'||x.action==='daily_budget')return Number(x.amount)>0;if(!(Number(x.amount)>0))return false;if(x.action==='transfer'||x.action==='repayment')return !!x.from&&!!x.to;return !!x.account}
+function showPreview(p){const arr=normalizeActions(p);pending=p;$('#preview').classList.add('show');$('#preview').innerHTML='<b>已自动识别并入账</b><br>'+arr.map(x=>`${icons[x.category]||'•'} ${x.summary||x.action} · ${money(x.amount)} · ${x.account||x.from||'-'}${x.to?' → '+x.to:''}${x.tags?.length?' · #'+x.tags.join(' #'):''}`).join('<br>')}
+async function processCurrent(force=false){const text=$('#command').value.trim(),payload=text+'|'+(imageData?imageData.slice(-80):'');if((!text&&!imageData)||processing||(!force&&payload===lastPayload))return;processing=true;lastPayload=payload;$('#autoStatus').textContent='AI识别中…';try{await calibrateTime();let result=DB.settings.apiKey?await apiParse(text||'识别图片内的全部银行账户、账户类型、余额、信用额度及交易信息，并创建对应动作',imageData):localParse(text);const actions=normalizeActions(result).filter(validAction);if(!actions.length)throw new Error('未识别到完整的账户或交易');DB.settings.lastSummaryKey='';for(const x of actions){(x.tags||[]).forEach(t=>{if(!DB.tags.includes(t))DB.tags.push(t)});applyOne(x)}await save();showPreview(result);imageData='';$('#imageInput').value='';$('#command').value='';render();toast('已自动识别并保存');$('#autoStatus').textContent='已保存'}catch(e){lastPayload='';$('#autoStatus').textContent='识别失败';toast('自动处理失败：'+e.message)}finally{processing=false;setTimeout(()=>{if($('#autoStatus').textContent==='已保存')$('#autoStatus').textContent='等待输入'},1400)}}
+function scheduleAuto(){clearTimeout(autoTimer);$('#autoStatus').textContent='等待输入完成…';autoTimer=setTimeout(()=>processCurrent(false),1200)}
+function calibratedNow(){return new Date(Date.now()+Number(DB.settings.timeOffsetMs||0))}
+function updateTimeFromHeader(response){try{const raw=response.headers.get('Date');if(!raw)return false;const server=Date.parse(raw);if(!Number.isFinite(server))return false;DB.settings.timeOffsetMs=server-Date.now();DB.settings.lastTimeSync=Date.now();save();return true}catch(e){return false}}
+async function calibrateTime(){try{const base=(DB.settings.apiBase||'').replace(/\/$/,'');if(!base)return false;const started=Date.now(),r=await fetch(base,{method:'HEAD',cache:'no-store'}),ended=Date.now(),server=Date.parse(r.headers.get('Date'));if(!Number.isFinite(server))return false;DB.settings.timeOffsetMs=server-Math.round((started+ended)/2);DB.settings.lastTimeSync=Date.now();await save();return true}catch(e){return false}}
+function applyApiSettings(next={}){const allowed=['apiBase','textModel','visionModel','rememberKey','apiKey','timeZone'];for(const k of allowed)if(Object.prototype.hasOwnProperty.call(next,k))DB.settings[k]=next[k];if(next.dailyBudget!==undefined)DB.budget.daily=Number(next.dailyBudget)||0;if(Array.isArray(next.dailyBudgetOverrides))DB.budget.dailyOverrides=next.dailyBudgetOverrides;if(next.monthlyBudget!==undefined)DB.budget.monthly=Number(next.monthlyBudget)||0;save();render();return JSON.parse(JSON.stringify({settings:DB.settings,budget:DB.budget}))}
+window.FlowLedger=Object.assign(window.FlowLedger||{},{setSettings:applyApiSettings,getSettings:()=>JSON.parse(JSON.stringify({settings:DB.settings,budget:DB.budget})),calibrateTime,now:()=>calibratedNow().toISOString()});
+function applyOne(p){if(!p||!p.action)return;const amt=Number(p.amount||0),date=calibratedNow().toISOString();if(p.action==='daily_budget'){setDailyBudget(amt,p.start_date||'',p.end_date||'')}else if(p.action==='budget'){DB.budget.monthly=amt}else if(p.action==='delete_tag'){DB.tags=DB.tags.filter(t=>t!==p.tag)}else if(p.action==='delete_account'){DB.accounts=DB.accounts.filter(a=>a.name!==p.account);DB.tx=DB.tx.filter(t=>t.account!==p.account&&t.from!==p.account&&t.to!==p.account)}else if(p.action==='account'){const existed=DB.accounts.find(a=>a.name===p.account);const a=account(p.account,p.account_type||'cash',amt,p.limit||0);a.type=p.account_type||a.type;if(existed){if(a.type==='credit')a.used=amt;else a.balance=amt;if(Number(p.limit)>0)a.limit=Number(p.limit)}}else if(p.action==='transfer'){const a=account(p.from),b=account(p.to);a.balance-=amt;b.balance+=amt;DB.tx.unshift({id:uid(),type:'transfer',amount:amt,from:a.name,to:b.name,category:'转账',note:p.note||p.summary,date})}else if(p.action==='repayment'){const a=account(p.from),b=account(p.to,'credit');a.balance-=amt;b.used=Math.max(0,(b.used||0)-amt);DB.tx.unshift({id:uid(),type:'repayment',amount:amt,from:a.name,to:b.name,category:'还款',note:p.note||p.summary,date})}else{const a=account(p.account||'未指定账户',/信用卡/.test(p.account||'')?'credit':'cash');if(a.type==='credit'){if(p.action==='expense')a.used=(a.used||0)+amt;else a.used=Math.max(0,(a.used||0)-amt)}else a.balance+=p.action==='income'?amt:-amt;DB.tx.unshift({id:uid(),type:p.action,amount:amt,account:a.name,category:p.category||'其他',note:p.note||p.summary,date})}}
+function calc(){const cash=DB.accounts.filter(a=>a.type!=='credit').reduce((s,a)=>s+a.balance,0),debt=DB.accounts.filter(a=>a.type==='credit').reduce((s,a)=>s+(a.used||0),0),now=calibratedNow(),month=DB.tx.filter(t=>{const d=new Date(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});return{cash,debt,available:cash-debt,expense:month.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0),income:month.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)}}
+function expenseStats(){
+   const now=calibratedNow(), startToday=new Date(now.getFullYear(),now.getMonth(),now.getDate()), startWeek=new Date(startToday);startWeek.setDate(startToday.getDate()-((startToday.getDay()+6)%7));const startMonth=new Date(now.getFullYear(),now.getMonth(),1);
+   const expense=DB.tx.filter(t=>t.type==='expense'), sum=arr=>arr.reduce((x,t)=>x+Number(t.amount||0),0), byCat=arr=>Object.entries(arr.reduce((o,t)=>(o[t.category]=(o[t.category]||0)+Number(t.amount||0),o),{})).sort((a,b)=>b[1]-a[1]);
+   const today=expense.filter(t=>new Date(t.date)>=startToday),week=expense.filter(t=>new Date(t.date)>=startWeek),month=expense.filter(t=>new Date(t.date)>=startMonth);
+   return{today,week,month,todayTotal:sum(today),weekTotal:sum(week),monthTotal:sum(month),todayCats:byCat(today),weekCats:byCat(week),monthCats:byCat(month)}
+  }
+  function localSummary(st){const top=a=>a.length?`${a[0][0]} ${money(a[0][1])}`:'暂无';return `今日消费 ${money(st.todayTotal)}，主要为${top(st.todayCats)}。\n本周消费 ${money(st.weekTotal)}，主要为${top(st.weekCats)}。\n本月消费 ${money(st.monthTotal)}，主要为${top(st.monthCats)}。`}
+  async function updateAISummary(force=false){
+   const box=$('#aiSummary'),meta=$('#summaryMeta');if(!box)return;const st=expenseStats(),key=JSON.stringify([st.todayTotal,st.weekTotal,st.monthTotal,DB.tx[0]?.id||'']);
+   if(!force&&DB.settings.lastSummaryKey===key&&DB.settings.lastSummaryText){box.textContent=DB.settings.lastSummaryText;meta.textContent='根据当前账本自动更新';return}
+   if(!st.month.length){box.textContent='暂无消费数据';meta.textContent='新增支出后会自动总结今日、本周和本月情况';return}
+   const dayBudget=effectiveDailyBudget(),dayLeft=dayBudget.amount-st.todayTotal;const budgetLine=dayBudget.amount?`\n今日日预算 ${money(dayBudget.amount)}，剩余 ${money(dayLeft)}。`:'';const fallback=localSummary(st)+budgetLine;if(!DB.settings.apiKey){box.textContent=fallback;meta.textContent='本地统计总结';return}
+   box.textContent='AI 正在总结…';box.classList.add('summary-loading');
+   try{const prompt=`请用简洁中文总结以下个人消费统计，严格分为今日、本周、本月三句，并指出主要类别，不给理财建议。数据：${JSON.stringify({今日总额:st.todayTotal,今日分类:st.todayCats,本周总额:st.weekTotal,本周分类:st.weekCats,本月总额:st.monthTotal,本月分类:st.monthCats,今日日预算:dayBudget.amount,今日日预算剩余:dayLeft})}`;const r=await fetch(DB.settings.apiBase.replace(/\/$/,'')+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+DB.settings.apiKey},body:JSON.stringify({model:DB.settings.textModel,messages:[{role:'user',content:prompt}],temperature:.2})});updateTimeFromHeader(r);if(!r.ok)throw new Error('API '+r.status);const j=await r.json(),text=(j.choices?.[0]?.message?.content||fallback).trim();DB.settings.lastSummaryKey=key;DB.settings.lastSummaryText=text;DB.settings.lastSummaryAt=Date.now();await save();box.textContent=text;meta.textContent='AI 根据当前账本自动生成'}catch(e){box.textContent=fallback;meta.textContent='AI 暂不可用，已显示本地统计总结'}finally{box.classList.remove('summary-loading')}
+  }
+  function distHTML(rows,total){if(!rows.length||!total)return '<div class="empty">暂无数据</div>';return rows.sort((a,b)=>b[1]-a[1]).map(([name,value])=>`<div class="dist-row"><span>${name}</span><div class="dist-track"><div class="dist-fill" style="width:${Math.max(2,value/total*100)}%"></div></div><span class="dist-value">${Math.round(value/total*100)}%</span></div>`).join('')}
+  function render(){const c=calc(),now=calibratedNow();$('#availableHero').textContent=money(c.available);$('#monthExpense').textContent=money(c.expense);$('#monthIncome').textContent=money(c.income);$('#totalAssets').textContent=money(c.cash);$('#creditDebt').textContent=money(c.debt);$('#overviewAvailable').textContent=money(c.available);$('#txCount').textContent=DB.tx.length+' 笔';$('#accountCount').textContent=DB.accounts.length+' 个账户';const st=expenseStats(),budgetBase=Number(DB.budget.monthly||0),budgetLeft=budgetBase?budgetBase-st.monthTotal:c.available;$('#budgetRemaining').textContent=money(budgetLeft);$('#budgetRemaining').className=budgetLeft<0?'expense':'';$('#todayExpense').textContent=money(st.todayTotal);const dayBudget=effectiveDailyBudget(now),dayLeft=dayBudget.amount-st.todayTotal;$('#dailyBudgetRemaining').textContent=money(dayLeft);$('#dailyBudgetRemaining').className=dayLeft<0?'expense':'';$('#dailyBudgetDetail').textContent=dayBudget.amount?(dayBudget.source==='specified'?`指定预算 ${money(dayBudget.amount)} · ${dayBudget.rule.startDate}${dayBudget.rule.endDate!==dayBudget.rule.startDate?' 至 '+dayBudget.rule.endDate:''}`:`固定预算 ${money(dayBudget.amount)}`):'尚未设置日预算';setTimeout(()=>updateAISummary(false),0);
+   $('#recentList').innerHTML=DB.tx.slice(0,8).map(t=>`<div class="row"><div class="left"><div class="ico">${icons[t.category]||'•'}</div><div class="meta"><b>${t.note||t.category}</b><span>${t.account||((t.from||'')+' → '+(t.to||''))} · ${new Date(t.date).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div></div><div class="value ${t.type==='expense'?'expense':t.type==='income'?'income':''}">${t.type==='income'?'+':t.type==='expense'?'-':''}${money(t.amount)}</div></div>`).join('')||'<div class="empty">还没有记录</div>';
+   $('#accountList').innerHTML=DB.accounts.map(a=>`<div class="row"><div class="left"><div class="ico">${a.type==='credit'?'💳':'◉'}</div><div class="meta"><b>${a.name}</b><span>${a.type==='credit'?'信用卡':'资金账户'}</span></div></div><div class="value ${a.type==='credit'?'expense':''}">${money(a.type==='credit'?a.used:a.balance)}<small>${a.type==='credit'?'可用 '+money((a.limit||0)-(a.used||0)):''}</small></div></div>`).join('')||'<div class="empty">使用（账户名）自动创建账户</div>';
+   const avail=DB.accounts.map(a=>[a.name,Math.max(0,a.type==='credit'?(a.limit||0)-(a.used||0):a.balance)]).filter(x=>x[1]>0),availTotal=avail.reduce((s,x)=>s+x[1],0);$('#availableDist').innerHTML=distHTML(avail,availTotal);
+   const expenseTx=DB.tx.filter(t=>t.type==='expense'),today=expenseTx.filter(t=>new Date(t.date).toDateString()===now.toDateString()),month=expenseTx.filter(t=>{const d=new Date(t.date);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()});
+   const group=arr=>Object.entries(arr.reduce((o,t)=>(o[t.category]=(o[t.category]||0)+t.amount,o),{})),todayTotal=today.reduce((s,t)=>s+t.amount,0),monthTotal=month.reduce((s,t)=>s+t.amount,0);$('#todayExpenseText').textContent=money(todayTotal);$('#monthExpenseText').textContent=money(monthTotal);$('#todayDist').innerHTML=distHTML(group(today),todayTotal);$('#monthDist').innerHTML=distHTML(group(month),monthTotal);
+   const months=[...Array(6)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return d}),vals=months.map(m=>expenseTx.filter(t=>{const d=new Date(t.date);return d.getFullYear()===m.getFullYear()&&d.getMonth()===m.getMonth()}).reduce((a,t)=>a+t.amount,0)),mx=Math.max(1,...vals);$('#monthlyTrend').innerHTML=vals.map((v,i)=>`<div style="height:${Math.max(4,v/mx*100)}%" title="${money(v)}"><em>${months[i].getMonth()+1}月</em></div>`).join('');
+   $('#apiStatus').textContent=DB.settings.apiKey?'已配置':'未配置'
+  }
+$$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.view').forEach(v=>v.classList.remove('active'));$('#'+b.dataset.view).classList.add('active');render()});$$('.chip').forEach(b=>b.onclick=()=>{$('#command').value=b.textContent.replace(/^[^\s]+\s/,'');$('#command').focus();scheduleAuto()});$('#command').addEventListener('input',scheduleAuto);$('#command').addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(scheduleAuto,0)});
+$('#imageInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imageData=r.result;$('#autoStatus').textContent='识别截图中…';processCurrent(true)};r.readAsDataURL(f)};
+$('#saveApi').onclick=async()=>{DB.settings.apiBase=$('#apiBase').value.trim();DB.settings.textModel=$('#textModel').value.trim();DB.settings.visionModel=$('#visionModel').value.trim();DB.settings.rememberKey=$('#rememberKey').checked;DB.settings.apiKey=$('#apiKey').value.trim();if(DB.settings.rememberKey)sessionStorage.removeItem('flow_api_key');else sessionStorage.setItem('flow_api_key',DB.settings.apiKey);await save();render();toast('API设置已保存')};
+$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(exportSnapshot(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='flow-ledger-backup.json';a.click();URL.revokeObjectURL(a.href)};
+$('#importInput').onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async()=>{try{normalizeDB(JSON.parse(r.result));if(!DB.settings.rememberKey)DB.settings.apiKey=sessionStorage.getItem('flow_api_key')||'';else sessionStorage.removeItem('flow_api_key');await save();$('#apiBase').value=DB.settings.apiBase;$('#textModel').value=DB.settings.textModel;$('#visionModel').value=DB.settings.visionModel;$('#apiKey').value=DB.settings.apiKey;$('#rememberKey').checked=DB.settings.rememberKey;render();toast('导入成功')}catch(_){toast('文件格式错误')}finally{e.target.value=''}};r.readAsText(file)};$('#clearBtn').onclick=()=>{if(confirm('确定清空全部本地账本数据？')){clearStorage().then(()=>location.reload())}};
+async function init(){await load();ensureDemo();await save();$('#apiBase').value=DB.settings.apiBase;$('#textModel').value=DB.settings.textModel;$('#visionModel').value=DB.settings.visionModel;$('#apiKey').value=DB.settings.apiKey;$('#rememberKey').checked=DB.settings.rememberKey;render();calibrateTime()}init();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')calibrateTime()});window.addEventListener('online',calibrateTime);setInterval(calibrateTime,21600000);
+</script></body></html>
