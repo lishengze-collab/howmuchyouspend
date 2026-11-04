@@ -122,7 +122,7 @@ button, input, textarea, select { font: inherit; }
 .dist-track { height: 8px; background: #e6e6e2; border-radius: 99px; overflow: hidden; }
 .dist-fill { height: 100%; background: #9b9b96; border-radius: 99px; }
 .dist-value { font-weight: 700; white-space: nowrap; }
-.month-chart { display: flex; height: 160px; align-items: flex-end; gap: 7px; padding: 10px 0 28px; }
+.month-chart { display: flex; height: 160px; align-items: flex-end; gap: 6px; padding: 10px 0 28px; }
 .month-chart div { flex: 1; min-width: 0; background: #cececa; border-radius: 6px 6px 2px 2px; position: relative; min-height: 4px; }
 .month-chart em { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 10px; color: var(--muted); white-space: nowrap; }
 .row-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--soft); }
@@ -229,7 +229,7 @@ input[type=file] { display: none; }
       <div class="section-title"><h2>当月消费占比</h2><span id="monthExpenseText">¥0.00</span></div>
       <div class="card dist" id="monthDist"></div>
 
-      <div class="section-title"><h2>每月消费趋势</h2><span>近 6 个月</span></div>
+      <div class="section-title"><h2>每日消费趋势</h2><span>近 10 天</span></div>
       <div class="card"><div id="monthlyTrend" class="month-chart"></div></div>
 
       <div class="section-title"><h2>账户明细</h2><span></span></div>
@@ -644,6 +644,18 @@ function parseSyntaxLines(raw) {
   }
   return { lines, actions, bad };
 }
+/* ---------- 供 AI 参考的消费汇总：按月 + 按日（本地保留全部记录） ---------- */
+function buildSpendSummary() {
+  const exp = DB.tx.filter(t => t.type === 'expense');
+  if (!exp.length) return '';
+  const sumBy = fn => exp.reduce((o, t) => { const k = fn(new Date(t.date)); o[k] = (o[k] || 0) + t.amount; return o; }, {});
+  const sorted = o => Object.entries(o).sort((a, b) => b[0].localeCompare(a[0]));
+  const months = sorted(sumBy(d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)).slice(0, 12).reverse();
+  const days = sorted(sumBy(d => dateKey(d))).slice(0, 31).reverse();
+  const fmt = rows => rows.map(([k, v]) => `${k} ${v.toFixed(2)}`).join('；');
+  return `\n消费汇总（仅供参考，不要写进输出）：\n按月：${fmt(months)}\n按日：${fmt(days)}`;
+}
+
 /*PURE_END*/
 
 /* ================= AI 调用（带状态与累计次数） ================= */
@@ -737,7 +749,7 @@ async function ocrImage(image) {
 }
 
 async function aiToSyntax(text, ocr, feedback, step) {
-  const ctx = `${dateKey(now())}\n已有账户：${JSON.stringify(DB.accounts.map(a => ({ name: a.name, type: a.type })))}\n已有标签：${JSON.stringify(DB.tags)}`;
+  const ctx = `${dateKey(now())}\n已有账户：${JSON.stringify(DB.accounts.map(a => ({ name: a.name, type: a.type })))}\n已有标签：${JSON.stringify(DB.tags)}${buildSpendSummary()}`;
   let user = '用户输入：' + (text || '（无）');
   if (ocr) user += '\n\n图片 OCR 文字（可能有错字或噪声，请合理推断）：\n' + ocr;
   const messages = [{ role: 'system', content: SYNTAX_PROMPT + ctx }, { role: 'user', content: user }];
@@ -1084,10 +1096,11 @@ function render() {
   const avail = DB.accounts.map(a => [a.name, Math.max(0, a.type === 'credit' ? (a.limit || 0) - (a.used || 0) : a.balance || 0)]).filter(x => x[1] > 0);
   $('#availableDist').innerHTML = mkDist(avail, avail.reduce((s, x) => s + x[1], 0));
 
-  const months = [...Array(6)].map((_, i) => new Date(n.getFullYear(), n.getMonth() - 5 + i, 1));
-  const vals = months.map(m => expenses.filter(t => { const d = new Date(t.date); return d.getFullYear() === m.getFullYear() && d.getMonth() === m.getMonth(); }).reduce((a, t) => a + t.amount, 0));
+  // 每日消费趋势：只展示近 10 天，更早的记录仍保存在本地
+  const days = [...Array(10)].map((_, i) => new Date(n.getFullYear(), n.getMonth(), n.getDate() - 9 + i));
+  const vals = days.map(d => { const k = dateKey(d); return expenses.filter(t => dateKey(t.date) === k).reduce((a, t) => a + t.amount, 0); });
   const mx = Math.max(1, ...vals);
-  $('#monthlyTrend').innerHTML = vals.map((v, i) => `<div style="height:${Math.max(4, v / mx * 100)}%" title="${money(v)}"><em>${months[i].getMonth() + 1}月</em></div>`).join('');
+  $('#monthlyTrend').innerHTML = vals.map((v, i) => `<div style="height:${Math.max(4, v / mx * 100)}%" title="${days[i].getMonth() + 1}月${days[i].getDate()}日 ${money(v)}"><em>${days[i].getMonth() + 1}/${days[i].getDate()}</em></div>`).join('');
 
   renderSummary();
 }
