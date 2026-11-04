@@ -41,52 +41,66 @@ button, input, textarea, select { font: inherit; }
 .section-title span { font-size: 12px; color: var(--muted); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 15px; box-shadow: 0 3px 14px rgba(0,0,0,.025); position: relative; }
 
-/* 录入区域 */
-.composer { transition: all 0.3s; }
-.composer textarea { width: 100%; min-height: 120px; height: 120px; resize: none; border: 0; outline: 0; font-size: 15px; line-height: 1.6; background: transparent; color: var(--ink); }
-.quick { display: flex; gap: 8px; overflow-x: auto; margin: 14px 0; padding: 0; scrollbar-width: none; }
-.quick::-webkit-scrollbar { display: none; }
-.chip { flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 8px 12px; font-size: 13px; color: #444; cursor: pointer; transition: background 0.2s; font-weight: 500; }
+/* 快捷操作 */
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 9px 0; font-size: 14px; color: #333; cursor: pointer; transition: background .2s, transform .1s; font-weight: 600; }
 .chip:hover { background: var(--soft); }
+.chip:active { transform: scale(.96); }
 
-/* 按钮区域完美对齐 */
-.actions { display: flex; gap: 10px; align-items: stretch; margin-top: 8px; height: 48px; }
-.btn { border: 0; border-radius: 14px; padding: 0 15px; font-weight: 650; background: #e6e6e2; color: var(--ink); cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; height: 100%; }
-.btn:active { opacity: 0.8; }
+/* 录入区域 */
+.input-wrap { position: relative; }
+.composer textarea { width: 100%; min-height: 128px; height: 128px; resize: none; border: 0; outline: 0; font-size: 16px; line-height: 1.6; background: transparent; color: var(--ink); }
+.composer textarea::placeholder { color: #a5a5a0; font-size: 14px; }
+.img-chip { display: none; align-items: center; gap: 8px; margin: 6px 0 2px; padding: 6px 8px 6px 6px; background: var(--soft); border-radius: 12px; font-size: 13px; width: fit-content; max-width: 100%; }
+.img-chip.show { display: flex; }
+.img-chip img { width: 30px; height: 30px; object-fit: cover; border-radius: 8px; }
+.img-chip button { border: 0; background: #d6d6d2; border-radius: 50%; width: 22px; height: 22px; line-height: 1; cursor: pointer; font-size: 13px; color: #333; padding: 0; }
+
+/* 按钮区域：上传与记录等高、水平对齐 */
+.actions { display: flex; gap: 10px; align-items: stretch; margin-top: 10px; height: 48px; }
+.btn { border: 0; border-radius: 14px; padding: 0 15px; font-weight: 650; background: #e6e6e2; color: var(--ink); cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; height: 100%; }
+.btn:active { opacity: .8; }
 .btn.secondary { background: var(--soft); color: var(--ink); }
-.btn.send { flex: 1; background: var(--ink); color: #fff; font-size: 16px; font-weight: 600; border-radius: 14px; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.upload-plus { display: flex; align-items: center; justify-content: center; width: 48px; padding: 0; flex-shrink: 0; background: var(--soft); }
-.upload-plus .plus { font-size: 32px; font-weight: 600; line-height: 1; transform: translateY(-2px); }
+.btn.send { flex: 1; background: var(--ink); color: #fff; font-size: 16px; font-weight: 600; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.actions > * { margin: 0; align-self: stretch; }
+.upload-plus { width: 48px; margin: 0; padding: 0; flex-shrink: 0; background: var(--soft); }
+.upload-plus.has { background: var(--ink); color: #fff; }
+.upload-plus .plus { font-size: 30px; font-weight: 500; line-height: 1; transform: translateY(-2px); }
 
-/* 识别预览区域 */
-#previewArea { display: none; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-#previewArea h3 { margin: 0 0 12px 0; font-size: 15px; color: var(--ink); display: flex; align-items: center; gap: 6px; }
-.preview-item { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+/* 识别预览 */
+#previewArea { display: none; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+#previewArea h3 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+.preview-item { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; line-height: 1.5; }
 .preview-item:last-child { border-bottom: none; }
-.preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.preview-item small { display: block; color: var(--muted); margin-top: 2px; }
+.badge { display: inline-block; font-size: 11px; background: #e3efe3; color: var(--green); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+.badge.warn { background: #f3e2e2; color: var(--red); }
+.preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; height: 48px; }
 
-/* @ 自动补全下拉菜单 (向下展开) */
-.mention-dropdown { position: absolute; top: 100%; left: 15px; right: 15px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 180px; overflow-y: auto; z-index: 100; margin-top: 4px; }
-.mention-item { padding: 10px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--soft); }
+/* @ / # 补全下拉：紧贴输入框下方，向下展开 */
+.mention-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.12); max-height: 190px; overflow-y: auto; z-index: 100; margin-top: 2px; display: none; }
+.mention-item { padding: 11px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--soft); display: flex; justify-content: space-between; gap: 8px; }
 .mention-item:last-child { border-bottom: 0; }
-.mention-item:hover { background: var(--soft); }
+.mention-item:hover, .mention-item.active { background: var(--soft); }
+.mention-item em { font-style: normal; color: var(--muted); font-size: 12px; }
 
 /* 记录列表与左滑删除 */
-.recent-scroll { height: 280px; overflow-y: auto; padding: 0; border: 1px solid var(--line); -webkit-overflow-scrolling: touch; }
+.recent-scroll { height: 280px; overflow-y: auto; padding: 0; -webkit-overflow-scrolling: touch; }
 .swipe-container { position: relative; overflow: hidden; border-bottom: 1px solid var(--soft); background: var(--card); }
 .swipe-container:last-child { border-bottom: 0; }
-.swipe-content { transition: transform 0.2s; position: relative; z-index: 2; background: var(--card); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; touch-action: pan-y; }
+.swipe-content { transition: transform .2s; position: relative; z-index: 2; background: var(--card); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; touch-action: pan-y; }
 .swipe-delete { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: var(--red); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; z-index: 1; cursor: pointer; }
+@media (hover: hover) { .swipe-container:hover .swipe-content { transform: translateX(-80px); } }
 .left { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .ico { width: 38px; height: 38px; border-radius: 12px; background: var(--soft); display: grid; place-items: center; font-size: 19px; flex-shrink: 0; }
 .meta { min-width: 0; }
 .meta b, .meta span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meta span { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.value { text-align: right; font-weight: 700; flex-shrink: 0; }
+.value { text-align: right; font-weight: 700; flex-shrink: 0; padding-left: 8px; }
 .value small { display: block; color: var(--muted); font-weight: 400; margin-top: 4px; }
 
-/* 总览页面 */
+/* 总览 */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .metric { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
 .metric span { font-size: 12px; color: var(--muted); }
@@ -102,15 +116,15 @@ button, input, textarea, select { font: inherit; }
 .row-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--soft); }
 .row-item:last-child { border-bottom: 0; }
 
-/* 其它通用 */
+/* 通用 */
 label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
 .field { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: var(--card); padding: 12px; outline: none; }
 .ai-only { padding: 13px; background: #f1f1ee; border-radius: 14px; color: #555; font-size: 13px; line-height: 1.65; }
 .empty { text-align: center; color: var(--muted); padding: 28px 10px; font-size: 13px; }
-.toast { position: fixed; z-index: 20; left: 50%; bottom: 105px; transform: translate(-50%, 15px); background: #d8d8d4; color: #111; padding: 10px 15px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; }
+.toast { position: fixed; z-index: 20; left: 50%; bottom: 105px; transform: translate(-50%, 15px); background: #d8d8d4; color: #111; padding: 10px 15px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; max-width: 90vw; text-align: center; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 input[type=file] { display: none; }
-.tabbar { position: fixed; z-index: 10; bottom: calc(12px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(calc(100% - 24px), 436px); background: rgba(214,214,210,.96); backdrop-filter: blur(18px); border-radius: 25px; padding: 6px; display: grid; grid-template-columns: repeat(3, 1fr); box-shadow: 0 10px 32px rgba(0,0,0,.25); }
+.tabbar { position: fixed; z-index: 10; bottom: calc(12px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(calc(100% - 24px), 436px); background: rgba(214,214,210,.96); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-radius: 25px; padding: 6px; display: grid; grid-template-columns: repeat(3, 1fr); box-shadow: 0 10px 32px rgba(0,0,0,.25); }
 .tab { border: 0; background: transparent; color: #3f3f3f; border-radius: 19px; padding: 11px 8px; font-size: 13px; font-weight: 650; cursor: pointer; }
 .tab.active { background: #f7f7f5; color: #111; }
 
@@ -133,25 +147,23 @@ input[type=file] { display: none; }
           <div class="hero-stat"><span>本月收入</span><b class="income" id="monthIncome">¥0</b></div>
         </div>
       </div>
-      
+
       <!-- 快捷操作 -->
       <div class="quick" id="quickChips">
-        <button class="chip" onclick="insertQuick('支出 ')">支出</button>
-        <button class="chip" onclick="insertQuick('收入 ')">收入</button>
-        <button class="chip" onclick="insertQuick('转账 ')">转账</button>
-        <button class="chip" onclick="insertQuick('还款 ')">还款</button>
+        <button class="chip" data-q="收入">收入</button>
+        <button class="chip" data-q="支出">支出</button>
+        <button class="chip" data-q="转账">转账</button>
+        <button class="chip" data-q="还款">还款</button>
       </div>
 
       <div class="card composer" id="composerCard">
-        <textarea id="command" placeholder="输入 # 创建标签
-输入 @ 引用标签或账户
-输入 （） 创建账户，括号内为账户名
-输入 \ ，之后的内容为备注
-内容前键入 // 表示删除其之后的内容"></textarea>
-        <div id="mentionDropdown" class="mention-dropdown" style="display:none"></div>
-        
+        <div class="input-wrap">
+          <textarea id="command" enterkeyhint="done" placeholder="输入 # 创建标签&#10;输入 @ 引用标签或账户&#10;输入 （） 创建账户，括号内为账户名&#10;输入 \ ，之后的内容为备注&#10;内容前键入 // 表示删除其之后的内容"></textarea>
+          <div id="mentionDropdown" class="mention-dropdown"></div>
+        </div>
+        <div class="img-chip" id="imgChip"><img id="imgThumb" alt=""><span>图片已选择，将识别账户 / 金额 / 消费</span><button id="imgRemove" aria-label="移除图片">✕</button></div>
         <div class="actions">
-          <label for="imageInput" class="btn upload-plus" aria-label="上传图片">
+          <label for="imageInput" class="btn upload-plus" id="uploadBtn" aria-label="上传图片">
             <span class="plus" aria-hidden="true">+</span>
           </label>
           <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp">
@@ -161,20 +173,20 @@ input[type=file] { display: none; }
 
       <!-- 预览确认区域 -->
       <div id="previewArea">
-        <h3>🤖 AI 识别结果</h3>
+        <h3>🤖 识别结果</h3>
         <div id="previewList"></div>
         <div class="preview-actions">
           <button id="cancelBtn" class="btn secondary">取消</button>
           <button id="confirmBtn" class="btn send">确认入账</button>
         </div>
       </div>
-      
+
       <div class="section-title"><h2>最近记录</h2><span id="txCount">0 笔</span></div>
       <div class="card recent-scroll" id="recentList"></div>
-      
-      <div class="section-title"><h2>AI 消费总结</h2><span id="summaryRange">今日 · 本周 · 本月</span></div>
+
+      <div class="section-title"><h2>消费总结</h2><span id="summaryRange">今日 · 本周 · 本月</span></div>
       <div class="card">
-        <div id="aiSummary" style="min-height:98px;font-size:13px;line-height:1.7;color:#444;white-space:pre-wrap;">暂无消费数据</div>
+        <div id="aiSummary" style="min-height:98px;font-size:13px;line-height:1.8;color:#444;white-space:pre-wrap;">暂无消费数据</div>
         <div id="summaryMeta" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
       </div>
     </div>
@@ -187,19 +199,19 @@ input[type=file] { display: none; }
         <div class="metric"><span>当日消费</span><b class="expense" id="todayExpense">¥0.00</b></div>
         <div class="metric"><span>日预算剩余</span><b id="dailyBudgetRemaining">¥0.00</b><small id="dailyBudgetDetail" style="display:block;color:var(--muted);margin-top:5px"></small></div>
       </div>
-      
+
       <div class="section-title"><h2>可用金额分布</h2><span id="accountCount">0 个账户</span></div>
       <div class="card dist" id="availableDist"></div>
-      
+
       <div class="section-title"><h2>当日消费占比</h2><span id="todayExpenseText">¥0.00</span></div>
       <div class="card dist" id="todayDist"></div>
-      
+
       <div class="section-title"><h2>当月消费占比</h2><span id="monthExpenseText">¥0.00</span></div>
       <div class="card dist" id="monthDist"></div>
-      
+
       <div class="section-title"><h2>每月消费趋势</h2><span>近 6 个月</span></div>
       <div class="card"><div id="monthlyTrend" class="month-chart"></div></div>
-      
+
       <div class="section-title"><h2>账户明细</h2><span></span></div>
       <div class="card" id="accountList"></div>
     </div>
@@ -210,21 +222,21 @@ input[type=file] { display: none; }
       <div class="card">
         <label>API 地址</label><input class="field" id="apiBase" value="https://api.deepseek.com">
         <label>文本模型</label><input class="field" id="textModel" value="deepseek-chat">
-        <label>图片模型</label><input class="field" id="visionModel" value="deepseek-flash">
+        <label>图片模型（需支持图片输入）</label><input class="field" id="visionModel" value="deepseek-flash">
         <label>API Key</label><input class="field" id="apiKey" type="password" placeholder="sk-...">
         <label><input id="rememberKey" type="checkbox"> 在本机保存 API Key</label>
-        <button id="saveApi" class="btn send" style="width:100%;margin-top:14px">保存连接</button>
+        <button id="saveApi" class="btn send" style="width:100%;margin-top:14px;height:48px">保存连接</button>
       </div>
-      
+
       <div class="section-title"><h2>AI 自动管理</h2></div>
-      <div class="ai-only">账户创建、删除、标签、交易类型、月预算、日预算等均通过文字或图片由 AI 智能识别。请务必配置 API Key 以获得最佳体验。</div>
-      
+      <div class="ai-only">账户创建、删除、标签、转账 / 还款、月预算、日预算等均可通过文字或图片智能识别。例如：<br>「从微信支出 25 #咖啡」<br>「工资到招行 8000」<br>「转账 招行到微信 500」<br>上传银行卡 / 账单截图可自动创建账户。未配置 API Key 时使用本地规则解析（不支持图片）。</div>
+
       <div class="section-title"><h2>数据管理</h2></div>
       <div class="card">
-        <button id="exportBtn" class="btn secondary" style="width:100%">导出本地 JSON 备份</button>
-        <label for="importInput" class="btn secondary" style="display:block;text-align:center;margin-top:9px;color:#151515">导入 JSON 备份</label>
+        <button id="exportBtn" class="btn secondary" style="width:100%;height:46px">导出本地 JSON 备份</button>
+        <label for="importInput" class="btn secondary" style="display:flex;margin-top:9px;color:#151515;height:46px;font-size:14px">导入 JSON 备份</label>
         <input id="importInput" type="file" accept="application/json">
-        <button id="clearBtn" class="btn" style="width:100%;margin-top:9px;background:#e0d6d6;color:#7f2020">清空全部本地数据</button>
+        <button id="clearBtn" class="btn" style="width:100%;margin-top:9px;height:46px;background:#e0d6d6;color:#7f2020">清空全部本地数据</button>
       </div>
     </div>
   </section>
@@ -239,6 +251,7 @@ input[type=file] { display: none; }
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DB = {
   accounts: [],
@@ -256,6 +269,7 @@ const money = n => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFracti
 const uid = () => crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random().toString(16).slice(2);
 const IDB_NAME = 'flow_ledger_db_v3';
 
+/* ---------- 存储 ---------- */
 function openIDB() {
   return new Promise((resolve, reject) => {
     const r = indexedDB.open(IDB_NAME, 1);
@@ -277,7 +291,7 @@ async function save() {
     });
     db.close();
   } catch (e) {
-    localStorage.setItem('flow_ledger_v3_backup', JSON.stringify(snapshot));
+    try { localStorage.setItem('flow_ledger_v3_backup', JSON.stringify(snapshot)); } catch (_) {}
   }
 }
 
@@ -291,8 +305,8 @@ async function load() {
     });
     db.close();
   } catch (e) {}
-  if (!x) { try { x = JSON.parse(localStorage.getItem('flow_ledger_v3_backup')); } catch(e){} }
-  
+  if (!x) { try { x = JSON.parse(localStorage.getItem('flow_ledger_v3_backup')); } catch (e) {} }
+
   if (x) {
     DB.accounts = Array.isArray(x.accounts) ? x.accounts : [];
     DB.tx = Array.isArray(x.tx) ? x.tx : [];
@@ -303,195 +317,374 @@ async function load() {
   if (!DB.settings.rememberKey) DB.settings.apiKey = sessionStorage.getItem('flow_api_key') || '';
 }
 
+let toastTimer;
 function toast(msg) {
   const el = $('#toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2000);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// 核心去重与账户自动创建逻辑
-function account(name, type = 'cash', balance = 0, limit = 0) {
+/* ---------- 账户（自动创建 + 去重） ---------- */
+const CREDIT_RE = /信用卡|信用|花呗|白条|credit|贷记/i;
+const guessType = n => CREDIT_RE.test(n || '') ? 'credit' : 'cash';
+const cleanName = s => String(s || '').replace(/[（）()@#]/g, '').trim();
+const norm = s => cleanName(s).replace(/\s+/g, '').toLowerCase();
+
+function findAccount(name, type) {
+  const n = norm(name);
+  if (!n) return null;
+  let a = DB.accounts.find(x => norm(x.name) === n || (x.aliases || []).some(al => norm(al) === n));
+  if (a) return a;
+  // 包含匹配（如 “微信” ≈ “微信零钱”），仅当类型相同且唯一候选时合并，避免把储蓄卡与信用卡混在一起
+  if (n.length >= 2) {
+    const t = type || guessType(name);
+    const c = DB.accounts.filter(x => {
+      const m = norm(x.name);
+      return m.length >= 2 && x.type === t && (m.includes(n) || n.includes(m));
+    });
+    if (c.length === 1) return c[0];
+  }
+  return null;
+}
+
+function account(name, type, balance, limit, setValues = false) {
+  name = cleanName(name);
   if (!name || name === '未指定') name = '默认钱包';
-  let a = DB.accounts.find(x => x.name === name);
+  type = type || guessType(name);
+  let a = findAccount(name, type);
   if (!a) {
-    a = { id: uid(), name, type, balance: Number(balance), limit: Number(limit), used: type === 'credit' ? Number(balance) : 0, aliases: [] };
+    a = { id: uid(), name, type, balance: 0, limit: 0, used: 0, aliases: [] };
     DB.accounts.push(a);
-  } else if (balance > 0) {
-    // 如果账户已存在且提供了余额，更新余额（多用于图片识别补充）
-    if (a.type === 'credit') a.used = Number(balance);
-    else a.balance = Number(balance);
+    if (balance || limit) setValues = true;
+  } else if (a.name !== name) {
+    a.aliases = a.aliases || [];
+    if (!a.aliases.some(al => norm(al) === norm(name))) a.aliases.push(name);
+  }
+  if (setValues) {
+    if (balance != null && !isNaN(balance)) { if (a.type === 'credit') a.used = Number(balance); else a.balance = Number(balance); }
     if (limit > 0) a.limit = Number(limit);
   }
   return a;
+}
+
+// delta > 0 表示资金增加（信用卡则表示已用额度减少）
+function applyDelta(a, delta) {
+  if (!a) return;
+  if (a.type === 'credit') a.used = (a.used || 0) - delta;
+  else a.balance = (a.balance || 0) + delta;
+}
+
+function addTag(t) {
+  t = String(t || '').replace(/^#/, '').trim();
+  if (t && !DB.tags.includes(t)) DB.tags.push(t);
+  return t;
 }
 
 function categoryOf(s) { for (const [name, re] of categoryRules) if (re.test(s)) return name; return '其他'; }
 function dateKey(d) { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
 function now() { return new Date(); }
 
-// AI 提示词（强化了从文本提取账户与图片识别）
-const SYSTEM_PROMPT = `你是个人财务记账与银行截图解析器。请仔细理解用户输入的自然语言，并解析为 JSON 格式。
-返回格式必须为 {"actions": [...]}。
-动作 action 支持的类型：
-1. "expense" (支出): 字段 account(账户), amount(金额), category(分类), tags(标签数组), note(备注)。
-2. "income" (收入): 字段 account, amount, category, tags, note。
-3. "transfer" (转账): 字段 from(转出), to(转入), amount, note。
-4. "repayment" (还款): 字段 from(资金账户), to(信用卡账户), amount, note。
-5. "account" (创建/更新账户): 字段 account, account_type("cash"资金/"credit"信用卡), balance(余额/已用), limit(额度)。
+/* ---------- AI 解析 ---------- */
+const SYSTEM_PROMPT = `你是个人财务记账助手，同时能解析银行卡/账单/消费截图。把用户输入解析为 JSON，格式必须为 {"actions":[...]}，只输出 JSON。
 
-【关键规则】：
-- 自然语言如“从微信支出50”，提取 account 为“微信”；“工资到招行 8000”，提取 account 为“招行”，不要强行使用已有的默认账户，缺失的由系统自动创建。
-- 如果上传了图片，请识别图片中的银行卡名、余额、额度，返回 "account" 动作。
-- 遇到“//”表示删除。
+action 类型：
+1. "expense" 支出：account, amount, category, tags(数组), note
+2. "income" 收入：account, amount, category, tags, note
+3. "transfer" 转账：from, to, amount, note
+4. "repayment" 还款：from(资金账户), to(信用卡账户), amount, note
+5. "account" 创建/更新账户：account, account_type("cash"=资金账户 / "credit"=信用卡), balance(资金账户为余额；信用卡为已用额度), limit(信用卡额度)
+6. "budget" 月预算：amount
+7. "daily_budget" 日预算：amount, 可选 start_date, end_date (YYYY-MM-DD)
+8. "delete_account"：account ；"delete_tag"：tag
 
-当前可用账户：`;
+输入语法：
+- #xxx 是标签（放入 tags，并可作为 category）；@xxx 引用已有标签或账户；（xxx）或(xxx) 表示创建账户，括号内为账户名（可带余额/额度）。
+- 反斜杠 \\ 之后的内容是备注（note）。
+- 内容前出现 // 表示删除其后内容指向的账户或标签，返回 delete_account / delete_tag。
+- 关键词：支出/消费/花了 → expense；收入/工资/到账 → income；转账 → transfer；还款 → repayment。
+
+关键规则：
+- “从微信支出50”→ account="微信"；“工资到招行 8000”→ account="招行"；“从A转账到B”→ from=A,to=B。账户名取自用户原话，不要擅自替换成已有账户；若与已有账户名相同或明显是同一账户（如“微信”与“微信零钱”）请使用已有账户的名字，避免重复创建；不存在的账户系统会自动创建。
+- 未说明账户时 account 留空字符串。
+- 图片：识别银行卡名称/类型/余额/额度，返回 "account" 动作；若是消费账单/订单截图，返回对应 expense / income 动作（金额取实付）。
+- 金额一律为正数。
+
+当前日期：`;
+
+function extractJSON(s) {
+  s = String(s || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try { return JSON.parse(s); } catch (_) {}
+  const m = s.match(/\{[\s\S]*\}/);
+  if (m) return JSON.parse(m[0]);
+  throw new Error('AI 返回格式无法解析');
+}
 
 async function apiParse(text, image) {
   const s = DB.settings;
   if (!s.apiKey) throw new Error('请先配置 API Key');
-  
-  let userContent = SYSTEM_PROMPT + JSON.stringify(DB.accounts.map(a=>a.name)) + '\n\n用户输入：' + (text || '解析图片内账户余额等信息。');
-  let content = image ? [
-    { type: 'text', text: userContent },
-    { type: 'image_url', image_url: { url: image, detail: 'high' } }
-  ] : userContent;
-  
+  const ctx = `${dateKey(now())}\n已有账户：${JSON.stringify(DB.accounts.map(a => ({ name: a.name, type: a.type })))}\n已有标签：${JSON.stringify(DB.tags)}`;
+  const userText = '用户输入：' + (text || '请解析图片中的账户、余额、额度或消费信息。');
+  const content = image ? [
+    { type: 'text', text: userText },
+    { type: 'image_url', image_url: { url: image } }
+  ] : userText;
+
   const res = await fetch(s.apiBase.replace(/\/$/, '') + '/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.apiKey },
     body: JSON.stringify({
       model: image ? s.visionModel : s.textModel,
-      messages: [{ role: 'user', content }],
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT + ctx },
+        { role: 'user', content }
+      ],
       temperature: 0.1,
       response_format: { type: 'json_object' }
     })
   });
-  
-  if (!res.ok) throw new Error('API 请求失败 ' + res.status);
+
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).error?.message || ''; } catch (_) {}
+    throw new Error('API 请求失败 ' + res.status + (detail ? '：' + detail : ''));
+  }
   const data = await res.json();
-  return JSON.parse(data.choices[0].message.content);
+  return extractJSON(data.choices?.[0]?.message?.content);
 }
 
-// 本地兜底解析（包含高级正则账户提取）
-function localParse(text) {
-  const actions = [];
-  const noteMatch = text.split('\\');
-  const coreText = noteMatch[0].trim();
-  const note = noteMatch.slice(1).join('\\').trim();
-  
-  const tags = [...coreText.matchAll(/#([\w\u4e00-\u9fff-]+)/g)].map(m => m[1]);
-  const amountMatch = coreText.match(/(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元)?/);
-  const amount = amountMatch ? Number(amountMatch[1]) : 0;
-  
-  let account = '默认钱包';
-  const accMatch1 = coreText.match(/从([^\s，,。]+?)(?:支出|消费|转出|扣除)/); // 从微信支出
-  const accMatch2 = coreText.match(/([^\s，,。]+?)(?:收入|到账|收到)/); // 招行收入
-  const accMatch3 = coreText.match(/@([^\s，,。#（）()]+)/); // 显式@
-  
-  if (accMatch1) account = accMatch1[1];
-  else if (accMatch2) account = accMatch2[1];
-  else if (accMatch3) account = accMatch3[1];
+/* ---------- 本地规则解析（无 API 时的兜底） ---------- */
+function parseAccountSpec(s) {
+  s = s.trim();
+  const lim = (s.match(/额度\s*[:：]?\s*(\d+(?:\.\d+)?)/) || [])[1];
+  const s2 = s.replace(/额度\s*[:：]?\s*\d+(?:\.\d+)?/, ' ');
+  const bal = (s2.match(/(\d+(?:\.\d+)?)/) || [])[1];
+  const name = s2.replace(/(?:余额|已用|欠款|欠)?\s*[:：]?\s*\d+(?:\.\d+)?\s*元?/, ' ').replace(/余额|已用|欠款/g, '').trim().split(/\s+/)[0];
+  return { name: cleanName(name), balance: bal != null ? Number(bal) : null, limit: lim ? Number(lim) : 0, type: guessType(s) };
+}
 
-  const category = tags[0] || categoryOf(coreText);
-  
-  if (/还款/.test(coreText)) {
-    const toMatch = coreText.match(/还(?:款)?(?:到)?\s*([^\s]+卡|信用卡)/);
-    actions.push({ action: 'repayment', from: account, to: toMatch ? toMatch[1] : '信用卡', amount, summary: '还款', note });
-  } else if (/转账|转入|转出/.test(coreText)) {
-    const toMatch = coreText.match(/(?:到|至)\s*([^\s，,。]+)/);
-    actions.push({ action: 'transfer', from: account, to: toMatch ? toMatch[1] : '储蓄卡', amount, summary: '转账', note });
-  } else if (/收入|工资|收到/.test(coreText)) {
-    actions.push({ action: 'income', account, amount, category, tags, summary: note || coreText, note });
+function localParse(raw) {
+  let text = raw.trim();
+  const actions = [];
+
+  // 1) // 删除
+  if (text.startsWith('//')) {
+    const target = cleanName(text.slice(2));
+    if (!target) return { actions };
+    if (findAccount(target)) actions.push({ action: 'delete_account', account: findAccount(target).name });
+    else if (DB.tags.includes(target)) actions.push({ action: 'delete_tag', tag: target });
+    return { actions };
+  }
+
+  // 2) \ 备注
+  let note = '';
+  const bs = text.search(/[\\＼]/);
+  if (bs >= 0) { note = text.slice(bs + 1).trim(); text = text.slice(0, bs).trim(); }
+
+  // 3) （账户）
+  const bracketSpecs = [];
+  text = text.replace(/[（(]([^）)]*)[）)]/g, (_, inner) => { if (inner.trim()) bracketSpecs.push(parseAccountSpec(inner)); return ' '; });
+
+  // 4) #标签
+  const tags = [...text.matchAll(/#([\w\u4e00-\u9fff-]+)/g)].map(m => m[1]);
+  text = text.replace(/#[\w\u4e00-\u9fff-]+/g, ' ');
+
+  // 5) @引用（账户优先，其次标签，未知按账户处理）
+  const mentionAccounts = [];
+  text = text.replace(/@([^\s，,。;；#@（）()]+)/g, (_, n) => {
+    if (findAccount(n)) mentionAccounts.push(n);
+    else if (DB.tags.includes(n)) tags.push(n);
+    else mentionAccounts.push(n);
+    return ' ';
+  });
+
+  const body = text.trim();
+  const amountMatch = body.match(/(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元|块)?/);
+  const amount = amountMatch ? Number(amountMatch[1]) : 0;
+  const stop = '[^\\s，,。;；\\d]';
+
+  // 仅有括号账户：创建账户
+  const hasKeyword = /支出|消费|花|付|收入|工资|到账|收到|奖金|转账|转到|转入|转出|还款|还/.test(body);
+  if (bracketSpecs.length && !(hasKeyword && amount > 0)) {
+    bracketSpecs.forEach(b => b.name && actions.push({ action: 'account', account: b.name, account_type: b.type, balance: b.balance, limit: b.limit }));
+    return { actions };
+  }
+  bracketSpecs.forEach(b => b.name && actions.push({ action: 'account', account: b.name, account_type: b.type, balance: b.balance, limit: b.limit }));
+
+  const fallbackAcc = (bracketSpecs[0] && bracketSpecs[0].name) || mentionAccounts[0] || '';
+  const category = tags[0] || categoryOf(body);
+  const title = note || tags.join(' ') || (category !== '其他' ? category : body.replace(/^(支出|收入|转账|还款)\s*/, '').replace(/[\d.¥￥元块]+/g, '').trim());
+
+  if (/还款|还(?!有)/.test(body)) {
+    const from = (body.match(new RegExp('从\\s*(' + stop + '+?)\\s*(?:还|转)')) || [])[1] || (body.match(new RegExp('(' + stop + '+?)\\s*(?:→|->|还到|还款到)')) || [])[1] || fallbackAcc;
+    let to = (body.match(new RegExp('(?:还款到|还到|还款|还)\\s*(' + stop + '+?)(?=\\s|\\d|$)')) || [])[1];
+    if (!to || to === from) to = (body.match(/(?:→|->|到|至)\s*([^\s，,。\d]+)/) || [])[1] || '信用卡';
+    actions.push({ action: 'repayment', from: from || '默认钱包', to, amount, note: note || '还款' });
+  } else if (/转账|转到|转入|转出|转给|汇款/.test(body)) {
+    let from = (body.match(new RegExp('从\\s*(' + stop + '+?)\\s*(?:转账?|汇)')) || [])[1];
+    let to = (body.match(/(?:转账?|汇款?)?\s*(?:到|至|给|→|->)\s*([^\s，,。\d]+)/) || [])[1];
+    if (!from) from = (body.match(new RegExp('(?:转账|转)\\s*(' + stop + '+?)\\s*(?:→|->|到|至|给)')) || [])[1] || fallbackAcc;
+    actions.push({ action: 'transfer', from: from || '默认钱包', to: to || '储蓄卡', amount, note: note || '转账' });
+  } else if (/收入|工资|到账|收到|奖金|报销|退款/.test(body)) {
+    const acc = (body.match(new RegExp('(?:到|入|进)\\s*(' + stop + '+?)(?=\\s|\\d|$)')) || [])[1]
+      || (body.match(new RegExp('(' + stop + '+?)\\s*(?:收入|到账|收到)')) || [])[1]
+      || fallbackAcc;
+    const acct = acc && !/^(收入|支出|工资|奖金)$/.test(acc) ? acc : '默认钱包';
+    actions.push({ action: 'income', account: acct, amount, category: tags[0] || (/工资|奖金|报销|退款/.test(body) ? '收入' : categoryOf(body)), tags, note: title });
   } else if (amount > 0) {
-    actions.push({ action: 'expense', account, amount, category, tags, summary: note || coreText, note });
+    const acc = (body.match(new RegExp('从\\s*(' + stop + '+?)\\s*(?:里|中)?\\s*(?:支出|消费|花费|花了?|付款|支付|付|扣除|扣款|转出)')) || [])[1]
+      || (body.match(new RegExp('(' + stop + '+?)\\s*(?:支付|付款)')) || [])[1]
+      || fallbackAcc;
+    actions.push({ action: 'expense', account: acc || '', amount, category, tags, note: title });
   }
   return { actions };
 }
 
+/* ---------- 图片处理 ---------- */
 let imageData = '';
+function setImage(dataUrl) {
+  imageData = dataUrl || '';
+  $('#imgChip').classList.toggle('show', !!imageData);
+  $('#uploadBtn').classList.toggle('has', !!imageData);
+  if (imageData) $('#imgThumb').src = imageData;
+  if (!imageData) $('#imageInput').value = '';
+}
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = reject;
+    fr.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const max = 1400, k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- 预览 & 入账 ---------- */
 let pendingActions = null;
+const NEEDS_AMOUNT = ['expense', 'income', 'transfer', 'repayment'];
+
+function newBadge(name, type) { return findAccount(name, type) ? '' : '<span class="badge">新建账户</span>'; }
 
 function showPreview(actions) {
   pendingActions = actions;
   $('#composerCard').style.display = 'none';
   $('#previewArea').style.display = 'block';
   $('#previewList').innerHTML = actions.map(a => {
+    const note = a.note ? `<small>备注：${esc(a.note)}</small>` : '';
+    const tg = a.tags?.length ? ' ' + a.tags.map(t => '#' + esc(t)).join(' ') : '';
     let html = '';
-    if (a.action === 'expense') html = `💸 <b>支出</b> ${money(a.amount)} (${a.account}) ${a.tags?.length ? '#'+a.tags.join(' #') : ''}`;
-    else if (a.action === 'income') html = `💰 <b>收入</b> ${money(a.amount)} (${a.account})`;
-    else if (a.action === 'transfer') html = `↔️ <b>转账</b> ${money(a.amount)} (${a.from} → ${a.to})`;
-    else if (a.action === 'repayment') html = `💳 <b>还款</b> ${money(a.amount)} (${a.from} → ${a.to})`;
-    else if (a.action === 'account') html = `👤 <b>账户更新</b> ${a.account} (${a.account_type === 'credit' ? '信用卡' : '资金'})`;
-    else if (a.action === 'budget') html = `🎯 <b>月预算</b> ${money(a.amount)}`;
-    else if (a.action === 'daily_budget') html = `📅 <b>日预算</b> ${money(a.amount)}`;
+    switch (a.action) {
+      case 'expense': html = `💸 <b>支出</b> ${money(a.amount)}　${esc(a.account || '默认钱包')}${newBadge(a.account || '默认钱包')}${tg}${note}`; break;
+      case 'income': html = `💰 <b>收入</b> ${money(a.amount)}　${esc(a.account || '默认钱包')}${newBadge(a.account || '默认钱包')}${tg}${note}`; break;
+      case 'transfer': html = `↔️ <b>转账</b> ${money(a.amount)}　${esc(a.from || '默认钱包')}${newBadge(a.from || '默认钱包')} → ${esc(a.to || '默认钱包')}${newBadge(a.to || '默认钱包')}${note}`; break;
+      case 'repayment': html = `💳 <b>还款</b> ${money(a.amount)}　${esc(a.from || '默认钱包')}${newBadge(a.from || '默认钱包')} → ${esc(a.to || '信用卡')}${newBadge(a.to || '信用卡', 'credit')}${note}`; break;
+      case 'account': {
+        const t = a.account_type === 'credit' ? 'credit' : (a.account_type === 'cash' ? 'cash' : guessType(a.account));
+        const bal = a.balance != null && a.balance !== '' ? (t === 'credit' ? `已用 ${money(a.balance)}` : `余额 ${money(a.balance)}`) : '';
+        const lim = Number(a.limit) > 0 ? `额度 ${money(a.limit)}` : '';
+        html = `👤 <b>${findAccount(a.account, t) ? '更新账户' : '创建账户'}</b> ${esc(a.account)}（${t === 'credit' ? '信用卡' : '资金账户'}）<small>${[bal, lim].filter(Boolean).join('　')}</small>`;
+        break;
+      }
+      case 'budget': html = `🎯 <b>月预算</b> ${money(a.amount)}`; break;
+      case 'daily_budget': html = `📅 <b>日预算</b> ${money(a.amount)}${a.start_date ? `<small>${esc(a.start_date)} ~ ${esc(a.end_date || a.start_date)}</small>` : ''}`; break;
+      case 'delete_account': html = `🗑️ <b>删除账户</b> ${esc(a.account)} <span class="badge warn">含其全部记录</span>`; break;
+      case 'delete_tag': html = `🗑️ <b>删除标签</b> #${esc(a.tag)}`; break;
+      default: html = esc(JSON.stringify(a));
+    }
     return `<div class="preview-item">${html}</div>`;
   }).join('');
 }
 
 function applyOne(p) {
   const amt = Number(p.amount || 0), date = now().toISOString();
-  
-  if (p.action === 'daily_budget') {
-    if (!p.start_date && !p.end_date) DB.budget.daily = amt;
-    else {
-      DB.budget.dailyOverrides = DB.budget.dailyOverrides || [];
-      DB.budget.dailyOverrides.push({ id: uid(), amount: amt, startDate: p.start_date || dateKey(now()), endDate: p.end_date || p.start_date || dateKey(now()), createdAt: date });
+  switch (p.action) {
+    case 'daily_budget':
+      if (!p.start_date && !p.end_date) DB.budget.daily = amt;
+      else {
+        DB.budget.dailyOverrides = DB.budget.dailyOverrides || [];
+        DB.budget.dailyOverrides.push({ id: uid(), amount: amt, startDate: p.start_date || dateKey(now()), endDate: p.end_date || p.start_date || dateKey(now()), createdAt: date });
+      }
+      break;
+    case 'budget': DB.budget.monthly = amt; break;
+    case 'delete_tag': DB.tags = DB.tags.filter(t => t !== p.tag); break;
+    case 'delete_account': {
+      const a = findAccount(p.account);
+      if (a) {
+        DB.accounts = DB.accounts.filter(x => x !== a);
+        DB.tx = DB.tx.filter(t => t.account !== a.name && t.from !== a.name && t.to !== a.name);
+      }
+      break;
     }
-  } 
-  else if (p.action === 'budget') DB.budget.monthly = amt;
-  else if (p.action === 'delete_tag') DB.tags = DB.tags.filter(t => t !== p.tag);
-  else if (p.action === 'delete_account') {
-    DB.accounts = DB.accounts.filter(a => a.name !== p.account);
-    DB.tx = DB.tx.filter(t => t.account !== p.account && t.from !== p.account && t.to !== p.account);
-  } 
-  else if (p.action === 'account') {
-    account(p.account, p.account_type || 'cash', amt, p.limit || 0);
-  } 
-  else if (p.action === 'transfer' || p.action === 'repayment') {
-    const fromAcc = account(p.from || '未指定');
-    const toAcc = account(p.to || '未指定', p.action === 'repayment' ? 'credit' : 'cash');
-    fromAcc.balance -= amt;
-    if (toAcc.type === 'credit') toAcc.used = Math.max(0, (toAcc.used || 0) - amt);
-    else toAcc.balance += amt;
-    DB.tx.unshift({ id: uid(), type: p.action, amount: amt, from: fromAcc.name, to: toAcc.name, category: p.action === 'repayment' ? '还款' : '转账', note: p.note || p.summary || '', date });
-  } 
-  else {
-    const a = account(p.account || '默认钱包', p.account?.includes('信用卡') ? 'credit' : 'cash');
-    if (a.type === 'credit') {
-      if (p.action === 'expense') a.used = (a.used || 0) + amt;
-      else a.used = Math.max(0, (a.used || 0) - amt);
-    } else {
-      a.balance += p.action === 'income' ? amt : -amt;
+    case 'account': {
+      const bal = p.balance ?? p.amount;
+      const t = p.account_type === 'credit' || p.account_type === 'cash' ? p.account_type : undefined;
+      account(p.account, t, bal != null && bal !== '' ? Number(bal) : null, Number(p.limit || 0), true);
+      break;
     }
-    DB.tx.unshift({ id: uid(), type: p.action, amount: amt, account: a.name, category: p.category || '其他', note: p.note || p.summary || '', date });
+    case 'transfer':
+    case 'repayment': {
+      const fromAcc = account(p.from || '默认钱包');
+      const toAcc = account(p.to || '默认钱包', p.action === 'repayment' ? 'credit' : undefined);
+      applyDelta(fromAcc, -amt);
+      applyDelta(toAcc, amt);
+      DB.tx.unshift({ id: uid(), type: p.action, amount: amt, from: fromAcc.name, to: toAcc.name, category: p.action === 'repayment' ? '还款' : '转账', note: p.note || p.summary || '', date });
+      break;
+    }
+    case 'income':
+    case 'expense': {
+      const a = account(p.account || '默认钱包');
+      applyDelta(a, p.action === 'income' ? amt : -amt);
+      const tags = (p.tags || []).map(addTag).filter(Boolean);
+      DB.tx.unshift({ id: uid(), type: p.action, amount: amt, account: a.name, category: p.category || tags[0] || '其他', tags, note: p.note || p.summary || '', date });
+      break;
+    }
   }
 }
 
 async function handleParse() {
-  if (!DB.settings.apiKey && !imageData) {
-    toast('未配置API，使用本地规则解析');
-  }
-  
   const text = $('#command').value.trim();
-  if (!text && !imageData) return;
-  
+  if (!text && !imageData) return toast('请输入内容或上传图片');
+  if (imageData && !DB.settings.apiKey) return toast('图片识别需要先在设置中配置 API Key');
+
   const btn = $('#parseBtn');
   btn.textContent = '识别中…'; btn.disabled = true;
-  
+
   try {
-    let result = DB.settings.apiKey ? await apiParse(text, imageData) : localParse(text);
-    const actions = (Array.isArray(result) ? result : (result.actions || [])).filter(a => a && a.action);
-    
-    if (!actions.length) throw new Error('未识别到有效动作');
-    
-    for (const a of actions) {
-      if (a.tags) a.tags.forEach(t => { if (!DB.tags.includes(t)) DB.tags.push(t); });
+    let result;
+    if (DB.settings.apiKey) {
+      try { result = await apiParse(text, imageData); }
+      catch (e) {
+        if (imageData || !text) throw e;
+        toast('AI 不可用，已改用本地规则');
+        result = localParse(text);
+      }
+    } else {
+      result = localParse(text);
     }
-    
+
+    const actions = (Array.isArray(result) ? result : (result.actions || []))
+      .filter(a => a && a.action)
+      .map(a => ({ ...a, action: String(a.action).toLowerCase() }));
+    if (!actions.length) throw new Error('未识别到有效动作');
+
+    for (const a of actions) {
+      if (NEEDS_AMOUNT.includes(a.action) && !(Number(a.amount) > 0)) throw new Error('未识别到金额');
+      if (a.action === 'account' && !cleanName(a.account)) throw new Error('未识别到账户名');
+    }
     showPreview(actions);
   } catch (e) {
-    toast('解析失败: ' + e.message);
+    toast('解析失败：' + e.message);
   } finally {
     btn.textContent = '记录'; btn.disabled = false;
   }
@@ -499,22 +692,17 @@ async function handleParse() {
 
 async function confirmActions() {
   if (!pendingActions) return;
-  
   const btn = $('#confirmBtn');
   btn.textContent = '入账中…'; btn.disabled = true;
-  
   try {
     for (const a of pendingActions) applyOne(a);
     await save();
     toast('已成功记录');
-    
     pendingActions = null;
     $('#previewArea').style.display = 'none';
     $('#composerCard').style.display = 'block';
     $('#command').value = '';
-    imageData = '';
-    $('#imageInput').value = '';
-    
+    setImage('');
     render();
   } catch (e) {
     toast('入账失败');
@@ -523,47 +711,72 @@ async function confirmActions() {
   }
 }
 
+/* ---------- 统计 & 渲染 ---------- */
 function calc() {
-  const cash = DB.accounts.filter(a => a.type !== 'credit').reduce((s, a) => s + a.balance, 0);
+  const cash = DB.accounts.filter(a => a.type !== 'credit').reduce((s, a) => s + (a.balance || 0), 0);
   const debt = DB.accounts.filter(a => a.type === 'credit').reduce((s, a) => s + (a.used || 0), 0);
   const n = now();
   const month = DB.tx.filter(t => { const d = new Date(t.date); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); });
   return { cash, debt, available: cash - debt, expense: month.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0), income: month.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0) };
 }
 
+const getTotal = arr => arr.reduce((s, t) => s + t.amount, 0);
+const byCat = arr => Object.entries(arr.reduce((o, t) => (o[t.category] = (o[t.category] || 0) + t.amount, o), {})).sort((a, b) => b[1] - a[1]);
+
+function renderSummary() {
+  const exp = DB.tx.filter(t => t.type === 'expense');
+  const box = $('#aiSummary');
+  if (!exp.length) { box.textContent = '暂无消费数据'; $('#summaryMeta').textContent = ''; return; }
+  const n = now();
+  const sd = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const sw = new Date(sd); sw.setDate(sd.getDate() - ((n.getDay() || 7) - 1));
+  const sm = new Date(n.getFullYear(), n.getMonth(), 1);
+  const seg = (label, from) => {
+    const a = exp.filter(t => new Date(t.date) >= from), tot = getTotal(a), top = byCat(a)[0];
+    return `${label}：${money(tot)}（${a.length} 笔${top ? '，最多 ' + top[0] + ' ' + Math.round(top[1] / tot * 100) + '%' : ''}）`;
+  };
+  box.textContent = [seg('今日', sd), seg('本周', sw), seg('本月', sm)].join('\n');
+  const mTot = getTotal(exp.filter(t => new Date(t.date) >= sm));
+  $('#summaryMeta').textContent = DB.budget.monthly > 0 ? `本月预算已使用 ${Math.round(mTot / DB.budget.monthly * 100)}%` : '';
+}
+
 function render() {
   const c = calc(), n = now();
-  
+
   $('#availableHero').textContent = money(c.available);
   $('#monthExpense').textContent = money(c.expense);
   $('#monthIncome').textContent = money(c.income);
   $('#overviewAvailable').textContent = money(c.available);
   $('#txCount').textContent = DB.tx.length + ' 笔';
   $('#accountCount').textContent = DB.accounts.length + ' 个账户';
-  
-  $('#recentList').innerHTML = DB.tx.slice(0, 15).map(t => `
-    <div class="swipe-container" data-id="${t.id}">
-      <div class="swipe-delete" onclick="deleteTx('${t.id}')">删除</div>
+  $('#apiStatus').textContent = DB.settings.apiKey ? '已配置' : '未配置';
+
+  $('#recentList').innerHTML = DB.tx.slice(0, 30).map(t => {
+    const where = t.account || ((t.from || '') + ' → ' + (t.to || ''));
+    const tg = t.tags?.length ? ' · ' + t.tags.map(x => '#' + x).join(' ') : '';
+    return `
+    <div class="swipe-container">
+      <div class="swipe-delete" data-del="${esc(t.id)}">删除</div>
       <div class="swipe-content">
         <div class="left">
           <div class="ico">${icons[t.category] || '📝'}</div>
           <div class="meta">
-            <b>${t.note || t.category}</b>
-            <span>${t.account || ((t.from || '') + ' → ' + (t.to || ''))} · ${new Date(t.date).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            <b>${esc(t.note || t.category)}</b>
+            <span>${esc(where)} · ${new Date(t.date).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}${esc(tg)}</span>
           </div>
         </div>
         <div class="value ${t.type === 'expense' ? 'expense' : t.type === 'income' ? 'income' : ''}">
           ${t.type === 'income' ? '+' : t.type === 'expense' ? '-' : ''}${money(t.amount)}
         </div>
       </div>
-    </div>
-  `).join('') || '<div class="empty">还没有记录</div>';
+    </div>`;
+  }).join('') || '<div class="empty">还没有记录</div>';
 
   $('#accountList').innerHTML = DB.accounts.map(a => `
     <div class="row-item">
       <div class="left">
         <div class="ico">${a.type === 'credit' ? '💳' : '◉'}</div>
-        <div class="meta"><b>${a.name}</b><span>${a.type === 'credit' ? '信用卡' : '资金账户'}</span></div>
+        <div class="meta"><b>${esc(a.name)}</b><span>${a.type === 'credit' ? '信用卡' : '资金账户'}</span></div>
       </div>
       <div class="value ${a.type === 'credit' ? 'expense' : ''}">
         ${money(a.type === 'credit' ? a.used : a.balance)}
@@ -577,17 +790,13 @@ function render() {
   const expenses = DB.tx.filter(t => t.type === 'expense');
   const todayExp = expenses.filter(t => new Date(t.date) >= startToday);
   const monthExp = expenses.filter(t => new Date(t.date) >= startMonth);
-  
-  const getTotal = arr => arr.reduce((s, t) => s + t.amount, 0);
-  const byCat = arr => Object.entries(arr.reduce((o, t) => (o[t.category] = (o[t.category] || 0) + t.amount, o), {})).sort((a, b) => b[1] - a[1]);
-  
+
   $('#todayExpense').textContent = money(getTotal(todayExp));
   $('#todayExpenseText').textContent = money(getTotal(todayExp));
   $('#monthExpenseText').textContent = money(getTotal(monthExp));
-  
+
   const todayK = dateKey(n);
-  let dayBudgetAmt = DB.budget.daily;
-  let dayBudgetLabel = '固定预算';
+  let dayBudgetAmt = DB.budget.daily, dayBudgetLabel = '固定预算';
   if (DB.budget.dailyOverrides) {
     const ov = DB.budget.dailyOverrides.find(o => o.startDate <= todayK && o.endDate >= todayK);
     if (ov) { dayBudgetAmt = ov.amount; dayBudgetLabel = '指定预算'; }
@@ -596,125 +805,142 @@ function render() {
   $('#dailyBudgetRemaining').textContent = money(dayLeft);
   $('#dailyBudgetRemaining').className = dayLeft < 0 ? 'expense' : '';
   $('#dailyBudgetDetail').textContent = dayBudgetAmt > 0 ? `${dayBudgetLabel} ${money(dayBudgetAmt)}` : '尚未设置日预算';
-  
+
   const budgetLeft = DB.budget.monthly > 0 ? DB.budget.monthly - getTotal(monthExp) : c.available;
   $('#budgetRemaining').textContent = money(budgetLeft);
   $('#budgetRemaining').className = budgetLeft < 0 ? 'expense' : '';
 
   const mkDist = (rows, total) => !rows.length || !total ? '<div class="empty">暂无数据</div>' : rows.map(([name, val]) => `
-    <div class="dist-row"><span>${name}</span><div class="dist-track"><div class="dist-fill" style="width:${Math.max(2, val/total*100)}%"></div></div><span class="dist-value">${Math.round(val/total*100)}%</span></div>
+    <div class="dist-row"><span>${esc(name)}</span><div class="dist-track"><div class="dist-fill" style="width:${Math.max(2, val / total * 100)}%"></div></div><span class="dist-value">${Math.round(val / total * 100)}%</span></div>
   `).join('');
-  
+
   $('#todayDist').innerHTML = mkDist(byCat(todayExp), getTotal(todayExp));
   $('#monthDist').innerHTML = mkDist(byCat(monthExp), getTotal(monthExp));
-  
-  const avail = DB.accounts.map(a => [a.name, Math.max(0, a.type === 'credit' ? (a.limit || 0) - (a.used || 0) : a.balance)]).filter(x => x[1] > 0);
+
+  const avail = DB.accounts.map(a => [a.name, Math.max(0, a.type === 'credit' ? (a.limit || 0) - (a.used || 0) : a.balance || 0)]).filter(x => x[1] > 0);
   $('#availableDist').innerHTML = mkDist(avail, avail.reduce((s, x) => s + x[1], 0));
 
   const months = [...Array(6)].map((_, i) => new Date(n.getFullYear(), n.getMonth() - 5 + i, 1));
   const vals = months.map(m => expenses.filter(t => { const d = new Date(t.date); return d.getFullYear() === m.getFullYear() && d.getMonth() === m.getMonth(); }).reduce((a, t) => a + t.amount, 0));
   const mx = Math.max(1, ...vals);
-  $('#monthlyTrend').innerHTML = vals.map((v, i) => `<div style="height:${Math.max(4, v/mx*100)}%" title="${money(v)}"><em>${months[i].getMonth()+1}月</em></div>`).join('');
+  $('#monthlyTrend').innerHTML = vals.map((v, i) => `<div style="height:${Math.max(4, v / mx * 100)}%" title="${money(v)}"><em>${months[i].getMonth() + 1}月</em></div>`).join('');
+
+  renderSummary();
 }
 
-window.deleteTx = async function(id) {
+async function deleteTx(id) {
   if (!confirm('确认删除这笔记录吗？余额将同步回退。')) return;
   const t = DB.tx.find(x => x.id === id);
   if (!t) return;
-  
-  if (t.type === 'expense') {
-    const a = DB.accounts.find(x => x.name === t.account);
-    if (a) { if (a.type === 'credit') a.used -= t.amount; else a.balance += t.amount; }
-  } else if (t.type === 'income') {
-    const a = DB.accounts.find(x => x.name === t.account);
-    if (a) a.balance -= t.amount;
-  } else if (t.type === 'transfer' || t.type === 'repayment') {
-    const a = DB.accounts.find(x => x.name === t.from);
-    const b = DB.accounts.find(x => x.name === t.to);
-    if (a) a.balance += t.amount;
-    if (b) { if (b.type === 'credit') b.used += t.amount; else b.balance -= t.amount; }
-  }
-  
+  const find = n => DB.accounts.find(x => x.name === n);
+  if (t.type === 'expense') applyDelta(find(t.account), t.amount);
+  else if (t.type === 'income') applyDelta(find(t.account), -t.amount);
+  else { applyDelta(find(t.from), t.amount); applyDelta(find(t.to), -t.amount); }
   DB.tx = DB.tx.filter(x => x.id !== id);
   await save();
   render();
   toast('已删除记录');
-};
+}
+$('#recentList').addEventListener('click', e => {
+  const d = e.target.closest('[data-del]');
+  if (d) deleteTx(d.dataset.del);
+});
 
-// 左滑删除手势
+/* ---------- 左滑删除（触屏） ---------- */
 let startX = 0, startY = 0, currentRow = null;
 const scrollBox = $('#recentList');
-
 scrollBox.addEventListener('touchstart', e => {
-  if (!e.target.closest('.swipe-content')) return;
-  currentRow = e.target.closest('.swipe-content');
+  const row = e.target.closest('.swipe-content');
+  if (!row) return;
+  currentRow = row;
   startX = e.touches[0].clientX;
   startY = e.touches[0].clientY;
-  document.querySelectorAll('.swipe-content').forEach(el => { if (el !== currentRow) el.style.transform = 'translateX(0)'; });
+  $$('.swipe-content').forEach(el => { if (el !== currentRow) el.style.transform = ''; });
 }, { passive: true });
-
 scrollBox.addEventListener('touchmove', e => {
   if (!currentRow) return;
-  const dx = e.touches[0].clientX - startX;
-  const dy = e.touches[0].clientY - startY;
-  if (Math.abs(dy) > Math.abs(dx)) {
-    currentRow.style.transform = 'translateX(0)';
-    currentRow = null;
-    return;
-  }
+  const dx = e.touches[0].clientX - startX, dy = e.touches[0].clientY - startY;
+  if (Math.abs(dy) > Math.abs(dx)) { currentRow.style.transform = ''; currentRow = null; return; }
   if (dx < 0) currentRow.style.transform = `translateX(${Math.max(dx, -80)}px)`;
 }, { passive: true });
-
 scrollBox.addEventListener('touchend', e => {
   if (!currentRow) return;
   const dx = e.changedTouches[0].clientX - startX;
-  if (dx < -40) currentRow.style.transform = 'translateX(-80px)';
-  else currentRow.style.transform = 'translateX(0)';
+  currentRow.style.transform = dx < -40 ? 'translateX(-80px)' : '';
   currentRow = null;
 }, { passive: true });
 
-// @ 弹出补全（向下）
-let mentionStart = -1;
-$('#command').addEventListener('input', e => {
-  const val = e.target.value;
-  const pos = e.target.selectionStart;
-  const before = val.slice(0, pos);
-  const match = before.match(/@([^\s]*)$/);
-  const drop = $('#mentionDropdown');
-  
-  if (match) {
-    mentionStart = pos - match[1].length - 1;
-    const query = match[1].toLowerCase();
-    const items = [...new Set([...DB.accounts.map(a => a.name), ...DB.tags])];
-    const filtered = items.filter(i => i.toLowerCase().includes(query));
-    if (filtered.length > 0) {
-      drop.innerHTML = filtered.map(item => `<div class="mention-item" onclick="insertMention('${item}')">${item}</div>`).join('');
-      drop.style.display = 'block';
-      return;
-    }
+/* ---------- # / @ 自动补全（向下展开） ---------- */
+const cmd = $('#command'), drop = $('#mentionDropdown');
+let sugStart = -1, sugActive = 0;
+
+function hideSuggest() { drop.style.display = 'none'; sugStart = -1; }
+function updateSuggest() {
+  const pos = cmd.selectionStart, before = cmd.value.slice(0, pos);
+  const m = before.match(/([@#])([^\s@#（）()\\＼]*)$/);
+  if (!m) return hideSuggest();
+  const ch = m[1], q = m[2], ql = q.toLowerCase();
+  sugStart = pos - q.length - 1;
+  let items = [];
+  if (ch === '#') {
+    items = DB.tags.filter(t => t.toLowerCase().includes(ql)).map(t => ({ value: t, label: '#' + t, hint: '标签' }));
+    if (q && !DB.tags.includes(q)) items.push({ value: q, label: '＋ 创建标签 #' + q, hint: '新建' });
+  } else {
+    items = [
+      ...DB.accounts.filter(a => a.name.toLowerCase().includes(ql)).map(a => ({ value: a.name, label: a.name, hint: a.type === 'credit' ? '信用卡' : '账户' })),
+      ...DB.tags.filter(t => t.toLowerCase().includes(ql)).map(t => ({ value: t, label: '#' + t, hint: '标签' }))
+    ];
   }
-  drop.style.display = 'none';
+  if (!items.length) return hideSuggest();
+  sugActive = 0;
+  drop.innerHTML = items.slice(0, 30).map((it, i) => `<div class="mention-item${i === 0 ? ' active' : ''}" data-ch="${ch}" data-value="${esc(it.value)}"><span>${esc(it.label)}</span><em>${it.hint}</em></div>`).join('');
+  drop.style.display = 'block';
+}
+function insertSuggest(ch, value) {
+  const pos = cmd.selectionStart;
+  const before = cmd.value.slice(0, sugStart), after = cmd.value.slice(pos);
+  const ins = ch + value + ' ';
+  cmd.value = before + ins + after;
+  cmd.focus();
+  cmd.selectionStart = cmd.selectionEnd = (before + ins).length;
+  hideSuggest();
+}
+drop.addEventListener('mousedown', e => {
+  e.preventDefault();
+  const it = e.target.closest('.mention-item');
+  if (it) insertSuggest(it.dataset.ch, it.dataset.value);
 });
-
-window.insertMention = function(name) {
-  const txt = $('#command');
-  const val = txt.value;
-  const pos = txt.selectionStart;
-  const before = val.slice(0, mentionStart);
-  const after = val.slice(pos);
-  txt.value = before + '@' + name + ' ' + after;
-  txt.focus();
-  txt.selectionStart = txt.selectionEnd = (before + '@' + name + ' ').length;
-  $('#mentionDropdown').style.display = 'none';
-};
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('#command') && !e.target.closest('#mentionDropdown')) {
-    $('#mentionDropdown').style.display = 'none';
-  }
+drop.addEventListener('touchstart', e => {
+  const it = e.target.closest('.mention-item');
+  if (it) { e.preventDefault(); insertSuggest(it.dataset.ch, it.dataset.value); }
+}, { passive: false });
+cmd.addEventListener('input', updateSuggest);
+cmd.addEventListener('click', updateSuggest);
+cmd.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleParse(); return; }
+  if (drop.style.display !== 'block') return;
+  const items = [...drop.children];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    sugActive = (sugActive + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items.forEach((el, i) => el.classList.toggle('active', i === sugActive));
+    items[sugActive].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
+    e.preventDefault();
+    const it = items[sugActive];
+    insertSuggest(it.dataset.ch, it.dataset.value);
+  } else if (e.key === 'Escape') hideSuggest();
 });
+document.addEventListener('click', e => { if (!e.target.closest('.input-wrap')) hideSuggest(); });
 
-window.insertQuick = text => { $('#command').value = text; $('#command').focus(); };
+/* ---------- 其他交互 ---------- */
+$('#quickChips').addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  cmd.value = b.dataset.q + ' ' + cmd.value.replace(/^(收入|支出|转账|还款)\s*/, '');
+  cmd.focus();
+  cmd.selectionStart = cmd.selectionEnd = cmd.value.length;
+});
 $('#parseBtn').onclick = handleParse;
 $('#confirmBtn').onclick = confirmActions;
 $('#cancelBtn').onclick = () => {
@@ -723,24 +949,25 @@ $('#cancelBtn').onclick = () => {
   $('#composerCard').style.display = 'block';
 };
 
-$('#imageInput').onchange = e => {
+$('#imageInput').onchange = async e => {
   const f = e.target.files[0];
   if (!f) return;
-  const r = new FileReader();
-  r.onload = () => { imageData = r.result; toast('已选图片，点击“记录”解析'); };
-  r.readAsDataURL(f);
+  try { setImage(await compressImage(f)); toast('已选图片，点击“记录”识别'); }
+  catch (_) { toast('图片读取失败'); setImage(''); }
 };
+$('#imgRemove').onclick = () => setImage('');
 
 $$('.tab').forEach(b => b.onclick = () => {
   $$('.tab').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
   $$('.view').forEach(v => v.classList.remove('active'));
   $('#' + b.dataset.view).classList.add('active');
+  window.scrollTo({ top: 0 });
   render();
 });
 
 $('#saveApi').onclick = async () => {
-  DB.settings.apiBase = $('#apiBase').value.trim();
+  DB.settings.apiBase = $('#apiBase').value.trim() || 'https://api.deepseek.com';
   DB.settings.textModel = $('#textModel').value.trim();
   DB.settings.visionModel = $('#visionModel').value.trim();
   DB.settings.rememberKey = $('#rememberKey').checked;
@@ -749,7 +976,7 @@ $('#saveApi').onclick = async () => {
   else sessionStorage.setItem('flow_api_key', DB.settings.apiKey);
   await save();
   render();
-  toast('API设置已保存');
+  toast('API 设置已保存');
 };
 
 $('#exportBtn').onclick = () => {
@@ -760,7 +987,7 @@ $('#exportBtn').onclick = () => {
   a.href = URL.createObjectURL(blob);
   a.download = 'flow-ledger-backup.json';
   a.click();
-  URL.revokeObjectURL(a.href);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 
 $('#importInput').onchange = e => {
@@ -772,15 +999,14 @@ $('#importInput').onchange = e => {
       const data = JSON.parse(r.result);
       DB.accounts = data.accounts || [];
       DB.tx = data.tx || [];
-      DB.tags = data.tags || [];
+      DB.tags = [...new Set([...PRESET_TAGS, ...(data.tags || [])])];
       DB.budget = data.budget || { daily: 0, monthly: 0, dailyOverrides: [] };
-      DB.settings = { ...DB.settings, ...(data.settings || {}) };
-      if (!DB.settings.rememberKey) DB.settings.apiKey = sessionStorage.getItem('flow_api_key') || '';
+      const keep = DB.settings.apiKey;
+      DB.settings = { ...DB.settings, ...(data.settings || {}), apiKey: keep };
       await save();
       $('#apiBase').value = DB.settings.apiBase;
       $('#textModel').value = DB.settings.textModel;
       $('#visionModel').value = DB.settings.visionModel;
-      $('#apiKey').value = DB.settings.apiKey;
       $('#rememberKey').checked = DB.settings.rememberKey;
       render();
       toast('导入成功');
@@ -803,13 +1029,13 @@ async function init() {
   await load();
   DB.tags = [...new Set([...PRESET_TAGS, ...DB.tags])];
   await save();
-  
+
   $('#apiBase').value = DB.settings.apiBase;
   $('#textModel').value = DB.settings.textModel;
   $('#visionModel').value = DB.settings.visionModel;
   $('#apiKey').value = DB.settings.apiKey;
   $('#rememberKey').checked = DB.settings.rememberKey;
-  
+
   render();
 }
 init();
