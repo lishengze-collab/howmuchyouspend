@@ -1,1337 +1,1980 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#f7f7f5">
-<title>Flow Ledger</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#f5f5f7">
+<title>Study</title>
 <style>
-:root {
-  --bg: #f7f7f5;
-  --card: #fbfbfa;
-  --ink: #151515;
-  --muted: #6f6f6f;
-  --line: #e3e3df;
-  --soft: #ededeb;
-  --red: #c83f3f;
-  --blue: #2367c9;
-  --green: #2e7d32;
-  --shadow: 0 8px 28px rgba(0,0,0,.06);
+:root{
+  --bg:#f5f5f7;
+  --fg:#000000;
+  --line:rgba(60,60,67,.24);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
 }
-* { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", sans-serif; }
-body { padding: 0 0 calc(94px + env(safe-area-inset-bottom)); }
-button, input, textarea, select { font: inherit; }
-.app { width: min(100%, 460px); margin: auto; min-height: 100vh; }
-.content { padding: calc(12px + env(safe-area-inset-top)) 16px 16px; }
-.view { display: none; }
-.view.active { display: block; }
-
-/* 基础卡片与标题 */
-.hero { background: #e9e9e6; color: var(--ink); border-radius: 24px; padding: 20px; box-shadow: var(--shadow); }
-.eyebrow { font-size: 12px; color: #5f5f5f; text-transform: uppercase; letter-spacing: .12em; }
-.amount { font-size: 38px; font-weight: 750; letter-spacing: -1.2px; margin: 8px 0 14px; }
-.hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.hero-stat { background: #f7f7f5; border-radius: 15px; padding: 12px; }
-.hero-stat b { display: block; font-size: 17px; margin-top: 4px; }
-.expense { color: var(--red) !important; }
-.income { color: var(--blue) !important; }
-.section-title { display: flex; justify-content: space-between; align-items: center; margin: 22px 2px 10px; }
-.section-title h2 { font-size: 16px; margin: 0; }
-.section-title span { font-size: 12px; color: var(--muted); }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 15px; box-shadow: 0 3px 14px rgba(0,0,0,.025); position: relative; }
-
-/* 录入区域 */
-.composer { margin-top: 14px; }
-.input-wrap { position: relative; }
-.composer textarea { width: 100%; min-height: 166px; height: 166px; resize: none; border: 0; outline: 0; font-size: 16px; line-height: 1.6; background: transparent; color: var(--ink); }
-.composer textarea::placeholder { color: #a5a5a0; font-size: 13.5px; line-height: 1.65; }
-.img-chip { display: none; align-items: center; gap: 8px; margin: 6px 0 2px; padding: 6px 8px 6px 6px; background: var(--soft); border-radius: 12px; font-size: 13px; width: fit-content; max-width: 100%; }
-.img-chip.show { display: flex; }
-.img-chip img { width: 30px; height: 30px; object-fit: cover; border-radius: 8px; }
-.img-chip button { border: 0; background: #d6d6d2; border-radius: 50%; width: 22px; height: 22px; line-height: 1; cursor: pointer; font-size: 13px; color: #333; padding: 0; }
-
-/* 快捷操作：位于输入框与按钮之间 */
-.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 0; }
-.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 0; font-size: 14px; color: #333; cursor: pointer; transition: background .2s, transform .1s; font-weight: 600; }
-.chip:hover { background: var(--soft); }
-.chip:active { transform: scale(.96); }
-
-/* 按钮区域：上传与记录等高、水平对齐 */
-.actions { display: flex; gap: 10px; align-items: stretch; margin-top: 10px; height: 48px; }
-.actions > * { margin: 0; align-self: stretch; }
-.btn { border: 0; border-radius: 14px; padding: 0 15px; font-weight: 650; background: #e6e6e2; color: var(--ink); cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; height: 100%; }
-.btn:active { opacity: .8; }
-.btn.secondary { background: var(--soft); color: var(--ink); }
-.btn.send { flex: 1; background: var(--ink); color: #fff; font-size: 16px; font-weight: 600; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.upload-plus { width: 48px; margin: 0; padding: 0; flex-shrink: 0; background: var(--soft); }
-.upload-plus.has { background: var(--ink); color: #fff; }
-.upload-plus .plus { font-size: 30px; font-weight: 500; line-height: 1; transform: translateY(-2px); }
-
-/* 状态行 */
-.status-line { font-size: 12px; color: var(--muted); margin: 10px 4px 0; min-height: 17px; text-align: center; line-height: 1.5; }
-.status-line.busy { color: var(--blue); animation: pulse 1.2s ease-in-out infinite; }
-.status-line.ok { color: var(--green); }
-.status-line.err { color: var(--red); }
-@keyframes pulse { 50% { opacity: .45; } }
-
-/* 识别预览 */
-#previewArea { display: none; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
-#previewArea h3 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-#previewArea h3 .src { font-size: 11px; font-weight: 500; color: var(--muted); background: var(--soft); border-radius: 6px; padding: 2px 7px; }
-.preview-item { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; line-height: 1.5; }
-.preview-item:last-child { border-bottom: none; }
-.preview-item small { display: block; color: var(--muted); margin-top: 2px; }
-.preview-warn { margin-top: 10px; font-size: 12px; color: #9a5b00; background: #fff3dc; border-radius: 10px; padding: 8px 10px; line-height: 1.55; }
-.preview-ocr { margin-top: 10px; font-size: 12px; color: var(--muted); }
-.preview-ocr pre { white-space: pre-wrap; word-break: break-all; background: var(--soft); border-radius: 10px; padding: 8px 10px; margin: 6px 0 0; max-height: 140px; overflow: auto; font-family: inherit; }
-.badge { display: inline-block; font-size: 11px; background: #e3efe3; color: var(--green); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
-.badge.warn { background: #f3e2e2; color: var(--red); }
-.preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; height: 48px; }
-
-/* @ / # 补全下拉：紧贴输入框下方，向下展开 */
-.mention-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.12); max-height: 190px; overflow-y: auto; z-index: 100; margin-top: 2px; display: none; }
-.mention-item { padding: 11px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--soft); display: flex; justify-content: space-between; gap: 8px; }
-.mention-item:last-child { border-bottom: 0; }
-.mention-item:hover, .mention-item.active { background: var(--soft); }
-.mention-item em { font-style: normal; color: var(--muted); font-size: 12px; }
-
-/* 记录列表与左滑删除 */
-.recent-scroll { height: 280px; overflow-y: auto; padding: 0; -webkit-overflow-scrolling: touch; }
-.swipe-container { position: relative; overflow: hidden; border-bottom: 1px solid var(--soft); background: var(--card); }
-.swipe-container:last-child { border-bottom: 0; }
-.swipe-content { transition: transform .2s; position: relative; z-index: 2; background: var(--card); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; touch-action: pan-y; }
-.swipe-delete { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: var(--red); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; z-index: 1; cursor: pointer; }
-@media (hover: hover) { .swipe-container:hover .swipe-content { transform: translateX(-80px); } }
-.left { display: flex; align-items: center; gap: 11px; min-width: 0; }
-.ico { width: 38px; height: 38px; border-radius: 12px; background: var(--soft); display: grid; place-items: center; font-size: 19px; flex-shrink: 0; }
-.meta { min-width: 0; }
-.meta b, .meta span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meta span { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.value { text-align: right; font-weight: 700; flex-shrink: 0; padding-left: 8px; }
-.value small { display: block; color: var(--muted); font-weight: 400; margin-top: 4px; }
-
-/* 总览 */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.metric { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
-.metric span { font-size: 12px; color: var(--muted); }
-.metric b { display: block; font-size: 21px; margin-top: 5px; }
-.dist { display: grid; gap: 11px; }
-.dist-row { display: grid; grid-template-columns: minmax(72px, auto) 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
-.dist-track { height: 8px; background: #e6e6e2; border-radius: 99px; overflow: hidden; }
-.dist-fill { height: 100%; background: #9b9b96; border-radius: 99px; }
-.dist-value { font-weight: 700; white-space: nowrap; }
-.month-chart { display: flex; height: 160px; align-items: flex-end; gap: 6px; padding: 10px 0 28px; }
-.month-chart div { flex: 1; min-width: 0; background: #cececa; border-radius: 6px 6px 2px 2px; position: relative; min-height: 4px; }
-.month-chart em { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 10px; color: var(--muted); white-space: nowrap; }
-.row-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--soft); }
-.row-item:last-child { border-bottom: 0; }
-
-/* 通用 */
-label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
-.field { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: var(--card); padding: 12px; outline: none; }
-.ai-only { padding: 13px; background: #f1f1ee; border-radius: 14px; color: #555; font-size: 13px; line-height: 1.65; }
-.empty { text-align: center; color: var(--muted); padding: 28px 10px; font-size: 13px; }
-.stat-big { font-size: 28px; font-weight: 750; letter-spacing: -.5px; }
-.toast { position: fixed; z-index: 20; left: 50%; bottom: 105px; transform: translate(-50%, 15px); background: #d8d8d4; color: #111; padding: 10px 15px; border-radius: 16px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; max-width: 90vw; text-align: center; line-height: 1.5; }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
-input[type=file] { display: none; }
-.tabbar { position: fixed; z-index: 10; bottom: calc(12px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(calc(100% - 24px), 436px); background: rgba(214,214,210,.96); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-radius: 25px; padding: 6px; display: grid; grid-template-columns: repeat(3, 1fr); box-shadow: 0 10px 32px rgba(0,0,0,.25); }
-.tab { border: 0; background: transparent; color: #3f3f3f; border-radius: 19px; padding: 11px 8px; font-size: 13px; font-weight: 650; cursor: pointer; }
-.tab.active { background: #f7f7f5; color: #111; }
-
-@media (min-width: 700px) {
-  body { padding-top: 20px; }
-  .app { border: 1px solid var(--line); border-radius: 32px; overflow: hidden; min-height: 850px; box-shadow: var(--shadow); }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  font-size:15px;line-height:1.5;
+  padding-top:var(--safe-top);
+  overscroll-behavior:none;
+  -webkit-font-smoothing:antialiased;
 }
+#app{height:100dvh;display:flex;flex-direction:column}
+
+/* ---------- 页面 ---------- */
+.page{flex:1;overflow-y:auto;padding:calc(12px + var(--safe-top)) 16px calc(112px + var(--safe-bottom));display:none;-webkit-overflow-scrolling:touch}
+.page.active{display:block}
+.page.no-pad{padding:0}
+
+/* ---------- 头部 ---------- */
+.hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px}
+.hdr h1{font-size:28px;font-weight:700;letter-spacing:-1px}
+.hdr .sub{font-size:12px;font-weight:600;opacity:.5}
+
+/* ---------- 卡片 ---------- */
+.card{
+  background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.05);
+  padding:16px;margin-bottom:12px;
+}
+.card-tight{padding:12px}
+
+/* ---------- 表单 ---------- */
+label{display:block;font-size:12px;font-weight:600;margin:0 0 6px 2px;opacity:.6}
+input[type=text],input[type=password],input[type=number]{
+  width:100%;border:1px solid #000;border-radius:12px;
+  padding:11px 14px;font-size:15px;font-family:inherit;
+  background:#fff;color:#000;outline:none;
+}
+input:focus{border-width:2px;padding:10px 13px}
+textarea{
+  width:100%;border:1px solid #000;border-radius:12px;
+  padding:11px 14px;font-size:15px;font-family:inherit;
+  background:#fff;color:#000;outline:none;
+  line-height:1.55;
+}
+textarea:focus{border-width:2px;padding:10px 13px}
+::placeholder{opacity:.3}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid #000;border-radius:12px;padding:11px 16px;
+  font-size:14px;font-weight:700;font-family:inherit;
+  background:#000;color:#fff;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.97);opacity:.7}
+.btn.ghost{background:#fff;color:#000}
+.btn.sm{padding:8px 12px;font-size:13px;border-radius:10px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.3;pointer-events:none}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn-row>.btn{flex:1}
+
+/* ---------- 底部胶囊 tab ---------- */
+.capsule{
+  position:fixed;
+  bottom:calc(14px + var(--safe-bottom));
+  left:50%;transform:translateX(-50%);
+  background:rgba(30,30,32,.88);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-radius:999px;
+  display:flex;padding:5px;gap:2px;
+  z-index:200;
+  box-shadow:0 6px 28px rgba(0,0,0,.22);
+}
+.capsule button{
+  border:none;background:transparent;color:#fff;
+  font-size:13px;font-weight:700;
+  padding:10px 15px;border-radius:999px;
+  font-family:inherit;cursor:pointer;white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.capsule button.active{background:#fff;color:#000}
+
+/* ---------- 聊天式录入 ---------- */
+#page-input{padding:0}
+.chat-scroll{
+  height:100%;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:16px 14px 300px;
+}
+.chat-msg{display:flex;margin-bottom:12px}
+.chat-msg.user{justify-content:flex-end}
+.chat-msg.bot{justify-content:flex-start}
+.bubble{
+  max-width:85%;
+  border-radius:18px;
+  padding:12px 15px;
+  font-size:14px;line-height:1.6;
+  word-break:break-word;
+}
+.chat-msg.user .bubble{
+  background:#000;color:#fff;
+  border-bottom-right-radius:6px;
+}
+.chat-msg.bot .bubble{
+  background:#fff;color:#000;border:1px solid #000;
+  border-bottom-left-radius:6px;
+}
+.bubble .word-preview{font-size:20px;font-weight:700;letter-spacing:-.4px;margin-bottom:4px}
+.bubble .def-en{font-size:13px;margin-top:6px;line-height:1.55}
+.bubble .def-cn{font-size:13px;margin-top:3px;font-weight:600}
+.bubble .example{font-size:12px;margin-top:5px;padding-left:9px;border-left:2px solid #000;line-height:1.5}
+.bubble .example .tr{opacity:.55;font-size:11px}
+.bubble .syll{display:flex;gap:2px;flex-wrap:wrap;margin:5px 0}
+.bubble .syll span{background:#000;color:#fff;border-radius:5px;padding:1px 6px;font-size:12px;font-weight:700}
+.bubble .syll .dot{background:none;color:#000;padding:1px 0;font-size:10px}
+
+/* 输入坞 */
+.input-dock{
+  position:fixed;
+  bottom:calc(80px + var(--safe-bottom));
+  left:10px;right:10px;
+  background:#fff;
+  border:1px solid #000;border-radius:20px;
+  padding:9px;z-index:150;
+  box-shadow:0 4px 24px rgba(0,0,0,.08);
+}
+.input-dock textarea{
+  height:72px;min-height:72px;max-height:72px;
+  resize:none;
+  border:none;border-radius:12px;
+  padding:8px;font-size:15px;
+  overflow-y:auto;
+}
+.input-dock textarea:focus{border:none;padding:8px}
+.input-actions{display:flex;gap:6px;margin-top:6px}
+.input-actions .btn{flex:1;padding:9px 4px;font-size:13px;border-radius:11px}
+.img-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 8px;margin-bottom:6px;
+  border:1px solid #000;border-radius:11px;
+}
+.img-chip img{width:38px;height:38px;object-fit:cover;border-radius:8px;border:1px solid #000}
+.img-chip .t{flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.img-chip .x{
+  border:1px solid #000;background:#fff;color:#000;border-radius:50%;
+  width:22px;height:22px;font-size:12px;font-weight:700;
+  font-family:inherit;cursor:pointer;
+}
+
+/* ---------- 单词卡 ---------- */
+.wcard{
+  background:#fff;border:1px solid #000;border-radius:20px;
+  padding:24px 20px;margin-bottom:12px;
+  min-height:260px;display:flex;flex-direction:column;
+}
+.wcard .word{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:4px}
+.wcard .phonetic{font-size:14px;opacity:.55;margin-bottom:10px;font-weight:500}
+.wcard .syllables{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:14px}
+.wcard .syllables span{background:#000;color:#fff;border-radius:6px;padding:2px 8px;font-size:16px;font-weight:700}
+.wcard .syllables .dot{background:none;color:#000;padding:2px 0;font-size:11px;display:flex;align-items:center}
+.wcard .section-label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin:12px 0 5px;opacity:.45}
+.wcard .en-def{font-size:14px;line-height:1.65}
+.wcard .cn-def{font-size:14px;line-height:1.65;font-weight:650}
+.wcard .example{font-size:13px;line-height:1.6;padding-left:10px;border-left:2px solid #000;margin-bottom:6px}
+.wcard .example .tr{opacity:.5;font-size:12px}
+.wcard .divider{height:1px;background:#000;margin:12px 0;opacity:.15}
+
+/* ---------- 列表项 ---------- */
+.li{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid #000;gap:10px;
+}
+.li:last-child{border-bottom:none}
+.li .l{flex:1;min-width:0}
+.li .title{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .meta{font-size:11px;opacity:.5;margin-top:2px;line-height:1.4;word-break:break-all}
+.li .r{text-align:right;flex-shrink:0}
+.chip{
+  display:inline-block;padding:3px 9px;border-radius:100px;
+  font-size:11px;font-weight:700;
+  background:#fff;color:#000;border:1px solid #000;
+}
+.chip.solid{background:#000;color:#fff}
+
+/* ---------- 时间线 ---------- */
+.tl{display:flex;gap:2px;height:38px;border-radius:9px;overflow:hidden;margin:10px 0;border:1px solid #000}
+.tl-seg{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;min-width:0}
+.tl-seg.awake{background:#fff;color:#000}
+.tl-seg.asleep{background:#000;color:#fff}
+
+/* ---------- 睡眠大按钮 ---------- */
+.sleep-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px 16px;text-align:center}
+.sleep-stage .big-btn{
+  width:118px;height:118px;border-radius:50%;
+  border:2px solid #000;font-size:15px;font-weight:800;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  cursor:pointer;transition:transform .15s;
+  margin-bottom:12px;
+}
+.sleep-stage .big-btn:active{transform:scale(.94)}
+.sleep-stage .big-btn.asleep{background:#fff;color:#000}
+.sleep-stage .big-btn.awake{background:#000;color:#fff}
+.sleep-stage .state-txt{font-size:12px;opacity:.5;font-weight:600;margin-bottom:2px}
+.sleep-stage .timer{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+
+/* ---------- 日历 ---------- */
+.cal-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-month{font-size:15px;font-weight:800}
+.cal-nav{display:flex;gap:6px}
+.cal-nav button{
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid #000;background:#fff;color:#000;
+  font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-head{text-align:center;font-size:10px;font-weight:800;padding:3px 0;opacity:.5}
+.cal-day{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;border-radius:7px;
+  border:1px solid #000;background:#fff;color:#000;
+}
+.cal-day.blank{border-color:transparent}
+.cal-day.full{background:#000;color:#fff}
+.cal-day.part{
+  background:repeating-linear-gradient(45deg,#000 0 1.5px,#fff 1.5px 4.5px);
+  color:#000;
+}
+.cal-day.today{outline:2px solid #000;outline-offset:1px}
+
+/* ---------- 图表 ---------- */
+.chart-wrap{position:relative;width:100%;height:150px;margin:6px 0 4px}
+.chart-wrap canvas{width:100%!important;height:100%!important;display:block}
+.chart-title{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.45;margin-bottom:4px}
+
+/* ---------- 分析框 ---------- */
+.analysis-box{
+  margin-top:10px;padding:12px;border:1px solid #000;border-radius:12px;
+  font-size:13px;line-height:1.7;white-space:pre-wrap;
+  display:none;
+}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;top:calc(16px + var(--safe-top));left:50%;
+  transform:translateX(-50%) translateY(-80px);
+  background:#000;color:#fff;padding:10px 20px;border-radius:100px;
+  font-size:13px;font-weight:700;z-index:999;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;
+  pointer-events:none;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ---------- 空态 ---------- */
+.empty{text-align:center;padding:32px 16px;font-size:13px;opacity:.35;font-weight:600}
+
+/* ---------- 设置行 ---------- */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #000;gap:10px}
+.srow:last-child{border-bottom:none}
+.srow .k{font-size:14px;font-weight:600}
+.srow .v{font-size:12px;font-weight:700;text-align:right;max-width:62%;word-break:break-all;opacity:.6}
+
+/* ---------- 加载 ---------- */
+.spinner{
+  display:inline-block;width:13px;height:13px;
+  border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite;
+}
+.btn.ghost .spinner{border-color:rgba(0,0,0,.15);border-top-color:#000}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- 分段 ---------- */
+.seg{display:flex;border:1px solid #000;border-radius:12px;overflow:hidden;margin-bottom:12px}
+.seg button{
+  flex:1;border:none;background:#fff;color:#000;
+  padding:9px 0;font-size:13px;font-weight:700;font-family:inherit;
+  cursor:pointer;border-right:1px solid #000;
+}
+.seg button:last-child{border-right:none}
+.seg button.active{background:#000;color:#fff}
+
+/* ---------- 状态灯 ---------- */
+.status-dot{
+  display:inline-block;width:9px;height:9px;border-radius:50%;
+  background:#000;border:1px solid #000;margin-right:5px;
+  vertical-align:middle;
+}
+.status-dot.off{background:#fff}
+
+/* iPhone 17 / iOS refinement */
+#page-input{padding:calc(8px + var(--safe-top)) 14px calc(112px + var(--safe-bottom));overflow-y:auto}
+.chat-scroll{height:auto;overflow:visible;padding:0}
+.chat-scroll>.card:first-child{display:none}
+#chatMessages{margin-top:12px}
+.input-dock{position:relative;left:auto;right:auto;bottom:auto;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:22px;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,.06);z-index:1;display:flex;flex-direction:column}
+.input-dock textarea{order:0;height:132px;min-height:132px;max-height:132px;resize:none;font-size:17px;line-height:1.55}
+#imgChipWrap{order:1}.input-actions{order:2}
+.btn,.input-dock,.card,.wcard{border-color:var(--line)}
+.capsule{width:min(calc(100% - 24px),520px);justify-content:stretch}.capsule button{flex:1;padding:10px 8px}
+.year-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.year-box{background:#fff;border:1px solid var(--line);border-radius:17px;padding:12px 6px;text-align:center}.year-box b{display:block;font-size:23px}.year-box span{font-size:10px;opacity:.5;font-weight:700}.year-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}.year-day{aspect-ratio:1;border:1px solid var(--line);border-radius:3px;background:#fff;position:relative}.year-day.past{background:#d1d1d6}.year-day.past:after{content:"";position:absolute;left:1px;right:1px;top:50%;height:1px;background:#555;transform:rotate(-35deg)}.year-day.today{outline:2px solid #000;outline-offset:1px}.audit-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.audit-row:last-child{border-bottom:0}.audit-row small{display:block;opacity:.5}.audit-ok{font-weight:800}.audit-bad{font-weight:800;color:#b42318}
 </style>
 </head>
 <body>
-<main class="app">
-  <section class="content">
-    <!-- Tab 1: 录入 -->
-    <div id="inputView" class="view active">
-      <div class="hero">
-        <div class="eyebrow">当前可用资金</div>
-        <div class="amount" id="availableHero">¥0.00</div>
-        <div class="hero-row">
-          <div class="hero-stat"><span>本月支出</span><b class="expense" id="monthExpense">¥0</b></div>
-          <div class="hero-stat"><span>本月收入</span><b class="income" id="monthIncome">¥0</b></div>
+<div id="app">
+
+<!-- ========== 录入 ========== -->
+<div class="page no-pad active" id="page-input">
+  <div class="input-dock">
+    <div id="imgChipWrap"></div>
+    <textarea id="wordInput" placeholder="输入单词，每行一个…"></textarea>
+    <div class="input-actions">
+      <button class="btn ghost sm" id="btnPickImg">图片</button>
+      <button class="btn ghost sm" id="btnPreviewWords">查询预览</button>
+      <button class="btn sm" id="btnConfirmWords" disabled>确认录入</button>
+    </div>
+    <input type="file" accept="image/*" id="imgFile" style="display:none">
+  </div>
+  <div class="chat-scroll" id="chatScroll">
+    <div class="card card-tight" style="margin-bottom:14px">
+      <div class="chart-title">每日录入单词数</div>
+      <div class="chart-wrap" style="height:120px"><canvas class="chart" id="chartInput"></canvas></div>
+      <button class="btn ghost sm block" id="btnAnalyzeInput" style="margin-top:8px">API 分析录入趋势</button>
+      <div class="analysis-box" id="analyzeInputBox"></div>
+    </div>
+    <div id="chatMessages"></div>
+  </div>
+</div>
+
+<!-- ========== 预览 ========== -->
+<div class="page" id="page-preview">
+  <div class="hdr">
+    <h1>预览</h1>
+    <span class="sub" id="previewIdx"></span>
+  </div>
+  <div id="previewBody"></div>
+  <div class="btn-row" style="margin-bottom:12px">
+    <button class="btn ghost sm" id="btnPrevWord">上一个</button>
+    <button class="btn ghost sm" id="btnMarkLearned">学一遍</button>
+    <button class="btn ghost sm" id="btnNextWord">下一个</button>
+  </div>
+
+  <div class="card card-tight">
+    <div class="chart-title">学习次数分布</div>
+    <div class="chart-wrap" style="height:120px"><canvas class="chart" id="chartPreview"></canvas></div>
+    <button class="btn ghost sm block" id="btnAnalyzePreview" style="margin-top:8px">API 分析学习进度</button>
+    <div class="analysis-box" id="analyzePreviewBox"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">单词列表</div>
+    <div id="wordList"></div>
+  </div>
+</div>
+
+<!-- ========== 打卡 ========== -->
+<div class="page" id="page-clock">
+  <div class="hdr">
+    <h1>打卡</h1>
+    <span class="sub" id="clockStatus"></span>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;font-weight:700;opacity:.45;letter-spacing:.5px">当前状态</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.5px" id="clockStateText">
+          <span class="status-dot off"></span>未打卡
         </div>
       </div>
-
-      <div class="card composer" id="composerCard">
-        <div class="input-wrap">
-          <textarea id="command" enterkeyhint="done" placeholder="创建#标签名 → 创建标签；创建（账户名）→ 创建账户&#10;删除#标签名 → 删除标签；删除@账户名 → 删除账户&#10;输入 @ 引用标签或账户，# 引用标签&#10;输入 \ ，之后的内容为备注&#10;从＝起点，到＝终点：从A转账到B 500&#10;从A支出 25 #标签 ｜ 收入 500 到A&#10;从A还款到信用卡B 500"></textarea>
-          <div id="mentionDropdown" class="mention-dropdown"></div>
-        </div>
-        <div class="img-chip" id="imgChip"><img id="imgThumb" alt=""><span>图片已选择：AI 先识别文字，再解析账务</span><button id="imgRemove" aria-label="移除图片">✕</button></div>
-
-        <!-- 快捷操作：输入框与按钮之间 -->
-        <div class="quick" id="quickChips">
-          <button class="chip" data-q="收入">收入</button>
-          <button class="chip" data-q="支出">支出</button>
-          <button class="chip" data-q="转账">转账</button>
-          <button class="chip" data-q="还款">还款</button>
-        </div>
-
-        <div class="actions">
-          <label for="imageInput" class="btn upload-plus" id="uploadBtn" aria-label="上传图片">
-            <span class="plus" aria-hidden="true">+</span>
-          </label>
-          <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp">
-          <button id="parseBtn" class="btn send">记录</button>
-        </div>
-      </div>
-
-      <!-- 状态与 AI 调用次数（始终可见） -->
-      <div id="statusLine" class="status-line"></div>
-
-      <!-- 预览确认区域 -->
-      <div id="previewArea">
-        <h3>🤖 识别结果 <span class="src" id="previewSrc"></span></h3>
-        <div id="previewList"></div>
-        <div id="previewWarn"></div>
-        <div id="previewSyntax"></div>
-        <div id="previewOcr"></div>
-        <div class="preview-actions">
-          <button id="cancelBtn" class="btn secondary">取消</button>
-          <button id="confirmBtn" class="btn send">确认入账</button>
-        </div>
-      </div>
-
-      <div class="section-title"><h2>最近记录</h2><span id="txCount">0 笔</span></div>
-      <div class="card recent-scroll" id="recentList"></div>
-
-      <div class="section-title"><h2>消费总结</h2><span id="summaryRange">今日 · 本周 · 本月</span></div>
-      <div class="card">
-        <div id="aiSummary" style="min-height:98px;font-size:13px;line-height:1.8;color:#444;white-space:pre-wrap;">暂无消费数据</div>
-        <div id="summaryMeta" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
+      <div style="text-align:right">
+        <div style="font-size:11px;font-weight:700;opacity:.45">校准时间</div>
+        <div style="font-size:12px;font-weight:700;font-variant-numeric:tabular-nums" id="clockCalTime">—</div>
       </div>
     </div>
-
-    <!-- Tab 2: 总览 -->
-    <div id="overviewView" class="view">
-      <div class="grid2">
-        <div class="metric"><span>可用金额</span><b id="overviewAvailable">¥0.00</b></div>
-        <div class="metric"><span>月预算剩余</span><b id="budgetRemaining">¥0.00</b></div>
-        <div class="metric"><span>当日消费</span><b class="expense" id="todayExpense">¥0.00</b></div>
-        <div class="metric"><span>日预算剩余</span><b id="dailyBudgetRemaining">¥0.00</b><small id="dailyBudgetDetail" style="display:block;color:var(--muted);margin-top:5px"></small></div>
-      </div>
-
-      <div class="section-title"><h2>可用金额分布</h2><span id="accountCount">0 个账户</span></div>
-      <div class="card dist" id="availableDist"></div>
-
-      <div class="section-title"><h2>当日消费占比</h2><span id="todayExpenseText">¥0.00</span></div>
-      <div class="card dist" id="todayDist"></div>
-
-      <div class="section-title"><h2>当月消费占比</h2><span id="monthExpenseText">¥0.00</span></div>
-      <div class="card dist" id="monthDist"></div>
-
-      <div class="section-title"><h2>每日消费趋势</h2><span>近 10 天</span></div>
-      <div class="card"><div id="monthlyTrend" class="month-chart"></div></div>
-
-      <div class="section-title"><h2>账户明细</h2><span></span></div>
-      <div class="card" id="accountList"></div>
+    <div class="btn-row">
+      <button class="btn sm" id="btnClockIn">上班</button>
+      <button class="btn ghost sm" id="btnBreakToggle">休息</button>
+      <button class="btn ghost sm" id="btnClockOut">下班</button>
     </div>
+    <div style="margin-top:8px;font-size:11px;opacity:.4;line-height:1.5">
+      打卡会请求定位权限，并反向解析详细地址，仅保存在本机。
+    </div>
+  </div>
 
-    <!-- Tab 3: 设置 -->
-    <div id="settingsView" class="view">
-      <div class="section-title"><h2>AI 连接</h2><span id="apiStatus">未配置</span></div>
-      <div class="card">
-        <label>API 地址</label><input class="field" id="apiBase" value="https://api.deepseek.com">
-        <label>文本模型</label><input class="field" id="textModel" value="deepseek-chat">
-        <label>图片模型（需支持图片输入，用于识别图片文字）</label><input class="field" id="visionModel" value="deepseek-flash">
-        <label>API Key</label><input class="field" id="apiKey" type="password" placeholder="sk-...">
-        <label><input id="rememberKey" type="checkbox"> 在本机保存 API Key</label>
-        <label><input id="alwaysAI" type="checkbox"> 所有文字都交给 AI 解析（默认：简单内容本地处理，复杂内容才调用 AI）</label>
-        <button id="saveApi" class="btn send" style="width:100%;margin-top:14px;height:48px">保存连接</button>
-      </div>
+  <div class="card card-tight">
+    <div class="cal-head-row">
+      <button class="cal-nav" id="calPrev" style="width:30px;height:30px;border-radius:50%;border:1px solid #000;background:#fff;font-weight:800;font-size:14px;cursor:pointer">‹</button>
+      <div class="cal-month" id="calMonth"></div>
+      <button class="cal-nav" id="calNext" style="width:30px;height:30px;border-radius:50%;border:1px solid #000;background:#fff;font-weight:800;font-size:14px;cursor:pointer">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div style="display:flex;gap:12px;margin-top:10px;font-size:10px;font-weight:700;opacity:.5">
+      <span><span style="display:inline-block;width:10px;height:10px;border:1px solid #000;border-radius:3px;vertical-align:-1px"></span> 无记录</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border:1px solid #000;border-radius:3px;background:repeating-linear-gradient(45deg,#000 0 1.5px,#fff 1.5px 4px);vertical-align:-1px"></span> 部分</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border:1px solid #000;border-radius:3px;background:#000;vertical-align:-1px"></span> 完整</span>
+    </div>
+  </div>
 
-      <div class="section-title"><h2>AI 调用统计</h2><span id="statsHint"></span></div>
-      <div class="card">
-        <div class="stat-big" id="statsAI">0 次</div>
-        <div id="statsText" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6"></div>
-        <button id="resetStats" class="btn secondary" style="width:100%;margin-top:12px;height:42px;font-size:14px">重置计数</button>
-      </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">今日明细</div>
+    <div id="clockDetail"></div>
+  </div>
 
-      <div class="section-title"><h2>输入语法</h2></div>
-      <div class="ai-only">
-        <b>「从」＝起点，「到」＝终点</b>，也是动作的一部分：<br>
-        • 支出：<b>从微信支出 25 #咖啡 \拿铁</b><br>
-        • 收入：<b>收入 8000 到招行 #工资</b><br>
-        • 转账：<b>从招行转账 500 到微信</b><br>
-        • 还款：<b>从招行还款 1000 到招商信用卡</b><br>
-        • 创建 / 删除：<b>创建#咖啡</b>、<b>创建（招行 余额5000）</b>、<b>删除#咖啡</b>、<b>删除@招行</b><br>
-        • 预算：<b>月预算 5000</b>、<b>日预算 100</b>；指定日期：在行内加 <b>2026-11-03</b><br>
-        简单内容由本地规则直接处理；解析不出来（口语化、多笔、相对日期、图片）时，由 AI 先转写成上面的标准语法，再交给同一套本地规则记账，并在预览里展示转写结果。
-      </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">近期记录</div>
+    <div id="clockHistory"></div>
+  </div>
 
-      <div class="section-title"><h2>数据管理</h2></div>
-      <div class="card">
-        <button id="exportBtn" class="btn secondary" style="width:100%;height:46px">导出本地 JSON 备份</button>
-        <label for="importInput" class="btn secondary" style="display:flex;margin-top:9px;color:#151515;height:46px;font-size:14px">导入 JSON 备份</label>
-        <input id="importInput" type="file" accept="application/json">
-        <button id="clearBtn" class="btn" style="width:100%;margin-top:9px;height:46px;background:#e0d6d6;color:#7f2020">清空全部本地数据</button>
+  <div class="card card-tight">
+    <div class="chart-title">每日工作时长（小时）</div>
+    <div class="chart-wrap" style="height:130px"><canvas class="chart" id="chartClock"></canvas></div>
+    <button class="btn ghost sm block" id="btnAnalyzeClock" style="margin-top:8px">API 分析时间规律</button>
+    <div class="analysis-box" id="analyzeClockBox"></div>
+  </div>
+</div>
+
+<!-- ========== 睡眠 ========== -->
+<div class="page" id="page-sleep">
+  <div class="hdr">
+    <h1>睡眠</h1>
+    <span class="sub" id="sleepDateLabel"></span>
+  </div>
+
+  <div class="card">
+    <div class="sleep-stage">
+      <div class="state-txt" id="sleepStateLabel">当前未在记录</div>
+      <button class="big-btn asleep" id="btnSleepToggle">
+        <span id="sleepBtnLabel">入睡</span>
+      </button>
+      <div class="timer" id="sleepTimer">00:00:00</div>
+      <div style="font-size:11px;opacity:.4;margin-top:8px;line-height:1.5">
+        睡前按一次“入睡”；中途醒来按“醒来”；再睡按“入睡”；睡醒后按“醒来”结束。
       </div>
     </div>
-  </section>
-</main>
+  </div>
 
-<nav class="tabbar">
-  <button class="tab active" data-view="inputView">录入</button>
-  <button class="tab" data-view="overviewView">总览</button>
-  <button class="tab" data-view="settingsView">设置</button>
+  <div class="card card-tight">
+    <div class="cal-head-row">
+      <button id="sleepCalPrev" style="width:30px;height:30px;border-radius:50%;border:1px solid #000;background:#fff;font-weight:800;font-size:14px;cursor:pointer">‹</button>
+      <div class="cal-month" id="sleepCalMonth"></div>
+      <button id="sleepCalNext" style="width:30px;height:30px;border-radius:50%;border:1px solid #000;background:#fff;font-weight:800;font-size:14px;cursor:pointer">›</button>
+    </div>
+    <div class="cal-grid" id="sleepCalGrid"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:800">今晚时间线</span>
+      <span style="font-size:11px;font-weight:700;opacity:.5" id="sleepTotal"></span>
+    </div>
+    <div class="tl" id="sleepTimeline"></div>
+    <div id="sleepSegments"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">近期睡眠</div>
+    <div id="sleepHistory"></div>
+  </div>
+
+  <div class="card card-tight">
+    <div class="chart-title">每日睡眠时长（小时）</div>
+    <div class="chart-wrap" style="height:130px"><canvas class="chart" id="chartSleep"></canvas></div>
+    <button class="btn ghost sm block" id="btnAnalyzeSleep" style="margin-top:8px">API 分析睡眠</button>
+    <div class="analysis-box" id="analyzeSleepBox"></div>
+  </div>
+</div>
+
+<!-- ========== 年度 ========== -->
+<div class="page" id="page-year">
+  <div class="hdr"><h1>年度</h1><span class="sub" id="yearPercent">0%</span></div>
+  <div class="year-summary"><div class="year-box"><b id="yearPassed">0</b><span>已过去</span></div><div class="year-box"><b id="yearRemain">0</b><span>还剩</span></div><div class="year-box"><b id="yearTotal">365</b><span>全年</span></div></div>
+  <div class="card card-tight"><div class="chart-title" id="yearLabel">年度进度</div><div class="year-grid" id="yearGrid"></div></div>
+  <div class="card"><div style="font-size:13px;font-weight:800;margin-bottom:8px">每日情况</div><div id="yearDaily"></div></div>
+</div>
+<!-- ========== 设置 ========== -->
+<div class="page" id="page-settings">
+  <div class="hdr">
+    <h1>设置</h1>
+    <span class="sub" id="syncLabel"></span>
+  </div>
+
+  <div class="card">
+    <label>DeepSeek API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+    <div style="margin-top:10px;font-size:11px;opacity:.45;line-height:1.6">
+      Key 仅保存在本机。若浏览器直连遇到 CORS 错误，可把下方 Base URL 换成你自己的反向代理地址。
+    </div>
+  </div>
+
+  <div class="card">
+    <label>API Base URL</label>
+    <input type="text" id="apiBaseInput" value="https://api.deepseek.com">
+    <div style="margin-top:10px">
+      <label>文本模型</label>
+      <input type="text" id="modelInput" value="deepseek-chat">
+    </div>
+    <div style="margin-top:10px">
+      <label>图片识别模型（可选，需支持视觉）</label>
+      <input type="text" id="visionModelInput" placeholder="留空则使用文本模型">
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn ghost sm" id="btnTestApi">测试连接</button>
+      <button class="btn sm" id="btnSaveApi">保存</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="srow">
+      <span class="k">时间校准源</span>
+      <span class="v" id="timeSourceVal">worldtimeapi.org</span>
+    </div>
+    <div class="srow">
+      <span class="k">最近校准</span>
+      <span class="v" id="lastSyncVal">—</span>
+    </div>
+    <div class="srow">
+      <span class="k">校准偏差</span>
+      <span class="v" id="driftVal">—</span>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn ghost sm block" id="btnResync">立即校准时间</button>
+    </div>
+  </div>
+
+  <div class="card"><div style="font-size:13px;font-weight:800;margin-bottom:8px">功能校验</div><div id="auditList"></div><button class="btn ghost sm block" id="btnAudit" style="margin-top:10px">重新校验</button></div>
+  <div class="card">
+    <div class="srow">
+      <span class="k">单词数</span>
+      <span class="v" id="statWords">0</span>
+    </div>
+    <div class="srow">
+      <span class="k">打卡记录</span>
+      <span class="v" id="statClock">0</span>
+    </div>
+    <div class="srow">
+      <span class="k">睡眠夜数</span>
+      <span class="v" id="statSleep">0</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:8px">Token 用量</div>
+    <div class="srow">
+      <span class="k">调用次数</span>
+      <span class="v" id="statApiCalls">0</span>
+    </div>
+    <div class="srow">
+      <span class="k">输入 tokens</span>
+      <span class="v" id="statPromptTok">0</span>
+    </div>
+    <div class="srow">
+      <span class="k">输出 tokens</span>
+      <span class="v" id="statCompletionTok">0</span>
+    </div>
+    <div class="srow">
+      <span class="k">合计 tokens</span>
+      <span class="v" id="statTotalTok">0</span>
+    </div>
+    <div class="srow">
+      <span class="k">预估费用</span>
+      <span class="v" id="statCost">¥0.00</span>
+    </div>
+  </div>
+
+  <div class="card card-tight">
+    <div class="chart-title">每日 Token 消耗</div>
+    <div class="chart-wrap" style="height:130px"><canvas class="chart" id="chartTokens"></canvas></div>
+    <button class="btn ghost sm block" id="btnAnalyzeTokens" style="margin-top:8px">API 分析用量</button>
+    <div class="analysis-box" id="analyzeTokensBox"></div>
+  </div>
+
+  <div class="card">
+    <button class="btn ghost sm block" id="btnExport">导出全部数据（JSON）</button>
+    <div style="margin-top:8px">
+      <button class="btn ghost sm block" id="btnClearAll">清空全部数据</button>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:11px;opacity:.3;padding:4px 0 20px">
+    Safari 分享 → 添加到主屏幕
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- 底部胶囊 tab -->
+<nav class="capsule">
+  <button data-tab="input" class="active">录入</button>
+  <button data-tab="preview">预览</button>
+  <button data-tab="clock">打卡</button>
+  <button data-tab="sleep">睡眠</button>
+  <button data-tab="year">年度</button>
+  <button data-tab="settings">设置</button>
 </nav>
-<div id="toast" class="toast"></div>
+
+<div id="toast"></div>
 
 <script>
-const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-const DB = {
-  accounts: [],
-  tx: [],
-  tags: [],
-  budget: { daily: 0, monthly: 0, dailyOverrides: [] },
-  stats: { aiCalls: 0, localRuns: 0 },
-  settings: { apiBase: 'https://api.deepseek.com', textModel: 'deepseek-chat', visionModel: 'deepseek-flash', rememberKey: false, alwaysAI: false, apiKey: '' }
+/* ============================================================
+   数据层
+   ============================================================ */
+const S = {
+  get(k, d){ try{ const v = localStorage.getItem('sl_'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('sl_'+k, JSON.stringify(v)); }catch(e){ toast('存储空间不足'); } }
 };
 
-const PRESET_TAGS = ['加油','饮料','早餐','午餐','晚餐','保养','车险','过路费','房租','水电费','咖啡','电话费'];
-const icons = { 早餐:'🥐',午餐:'🍱',晚餐:'🍲',餐饮:'🍜',饮料:'🥤',咖啡:'☕',零食:'🍪',交通:'🚕',加油:'⛽',保养:'🔧',车险:'🚗',过路费:'🛣️',房租:'🏠',水电费:'💡',电话费:'📱',购物:'🛍️',日用:'🧻',住房:'🏠',水电:'💡',娱乐:'🎬',医疗:'💊',教育:'📚',旅行:'✈️',收入:'💰',转账:'↔️',还款:'💳',其他:'•' };
-const categoryRules = [['早餐',/早餐|早饭|包子|豆浆|油条/],['午餐',/午餐|午饭|中饭|工作餐/],['晚餐',/晚餐|晚饭|夜宵/],['咖啡',/咖啡|拿铁|美式|卡布奇诺/],['饮料',/饮料|奶茶|果汁|可乐|矿泉水|水(?!电)/],['零食',/零食|饼干|薯片|巧克力/],['餐饮',/餐|饭|面|外卖|火锅|烧烤/],['加油',/加油|汽油|柴油|油费/],['交通',/打车|出租车|滴滴|地铁|公交|停车|过路费|高速费/],['购物',/购物|买了|购买|淘宝|京东/],['日用',/日用|纸巾|洗衣液|清洁/],['住房',/房租|租金|物业|房贷/],['水电',/水费|电费|燃气|宽带/],['娱乐',/电影|游戏|演出|KTV/],['医疗',/药|医院|诊所|体检/],['教育',/课程|学费|书籍|培训/],['旅行',/机票|酒店|旅行|旅游/],['收入',/工资|奖金|收入|报销|退款/]];
+let words = S.get('words', []);
+let clock = S.get('clock', []);
+let sleepNights = S.get('sleepNights', []);
+let apiUsage = S.get('apiUsage', []);
+let settings = S.get('settings', {
+  apiKey:'', apiBase:'https://api.deepseek.com', model:'deepseek-chat', visionModel:'',
+  lastSync:0, lastDrift:0
+});
 
-const money = n => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const uid = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + Math.random().toString(16).slice(2);
-const IDB_NAME = 'flow_ledger_db_v3';
+/* ---------- 时间校准 ---------- */
+let timeOffset = Number(settings.lastDrift || 0);
+function realNow(){ return Date.now() + timeOffset; }
 
-/* ---------- 存储 ---------- */
-function openIDB() {
-  return new Promise((resolve, reject) => {
-    const r = indexedDB.open(IDB_NAME, 1);
-    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('state')) r.result.createObjectStore('state'); };
-    r.onsuccess = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
-  });
+async function syncTime(silent){
+  const sources = [
+    { url:'https://worldtimeapi.org/api/timezone/etc/utc', pick: j => new Date(j.utc_datetime).getTime() },
+    { url:'https://timeapi.io/api/time/current/zone?timeZone=UTC', pick: j => new Date(j.dateTime).getTime() },
+  ];
+  for(const src of sources){
+    try{
+      const t0 = Date.now();
+      const res = await fetch(src.url, { cache:'no-store' });
+      if(!res.ok) continue;
+      const j = await res.json();
+      const serverTs = src.pick(j);
+      if(!serverTs || isNaN(serverTs)) continue;
+      const t1 = Date.now();
+      const latency = (t1 - t0) / 2;
+      const drift = (serverTs + latency) - t1;
+      timeOffset = drift;
+      settings.lastSync = serverTs + latency;
+      settings.lastDrift = Math.round(drift);
+      S.set('settings', settings);
+      settings.timeSource=src.url.includes('worldtimeapi')?'worldtimeapi.org':'timeapi.io';renderSyncLabels();
+      if(!silent) toast('时间已校准');
+      return true;
+    }catch(e){}
+  }
+  if(!silent) toast('校准失败，使用本地时间');
+  return false;
 }
 
-async function save() {
-  const snapshot = JSON.parse(JSON.stringify(DB));
-  if (!snapshot.settings.rememberKey) snapshot.settings.apiKey = '';
-  try {
-    const db = await openIDB();
-    await new Promise((res, rej) => {
-      const tx = db.transaction('state', 'readwrite');
-      tx.objectStore('state').put(snapshot, 'ledger');
-      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-    });
-    db.close();
-  } catch (e) {
-    try { localStorage.setItem('flow_ledger_v3_backup', JSON.stringify(snapshot)); } catch (_) {}
+function renderSyncLabels(){
+  const last = document.getElementById('lastSyncVal');
+  const drift = document.getElementById('driftVal');const source=document.getElementById('timeSourceVal');if(source)source.textContent=settings.timeSource||'本地时间';
+  if(last) last.textContent = settings.lastSync ? fmtTs(settings.lastSync) : '—';
+  if(drift){
+    const d = settings.lastDrift || 0;
+    drift.textContent = (d >= 0 ? '+' : '') + d + ' ms';
   }
 }
 
-async function load() {
-  let x = null;
-  try {
-    const db = await openIDB();
-    x = await new Promise((res, rej) => {
-      const r = db.transaction('state').objectStore('state').get('ledger');
-      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-    });
-    db.close();
-  } catch (e) {}
-  if (!x) { try { x = JSON.parse(localStorage.getItem('flow_ledger_v3_backup')); } catch (e) {} }
-
-  if (x) {
-    DB.accounts = Array.isArray(x.accounts) ? x.accounts : [];
-    DB.tx = Array.isArray(x.tx) ? x.tx : [];
-    DB.tags = Array.isArray(x.tags) ? x.tags : [];
-    DB.budget = x.budget || { daily: 0, monthly: 0, dailyOverrides: [] };
-    DB.stats = { ...DB.stats, ...(x.stats || {}) };
-    DB.settings = { ...DB.settings, ...(x.settings || {}) };
-  }
-  if (!DB.settings.rememberKey) DB.settings.apiKey = sessionStorage.getItem('flow_api_key') || '';
+/* ---------- 工具 ---------- */
+function fmtTs(ts){
+  const d = new Date(ts);
+  return d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 }
+function fmtTime(ts){
+  return new Date(ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+function fmtHM(ts){
+  return new Date(ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
+}
+function fmtDur(ms){
+  const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  if(h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+function fmtDurFull(ms){
+  const s = Math.floor(Math.abs(ms)/1000);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return `${h}h ${String(m).padStart(2,'0')}m`;
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function dayKey(ts){
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function todayKey(){ return dayKey(realNow()); }
 
 let toastTimer;
-function toast(msg) {
-  const el = $('#toast');
+function toast(msg){
+  const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
 }
 
-/* ---------- 账户（自动创建 + 去重） ---------- */
-const CREDIT_RE = /信用卡|信用|花呗|白条|credit|贷记/i;
-const guessType = n => CREDIT_RE.test(n || '') ? 'credit' : 'cash';
-const cleanName = s => String(s || '').replace(/[（）()@＠#＃]/g, '').trim();
-const norm = s => cleanName(s).replace(/\s+/g, '').toLowerCase();
+/* ============================================================
+   DeepSeek API + token 追踪
+   ============================================================ */
+function calcCost(pt, ct){
+  // DeepSeek 参考定价：输入约 ¥2/M，输出约 ¥8/M（按需自行调整）
+  return (pt * 2 + ct * 8) / 1000000;
+}
 
-function findAccount(name, type) {
-  const n = norm(name);
-  if (!n) return null;
-  let a = DB.accounts.find(x => norm(x.name) === n || (x.aliases || []).some(al => norm(al) === n));
-  if (a) return a;
-  // 包含匹配（如 “微信” ≈ “微信零钱”），仅当类型相同且唯一候选时合并，避免把储蓄卡与信用卡混在一起
-  if (n.length >= 2) {
-    const t = type || guessType(name);
-    const c = DB.accounts.filter(x => {
-      const m = norm(x.name);
-      return m.length >= 2 && x.type === t && (m.includes(n) || n.includes(m));
+async function deepseek(messages, opts = {}){
+  const { apiKey, apiBase, model } = settings;
+  if(!apiKey) throw new Error('请先在设置里填写 API Key');
+  const base = (apiBase || 'https://api.deepseek.com').replace(/\/+$/,'');
+  const res = await fetch(base + '/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+    body: JSON.stringify({
+      model: opts.model || model || 'deepseek-chat',
+      messages,
+      temperature: opts.temperature ?? 0.4,
+      max_tokens: opts.max_tokens ?? 900,
+      ...(opts.response_format ? { response_format: opts.response_format } : {})
+    })
+  });
+  if(!res.ok){
+    let detail = '';
+    try{ const j = await res.json(); detail = j.error?.message || JSON.stringify(j); }catch(e){}
+    throw new Error(`API ${res.status}${detail ? ': ' + detail : ''}`);
+  }
+  const j = await res.json();
+  if(j.usage){
+    apiUsage.push({
+      ts: realNow(),
+      pt: j.usage.prompt_tokens || 0,
+      ct: j.usage.completion_tokens || 0,
+      tt: j.usage.total_tokens || 0,
+      model: opts.model || model,
+      purpose: opts.purpose || ''
     });
-    if (c.length === 1) return c[0];
+    S.set('apiUsage', apiUsage);
   }
-  return null;
+  const text = j.choices?.[0]?.message?.content;
+  if(!text) throw new Error('API 返回为空');
+  return text;
 }
 
-function account(name, type, balance, limit, setValues = false) {
-  name = cleanName(name);
-  if (!name || name === '未指定') name = '默认钱包';
-  type = type || guessType(name);
-  let a = findAccount(name, type);
-  if (!a) {
-    a = { id: uid(), name, type, balance: 0, limit: 0, used: 0, aliases: [] };
-    DB.accounts.push(a);
-    if (balance || limit) setValues = true;
-  } else if (a.name !== name) {
-    a.aliases = a.aliases || [];
-    if (!a.aliases.some(al => norm(al) === norm(name))) a.aliases.push(name);
-  }
-  if (setValues) {
-    if (balance != null && !isNaN(balance)) { if (a.type === 'credit') a.used = Number(balance); else a.balance = Number(balance); }
-    if (limit > 0) a.limit = Number(limit);
-  }
-  return a;
-}
+/* ============================================================
+   图表
+   ============================================================ */
+function drawBars(canvas, data, opts = {}){
+  if(!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  if(rect.width < 10) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = rect.width, h = rect.height;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
 
-// delta > 0 表示资金增加（信用卡则表示已用额度减少）
-function applyDelta(a, delta) {
-  if (!a) return;
-  if (a.type === 'credit') a.used = (a.used || 0) - delta;
-  else a.balance = (a.balance || 0) + delta;
-}
+  const padL = 26, padR = 6, padT = 14, padB = 22;
+  const cw = w - padL - padR;
+  const ch = h - padT - padB;
 
-function addTag(t) {
-  t = String(t || '').replace(/^[#＃]/, '').trim();
-  if (t && !DB.tags.includes(t)) DB.tags.push(t);
-  return t;
-}
+  const max = Math.max(1, ...data.map(d => d.value));
+  const n = data.length;
+  const gap = cw / n;
+  const bw = Math.max(4, gap * 0.55);
 
-function categoryOf(s) { for (const [name, re] of categoryRules) if (re.test(s)) return name; return '其他'; }
-function dateKey(d) { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
-function now() { return new Date(); }
+  // 基线
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + ch + 0.5);
+  ctx.lineTo(padL + cw, padT + ch + 0.5);
+  ctx.stroke();
 
-/* ================= 本地规则解析 ================= */
-const ST = '[^\\s，,。;；\\d]';                       // 账户名可用字符
-const TAGCH = '[^\\s#＃@＠（）()\\\\＼]';              // 标签 / 引用名可用字符
-const COMPLEX_RE = /预算|每天|每日|每月|每周|昨天|昨日|前天|明天|上周|下周|本周|上个月|\d{1,2}月\d{1,2}[日号]|\d{4}[-/.年]\d{1,2}|分别|以及|还有|另外|共|总共|合计|平均/;
-const mm = (s, p) => { const r = s.match(new RegExp(p)); return r ? r[1] : ''; };
+  // Y 轴刻度
+  ctx.fillStyle = '#000';
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.globalAlpha = 0.4;
+  ctx.fillText(String(max), padL - 4, padT + 4);
+  ctx.fillText('0', padL - 4, padT + ch + 3);
+  ctx.globalAlpha = 1;
 
-function parseAccountSpec(s) {
-  s = String(s || '').trim();
-  const lim = (s.match(/额度\s*[:：]?\s*(\d+(?:\.\d+)?)/) || [])[1];
-  const s2 = s.replace(/额度\s*[:：]?\s*\d+(?:\.\d+)?/, ' ');
-  const bal = (s2.match(/(\d+(?:\.\d+)?)/) || [])[1];
-  const name = s2.replace(/(?:余额|已用|欠款|欠)?\s*[:：]?\s*\d+(?:\.\d+)?\s*元?/, ' ').replace(/余额|已用|欠款/g, '').trim().split(/\s+/)[0];
-  return { name: cleanName(name), balance: bal != null ? Number(bal) : null, limit: lim ? Number(lim) : 0, type: guessType(s) };
-}
-const specToAction = b => ({ action: 'account', account: b.name, account_type: b.type, balance: b.balance, limit: b.limit });
-
-// 手动命令：创建 / 删除（也兼容旧的 // 删除）
-function parseManual(text) {
-  let del = false;
-  let m = text.match(/^(?:创建|新建|新增|添加)\s*/);
-  if (!m) { m = text.match(/^(?:删除|移除|去掉)\s*/) || text.match(/^\/\/\s*/); del = !!m; }
-  if (!m) return null;
-  const rest = text.slice(m[0].length).trim();
-  const tagRe = new RegExp('[#＃](' + TAGCH + '+)', 'g');
-  const atRe = new RegExp('[@＠](' + TAGCH + '+)', 'g');
-  const tagNames = [...rest.matchAll(tagRe)].map(x => x[1]);
-  const brackets = [...rest.matchAll(/[（(]([^）)]*)[）)]/g)].map(x => x[1]).filter(x => x.trim());
-  const ats = [...rest.matchAll(atRe)].map(x => x[1]);
-  let loose = rest.replace(tagRe, ' ').replace(/[（(][^）)]*[）)]/g, ' ').replace(atRe, ' ').trim();
-  let kind = null;
-  const lm = loose.match(/^(标签|账户|账号|银行卡|卡)\s*(.*)$/);
-  if (lm) { kind = lm[1] === '标签' ? 'tag' : 'account'; loose = lm[2].trim(); }
-
-  const actions = [], errors = [];
-  if (!del) {
-    tagNames.forEach(t => actions.push({ action: 'create_tag', tag: t }));
-    brackets.forEach(b => { const s = parseAccountSpec(b); if (s.name) actions.push(specToAction(s)); });
-    ats.forEach(n => actions.push(specToAction({ name: n, type: guessType(n), balance: null, limit: 0 })));
-    if (loose) {
-      if (kind === 'tag') loose.split(/\s+/).forEach(t => actions.push({ action: 'create_tag', tag: t.replace(/^[#＃]/, '') }));
-      else if (kind === 'account') { const s = parseAccountSpec(loose); if (s.name) actions.push(specToAction(s)); }
-      else if (!actions.length) errors.push('创建时请用 # 指定标签名，或用 （） 指定账户名');
-    }
-    if (!actions.length && !errors.length) errors.push('创建什么？例如「创建#咖啡」「创建（招行 余额5000）」');
-  } else {
-    const delByName = n => {
-      const a = findAccount(n);
-      if (a) actions.push({ action: 'delete_account', account: a.name });
-      else if (DB.tags.includes(n)) actions.push({ action: 'delete_tag', tag: n });
-      else errors.push(`没有找到「${n}」`);
-    };
-    tagNames.forEach(t => { if (DB.tags.includes(t)) actions.push({ action: 'delete_tag', tag: t }); else errors.push(`没有标签 #${t}`); });
-    [...brackets, ...ats].forEach(delByName);
-    if (loose) {
-      if (kind === 'tag') loose.split(/\s+/).forEach(t => { t = t.replace(/^[#＃]/, ''); if (DB.tags.includes(t)) actions.push({ action: 'delete_tag', tag: t }); else errors.push(`没有标签 #${t}`); });
-      else loose.split(/\s+/).forEach(delByName);
-    }
-    if (!actions.length && !errors.length) errors.push('删除什么？例如「删除#咖啡」「删除@招行」');
-  }
-  return { actions, confident: true, manual: true, error: actions.length ? '' : errors.join('；') };
-}
-
-function localParseCore(raw) {
-  const text0 = String(raw || '').trim();
-  const out = (actions, confident, extra = {}) => ({ actions, confident, ...extra });
-
-  const manual = parseManual(text0);
-  if (manual) return manual;
-
-  // 预算（日预算可带 YYYY-MM-DD，范围用“到”连接）
-  if (/预算/.test(text0)) {
-    const dates = text0.match(/\d{4}-\d{2}-\d{2}/g) || [];
-    const t1 = text0.replace(/\d{4}-\d{2}-\d{2}/g, ' ');
-    const bm = t1.match(/(月预算|每月预算|日预算|每日预算|每天预算)\D{0,6}?(\d+(?:\.\d+)?)/);
-    if (bm && !/\d{1,2}月\d{1,2}[日号]|明天|昨天|本周|下周|上周/.test(t1) && !(dates.length && /月/.test(bm[1]))) {
-      const a = { action: /月/.test(bm[1]) ? 'budget' : 'daily_budget', amount: Number(bm[2]) };
-      if (a.action === 'daily_budget' && dates.length) { a.start_date = dates[0]; a.end_date = dates[1] || dates[0]; }
-      return out([a], true);
-    }
-    return out([], false);
-  }
-
-  let text = text0, note = '';
-  const bs = text.search(/[\\＼]/);
-  if (bs >= 0) { note = text.slice(bs + 1).trim(); text = text.slice(0, bs).trim(); }
-
-  const bracketSpecs = [];
-  text = text.replace(/[（(]([^）)]*)[）)]/g, (_, inner) => { if (inner.trim()) bracketSpecs.push(parseAccountSpec(inner)); return ' '; });
-
-  const tags = [];
-  text = text.replace(/[#＃]([\w一-鿿-]+)/g, (_, t) => { tags.push(t); return ' '; });
-
-  const mentions = [];
-  text = text.replace(new RegExp('[@＠](' + TAGCH + '+)', 'g'), (_, n) => {
-    if (findAccount(n)) mentions.push(n);
-    else if (DB.tags.includes(n)) tags.push(n);
-    else mentions.push(n);
-    return ' ';
-  });
-
-  const body = text.replace(/\s+/g, ' ').trim();
-  const nums = [...body.matchAll(/\d+(?:\.\d+)?/g)];
-  const amount = nums.length ? Number(nums[0][0]) : 0;
-  const bodyNoAmt = body.replace(/(?:¥|￥)?\s*\d+(?:\.\d+)?\s*(?:元|块|rmb|RMB)?/, ' ').replace(/\s+/g, ' ').trim();
-  const hasKeyword = /支出|消费|花|付|收入|工资|到账|收到|奖金|转账|转到|转入|转出|还款|还/.test(body);
-
-  // 仅括号：创建账户
-  if (bracketSpecs.length && !(hasKeyword && amount > 0)) {
-    return out(bracketSpecs.filter(b => b.name).map(specToAction), true);
-  }
-  const bracketActs = bracketSpecs.filter(b => b.name).map(specToAction);
-  const bracketAcc = (bracketSpecs[0] && bracketSpecs[0].name) || '';
-
-  // 仅 #标签：创建标签
-  if (!amount && tags.length && !bodyNoAmt) {
-    return out([...bracketActs, ...tags.map(t => ({ action: 'create_tag', tag: t }))], true);
-  }
-  if (!amount) {
-    return out([], false, { error: '没有找到金额。例如「从微信支出 25 #咖啡」「工资到招行 8000」；复杂内容请配置 API Key 交给 AI' });
-  }
-
-  const kinds = [/支出|消费|花了|花费|付款|支付/, /收入|工资|到账|收到|奖金|报销|退款|入账|进账/, /转账|转到|转入|转出|转给|汇款/, /还款|还.{0,6}卡|还花呗|还白条/].filter(r => r.test(body)).length;
-  const complex = COMPLEX_RE.test(body) || nums.length > 1 || kinds > 1 || /[;；\n]/.test(text0) || body.length > 40;
-  const fallbackAcc = bracketAcc || mentions[0] || '';
-  const category = tags[0] || categoryOf(body);
-  const title = note || tags.join(' ') || (category !== '其他' ? category : bodyNoAmt.replace(/^(支出|收入|转账|还款)\s*/, '').trim());
-  const arrowRe = new RegExp('(?:从)?\\s*(' + ST + '+?)\\s*(?:→|->|到|至|给)\\s*(' + ST + '+)');
-  const credTok = /信用卡|花呗|白条/;
-
-  const isRepay = /还款|还.{0,6}卡|还花呗|还白条/.test(body);
-  const isTransfer = !isRepay && /转账|转到|转入|转出|转给|汇款/.test(body);
-  const isIncome = !isRepay && !isTransfer && /收入|工资|到账|收到|奖金|报销|退款|入账|进账/.test(body);
-
-  if (isRepay) {
-    let from = '', to = '', r;
-    if ((r = bodyNoAmt.match(new RegExp('从\\s*(' + ST + '+?)\\s*还款?\\s*(?:到|至)?\\s*(' + ST + '*(?:信用卡|花呗|白条)' + ST + '*)')))) { from = r[1]; to = r[2]; }
-    else {
-      const b = bodyNoAmt.replace(/还款|还/g, ' ').replace(/\s+/g, ' ').trim();
-      if ((r = b.match(arrowRe))) { from = r[1]; to = r[2]; }
-      else {
-        const toks = b.split(' ').filter(Boolean);
-        const tk = toks.find(t => credTok.test(t));
-        if (tk) to = tk.replace(/^[到至给]/, '');
-        const f = b.match(new RegExp('从\\s*(' + ST + '+)'));
-        if (f) from = f[1]; else { const other = toks.find(t => t !== tk); if (other) from = other; }
-      }
-    }
-    from = from || fallbackAcc;
-    return out([...bracketActs, { action: 'repayment', from: from || '默认钱包', to: to || '信用卡', amount, note: note || '还款' }], !!to && !complex);
-  }
-
-  if (isTransfer) {
-    const b = bodyNoAmt.replace(/转账|转入|转出|转到|转给|汇款|转/g, ' ').replace(/\s+/g, ' ').trim();
-    let from = '', to = '';
-    const r = b.match(arrowRe);
-    if (r) { from = r[1]; to = r[2]; }
-    else {
-      to = mm(b, '(?:到|至|给|→|->)\\s*(' + ST + '+)');
-      from = mm(b, '从\\s*(' + ST + '+)');
-    }
-    from = from || fallbackAcc;
-    if (!to && mentions.length > 1) to = mentions[1];
-    return out([...bracketActs, { action: 'transfer', from: from || '默认钱包', to: to || '储蓄卡', amount, note: note || '转账' }], !!(from && to) && !complex);
-  }
-
-  if (isIncome) {
-    const b2 = body.replace(/到账|入账|进账|收入|收到/g, ' ');
-    let acc = mm(b2, '(?:到|存入|入|进)\\s*(' + ST + '+?)(?=\\s|\\d|$)');
-    if (!acc) {
-      acc = mm(body, '(' + ST + '+?)\\s*(?:收入|到账|收到)');
-      if (/^(工资|奖金|报销|退款|薪水|红包|收入)$/.test(acc)) acc = '';
-    }
-    acc = acc || fallbackAcc;
-    return out([...bracketActs, { action: 'income', account: acc || '', amount, category: tags[0] || (/工资|奖金|报销|退款/.test(body) ? '收入' : categoryOf(body)), tags, note: title }], !complex);
-  }
-
-  let acc = mm(body, '从\\s*(' + ST + '+?)\\s*(?:里|中)?\\s*(?:支出|消费|花费|花了?|付款|支付|付|扣除|扣款|转出)')
-    || mm(body, '用\\s*(' + ST + '+?)\\s*(?:支付|付款|付|买|消费)')
-    || fallbackAcc;
-  return out([...bracketActs, { action: 'expense', account: acc || '', amount, category, tags, note: title }], !complex);
-}
-
-/* ---------- 入口：支持 YYYY-MM-DD 指定账务日期 ---------- */
-function localParse(raw) {
-  let text = String(raw || '');
-  let date = '';
-  if (!/预算/.test(text) && !/^\s*(?:创建|新建|新增|添加|删除|移除|去掉|\/\/)/.test(text)) {
-    const m = text.match(/\d{4}-\d{2}-\d{2}/);
-    if (m) { date = m[0]; text = text.replace(/\d{4}-\d{2}-\d{2}/g, ' '); }
-  }
-  const r = localParseCore(text);
-  if (date) r.actions.forEach(a => { if (NEEDS_AMOUNT.includes(a.action)) a.date = date; });
-  return r;
-}
-
-const NEEDS_AMOUNT = ['expense', 'income', 'transfer', 'repayment'];
-
-function validateActions(actions) {
-  for (const a of actions) {
-    if (NEEDS_AMOUNT.includes(a.action) && !(Number(a.amount) > 0)) throw new Error('有一条记录缺少金额');
-    if ((a.action === 'budget' || a.action === 'daily_budget') && !(Number(a.amount) > 0)) throw new Error('预算缺少金额');
-    if (a.action === 'account' && !cleanName(a.account)) throw new Error('未识别到账户名');
-    if ((a.action === 'create_tag' || a.action === 'delete_tag') && !a.tag) throw new Error('未识别到标签名');
-    if (a.action === 'delete_account' && !cleanName(a.account)) throw new Error('未识别到账户名');
-  }
-}
-
-// 解析 AI 转写出的“标准语法”文本：逐行交给本地解析器
-function parseSyntaxLines(raw) {
-  const lines = String(raw || '').replace(/```[a-z]*/gi, '').split(/\n+/)
-    .map(l => l.replace(/^\s*(?:[-*•]|\d+[.、)])\s*/, '').trim()).filter(Boolean);
-  const actions = [], bad = [];
-  for (const l of lines) {
-    if (/^无法识别/.test(l)) throw new Error('AI 无法转写：' + (l.replace(/^无法识别[:：]?\s*/, '') || '内容不明确'));
-    const r = localParse(l);
-    if (r.actions.length) actions.push(...r.actions); else bad.push(l);
-  }
-  return { lines, actions, bad };
-}
-/* ---------- 供 AI 参考的消费汇总：按月 + 按日（本地保留全部记录） ---------- */
-function buildSpendSummary() {
-  const exp = DB.tx.filter(t => t.type === 'expense');
-  if (!exp.length) return '';
-  const sumBy = fn => exp.reduce((o, t) => { const k = fn(new Date(t.date)); o[k] = (o[k] || 0) + t.amount; return o; }, {});
-  const sorted = o => Object.entries(o).sort((a, b) => b[0].localeCompare(a[0]));
-  const months = sorted(sumBy(d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)).slice(0, 12).reverse();
-  const days = sorted(sumBy(d => dateKey(d))).slice(0, 31).reverse();
-  const fmt = rows => rows.map(([k, v]) => `${k} ${v.toFixed(2)}`).join('；');
-  return `\n消费汇总（仅供参考，不要写进输出）：\n按月：${fmt(months)}\n按日：${fmt(days)}`;
-}
-
-/*PURE_END*/
-
-/* ================= AI 调用（带状态与累计次数） ================= */
-const SYNTAX_PROMPT = `你是记账语法转写器。把用户的自然语言（以及图片 OCR 文字）改写成「标准记账语法」，每个动作一行。只输出这些行，不要解释、不要编号、不要代码块。
-
-标准语法（“从”表示起点/付款账户，“到”表示终点/收款账户）：
-- 支出：从<账户>支出 <金额> #标签 \\备注
-- 收入：收入 <金额> 到<账户> #标签 \\备注
-- 转账：从<账户>转账 <金额> 到<账户> \\备注
-- 还款：从<账户>还款 <金额> 到<信用卡账户> \\备注
-- 创建标签：创建#标签名
-- 创建/更新账户：创建（账户名 余额5000）；信用卡：创建（账户名 额度20000 已用3000）
-- 删除标签：删除#标签名；删除账户：删除@账户名
-- 月预算：月预算 5000；日预算：日预算 100；指定日期的日预算：日预算 100 2026-11-05 到 2026-11-07
-- 指定日期的账务：在该行任意位置加 YYYY-MM-DD，如：从微信支出 30 #交通 2026-11-03
-
-规则：
-1. 金额写阿拉伯数字，不带单位。
-2. 账户名取自用户原话，不含数字和括号；与已有账户明显是同一个（如“微信”与“微信零钱”）时用已有账户名；没提到账户就省略“从<账户>”/“到<账户>”，如：支出 25 #咖啡。
-3. 标签优先使用已有标签；商户、用途等细节放在 \\ 之后作为备注。
-4. “昨天/前天/上周五”等相对日期，按当前日期换算成 YYYY-MM-DD。
-5. 一句话包含多笔账务时拆成多行。
-6. 图片 OCR：银行卡信息 → 创建账户（名称用“银行名+卡类型”，如 招商银行储蓄卡 / 招商银行信用卡）；支付成功页或账单 → 支出/收入（金额取实付，商户放备注，支付方式作为账户）。
-7. 完全无法转写时只输出一行：无法识别：<原因>
-
-当前日期：`;
-
-const OCR_PROMPT = '请完整、逐行提取这张图片里所有可见的文字（包括银行名称、卡类型、卡号尾号、金额、余额、额度、日期、商户、支付方式等）。只输出提取到的文字本身，不要解释，不要总结。';
-
-let run = { calls: 0 };
-const aiCountText = () => `AI 累计调用 ${DB.stats.aiCalls} 次`;
-
-function setStatus(msg, kind = '') {
-  const el = $('#statusLine');
-  el.textContent = msg;
-  el.className = 'status-line ' + kind;
-}
-function statusIdle() { setStatus(`本地规则优先 · ${aiCountText()}`); }
-
-function extractJSON(s) {
-  s = String(s || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
-  try { return JSON.parse(s); } catch (_) {}
-  const m = s.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-  if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
-  throw new Error('AI 返回的内容无法解析');
-}
-
-async function callAI({ model, messages, json, step }) {
-  const s = DB.settings;
-  if (!s.apiKey) throw new Error('请先在设置中配置 API Key');
-  DB.stats.aiCalls++; run.calls++;
-  save();
-  setStatus(`🤖 AI 调用中 · ${step} · 本次第 ${run.calls} 次 · 累计 ${DB.stats.aiCalls} 次`, 'busy');
-  renderStats();
-
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 60000);
-  try {
-    const body = { model, messages, temperature: 0.1 };
-    if (json) body.response_format = { type: 'json_object' };
-    const res = await fetch(s.apiBase.replace(/\/$/, '') + '/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.apiKey },
-      body: JSON.stringify(body),
-      signal: ctrl.signal
-    });
-    if (!res.ok) {
-      let detail = '';
-      try { detail = (await res.json()).error?.message || ''; } catch (_) {}
-      throw new Error('API 请求失败 ' + res.status + (detail ? '：' + detail : ''));
-    }
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || '';
-  } catch (e) {
-    if (e.name === 'AbortError') throw new Error('AI 请求超时（60 秒）');
-    if (e instanceof TypeError) throw new Error('网络请求失败，请检查网络、API 地址或跨域设置');
-    throw e;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function ocrImage(image) {
-  const content = await callAI({
-    model: DB.settings.visionModel,
-    messages: [{ role: 'user', content: [{ type: 'text', text: OCR_PROMPT }, { type: 'image_url', image_url: { url: image } }] }],
-    json: false,
-    step: '步骤 1/2：识别图片文字'
-  });
-  return String(content || '').trim();
-}
-
-async function aiToSyntax(text, ocr, feedback, step) {
-  const ctx = `${dateKey(now())}\n已有账户：${JSON.stringify(DB.accounts.map(a => ({ name: a.name, type: a.type })))}\n已有标签：${JSON.stringify(DB.tags)}${buildSpendSummary()}`;
-  let user = '用户输入：' + (text || '（无）');
-  if (ocr) user += '\n\n图片 OCR 文字（可能有错字或噪声，请合理推断）：\n' + ocr;
-  const messages = [{ role: 'system', content: SYNTAX_PROMPT + ctx }, { role: 'user', content: user }];
-  if (feedback) {
-    messages.push({ role: 'assistant', content: feedback.prev });
-    messages.push({ role: 'user', content: '下面这些行不符合标准语法，程序无法解析：\n' + feedback.bad.join('\n') + '\n请严格按标准语法重新输出全部行。' });
-  }
-  return String(await callAI({ model: DB.settings.textModel, messages, json: false, step }) || '');
-}
-
-// AI 把自然语言转写为标准语法 → 本地解析 → 仍有无法解析的行则让 AI 修正一次
-async function viaAI(text, ocr) {
-  let out = await aiToSyntax(text, ocr, null, ocr ? '步骤 2/2：转写为标准语法' : '转写为标准语法');
-  let p = parseSyntaxLines(out);
-  if (p.bad.length) {
-    out = await aiToSyntax(text, ocr, { prev: out, bad: p.bad }, '修正语法');
-    p = parseSyntaxLines(out);
-  }
-  if (!p.actions.length) throw new Error('AI 转写后仍无法解析' + (p.bad[0] ? '：' + p.bad[0] : ''));
-  return { actions: p.actions, syntax: p.lines.join('\n'), warn: p.bad.length ? `有 ${p.bad.length} 行无法解析，已忽略：${p.bad.join('；')}` : '' };
-}
-
-/* ---------- 路由：简单 → 本地；复杂 / 图片 → AI ---------- */
-async function recognize(text, image) {
-  const s = DB.settings, hasKey = !!s.apiKey;
-
-  if (image) {
-    if (!hasKey) throw new Error('图片识别需要先在设置中配置 API Key');
-    const ocr = await ocrImage(image);
-    if (!ocr) throw new Error('没有从图片中识别到文字');
-    const r = await viaAI(text, ocr);
-    return { ...r, source: 'ai', ocr };
-  }
-
-  const local = localParse(text);
-  if (local.manual) {
-    if (!local.actions.length) throw new Error(local.error);
-    return { actions: local.actions, source: 'local' };
-  }
-  if (local.confident && local.actions.length && !(s.alwaysAI && hasKey)) {
-    return { actions: local.actions, source: 'local' };
-  }
-
-  if (hasKey) {
-    try {
-      const r = await viaAI(text, '');
-      return { ...r, source: 'ai' };
-    } catch (e) {
-      if (local.actions.length) return { actions: local.actions, source: 'local', warn: `AI 调用失败（${e.message}），已采用本地解析，请核对` };
-      throw e;
-    }
-  }
-
-  if (local.actions.length) return { actions: local.actions, source: 'local', warn: '内容较复杂，本地规则可能不准；在设置中配置 API Key 后，AI 会先把它转写成标准语法再记录，请仔细核对' };
-  throw new Error(local.error || '没能识别出内容。请使用标准语法，如「从微信支出 25 #咖啡」；复杂内容请在设置中配置 API Key');
-}
-
-/* ---------- 图片处理 ---------- */
-let imageData = '';
-function setImage(dataUrl) {
-  imageData = dataUrl || '';
-  $('#imgChip').classList.toggle('show', !!imageData);
-  $('#uploadBtn').classList.toggle('has', !!imageData);
-  if (imageData) $('#imgThumb').src = imageData;
-  if (!imageData) $('#imageInput').value = '';
-}
-function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onerror = reject;
-    fr.onload = () => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        const max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        resolve(c.toDataURL('image/jpeg', 0.88));
-      };
-      img.src = fr.result;
-    };
-    fr.readAsDataURL(file);
-  });
-}
-
-/* ---------- 预览 & 入账 ---------- */
-let pendingActions = null;
-let busy = false;
-
-function newBadge(name, type) { return findAccount(name, type) ? '' : '<span class="badge">新建账户</span>'; }
-
-function showPreview(r) {
-  const actions = r.actions;
-  pendingActions = actions;
-  $('#composerCard').style.display = 'none';
-  $('#previewArea').style.display = 'block';
-  $('#previewSrc').textContent = r.source === 'ai' ? `AI 转写 · 本次调用 ${run.calls} 次` : '本地规则 · 未调用 AI';
-  $('#previewWarn').innerHTML = r.warn ? `<div class="preview-warn">⚠️ ${esc(r.warn)}</div>` : '';
-  $('#previewSyntax').innerHTML = r.syntax ? `<details class="preview-ocr" open><summary>AI 转写成的标准语法</summary><pre>${esc(r.syntax)}</pre></details>` : '';
-  $('#previewOcr').innerHTML = r.ocr ? `<details class="preview-ocr"><summary>查看 AI 识别到的图片文字</summary><pre>${esc(r.ocr)}</pre></details>` : '';
-  $('#previewList').innerHTML = actions.map(a => {
-    const note = (a.note ? `<small>备注：${esc(a.note)}</small>` : '') + (a.date ? `<small>日期：${esc(a.date)}</small>` : '');
-    const tg = a.tags?.length ? ' ' + a.tags.map(t => '#' + esc(t)).join(' ') : '';
-    let html = '';
-    switch (a.action) {
-      case 'expense': html = `💸 <b>支出</b> ${money(a.amount)}　${esc(a.account || '默认钱包')}${newBadge(a.account || '默认钱包')}${tg}${note}`; break;
-      case 'income': html = `💰 <b>收入</b> ${money(a.amount)}　${esc(a.account || '默认钱包')}${newBadge(a.account || '默认钱包')}${tg}${note}`; break;
-      case 'transfer': html = `↔️ <b>转账</b> ${money(a.amount)}　${esc(a.from || '默认钱包')}${newBadge(a.from || '默认钱包')} → ${esc(a.to || '默认钱包')}${newBadge(a.to || '默认钱包')}${note}`; break;
-      case 'repayment': html = `💳 <b>还款</b> ${money(a.amount)}　${esc(a.from || '默认钱包')}${newBadge(a.from || '默认钱包')} → ${esc(a.to || '信用卡')}${newBadge(a.to || '信用卡', 'credit')}${note}`; break;
-      case 'account': {
-        const t = a.account_type === 'credit' ? 'credit' : (a.account_type === 'cash' ? 'cash' : guessType(a.account));
-        const bal = a.balance != null && a.balance !== '' ? (t === 'credit' ? `已用 ${money(a.balance)}` : `余额 ${money(a.balance)}`) : '';
-        const lim = Number(a.limit) > 0 ? `额度 ${money(a.limit)}` : '';
-        html = `👤 <b>${findAccount(a.account, t) ? '更新账户' : '创建账户'}</b> ${esc(a.account)}（${t === 'credit' ? '信用卡' : '资金账户'}）<small>${[bal, lim].filter(Boolean).join('　')}</small>`;
-        break;
-      }
-      case 'create_tag': html = `🏷️ <b>创建标签</b> #${esc(a.tag)}${DB.tags.includes(a.tag) ? '<span class="badge warn">已存在</span>' : ''}`; break;
-      case 'budget': html = `🎯 <b>月预算</b> ${money(a.amount)}`; break;
-      case 'daily_budget': html = `📅 <b>日预算</b> ${money(a.amount)}${a.start_date ? `<small>${esc(a.start_date)} ~ ${esc(a.end_date || a.start_date)}</small>` : ''}`; break;
-      case 'delete_account': html = `🗑️ <b>删除账户</b> ${esc(a.account)} <span class="badge warn">含其全部记录</span>`; break;
-      case 'delete_tag': html = `🗑️ <b>删除标签</b> #${esc(a.tag)}`; break;
-      default: html = esc(JSON.stringify(a));
-    }
-    return `<div class="preview-item">${html}</div>`;
-  }).join('');
-}
-
-function applyOne(p) {
-  const amt = Number(p.amount || 0);
-  const date = (p.date && /^\d{4}-\d{2}-\d{2}$/.test(p.date)) ? new Date(p.date + 'T12:00:00').toISOString() : now().toISOString();
-  switch (p.action) {
-    case 'daily_budget':
-      if (!p.start_date && !p.end_date) DB.budget.daily = amt;
-      else {
-        DB.budget.dailyOverrides = DB.budget.dailyOverrides || [];
-        DB.budget.dailyOverrides.push({ id: uid(), amount: amt, startDate: p.start_date || dateKey(now()), endDate: p.end_date || p.start_date || dateKey(now()), createdAt: date });
-      }
-      break;
-    case 'budget': DB.budget.monthly = amt; break;
-    case 'create_tag': addTag(p.tag); break;
-    case 'delete_tag': DB.tags = DB.tags.filter(t => t !== p.tag); break;
-    case 'delete_account': {
-      const a = findAccount(p.account);
-      if (a) {
-        DB.accounts = DB.accounts.filter(x => x !== a);
-        DB.tx = DB.tx.filter(t => t.account !== a.name && t.from !== a.name && t.to !== a.name);
-      }
-      break;
-    }
-    case 'account': {
-      const bal = p.balance ?? p.amount;
-      const t = p.account_type === 'credit' || p.account_type === 'cash' ? p.account_type : undefined;
-      account(p.account, t, bal != null && bal !== '' ? Number(bal) : null, Number(p.limit || 0), true);
-      break;
-    }
-    case 'transfer':
-    case 'repayment': {
-      const fromAcc = account(p.from || '默认钱包');
-      const toAcc = account(p.to || '默认钱包', p.action === 'repayment' ? 'credit' : undefined);
-      applyDelta(fromAcc, -amt);
-      applyDelta(toAcc, amt);
-      DB.tx.unshift({ id: uid(), type: p.action, amount: amt, from: fromAcc.name, to: toAcc.name, category: p.action === 'repayment' ? '还款' : '转账', note: p.note || p.summary || '', date });
-      break;
-    }
-    case 'income':
-    case 'expense': {
-      const a = account(p.account || '默认钱包');
-      applyDelta(a, p.action === 'income' ? amt : -amt);
-      const tags = (p.tags || []).map(addTag).filter(Boolean);
-      DB.tx.unshift({ id: uid(), type: p.action, amount: amt, account: a.name, category: p.category || tags[0] || '其他', tags, note: p.note || p.summary || '', date });
-      break;
-    }
-  }
-}
-
-async function handleParse() {
-  if (busy) return;
-  const text = $('#command').value.trim();
-  if (!text && !imageData) return toast('请输入内容或上传图片');
-  busy = true;
-  const btn = $('#parseBtn');
-  btn.textContent = '识别中…'; btn.disabled = true;
-  run = { calls: 0 };
-
-  try {
-    setStatus(imageData ? '准备调用 AI…' : '本地解析中…', 'busy');
-    const r = await recognize(text, imageData);
-    validateActions(r.actions);
-    if (r.source === 'local') {
-      DB.stats.localRuns++; save();
-      setStatus(`✓ 已用本地规则解析（未调用 AI）· ${aiCountText()}`, 'ok');
+  data.forEach((d, i) => {
+    const x = padL + i * gap + (gap - bw) / 2;
+    const bh = (d.value / max) * ch;
+    const y = padT + ch - bh;
+    if(d.value > 0){
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x, y, bw, bh);
     } else {
-      setStatus(`✓ AI 解析完成 · 本次调用 ${run.calls} 次 · ${aiCountText()}`, 'ok');
+      ctx.strokeStyle = '#000';
+      ctx.globalAlpha = 0.18;
+      ctx.strokeRect(x + 0.5, padT + ch - 0.5, bw - 1, 1);
+      ctx.globalAlpha = 1;
     }
-    showPreview(r);
-    renderStats();
-  } catch (e) {
-    setStatus(`✗ ${e.message}${run.calls ? ` · 本次已调用 AI ${run.calls} 次 · ${aiCountText()}` : ''}`, 'err');
-    toast('解析失败：' + e.message);
-  } finally {
-    busy = false;
-    btn.textContent = '记录'; btn.disabled = false;
+    // 标签
+    ctx.fillStyle = '#000';
+    ctx.font = '9px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = 0.55;
+    ctx.fillText(d.label, x + bw / 2, h - 6);
+    ctx.globalAlpha = 1;
+    // 顶部数值
+    if(d.value > 0 && opts.showValue !== false){
+      ctx.font = '9px -apple-system, sans-serif';
+      ctx.fillStyle = '#000';
+      ctx.fillText(d.value >= 100 ? String(Math.round(d.value)) : d.value.toFixed ? (+d.value.toFixed(1)).toString() : d.value, x + bw / 2, y - 3);
+    }
+  });
+}
+
+function last7Days(){
+  const out = [];
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(realNow());
+    d.setDate(d.getDate() - i);
+    out.push({
+      key: dayKey(d.getTime()),
+      label: (d.getMonth()+1) + '/' + d.getDate()
+    });
   }
+  return out;
 }
 
-async function confirmActions() {
-  if (!pendingActions) return;
-  const btn = $('#confirmBtn');
-  btn.textContent = '入账中…'; btn.disabled = true;
-  try {
-    for (const a of pendingActions) applyOne(a);
-    DB.tx.sort((x, y) => new Date(y.date) - new Date(x.date));
-    await save();
-    toast('已成功记录');
-    pendingActions = null;
-    $('#previewArea').style.display = 'none';
-    $('#composerCard').style.display = 'block';
-    $('#command').value = '';
-    setImage('');
-    statusIdle();
-    render();
-  } catch (e) {
-    toast('入账失败');
-  } finally {
-    btn.textContent = '确认入账'; btn.disabled = false;
-  }
-}
+/* ============================================================
+   录入页（聊天式）
+   ============================================================ */
+let chatMessages = [];        // {role:'user'|'bot', html}
+let pendingWords = [];        // 待确认的单词数据
+let pendingImage = null;      // {dataUrl, name}
 
-/* ---------- 统计 & 渲染 ---------- */
-function calc() {
-  const cash = DB.accounts.filter(a => a.type !== 'credit').reduce((s, a) => s + (a.balance || 0), 0);
-  const debt = DB.accounts.filter(a => a.type === 'credit').reduce((s, a) => s + (a.used || 0), 0);
-  const n = now();
-  const month = DB.tx.filter(t => { const d = new Date(t.date); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); });
-  return { cash, debt, available: cash - debt, expense: month.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0), income: month.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0) };
-}
+const chatEl = document.getElementById('chatMessages');
+const chatScrollEl = document.getElementById('chatScroll');
 
-const getTotal = arr => arr.reduce((s, t) => s + t.amount, 0);
-const byCat = arr => Object.entries(arr.reduce((o, t) => (o[t.category] = (o[t.category] || 0) + t.amount, o), {})).sort((a, b) => b[1] - a[1]);
-
-function renderStats() {
-  const ai = DB.stats.aiCalls, loc = DB.stats.localRuns;
-  $('#statsAI').textContent = ai + ' 次';
-  $('#statsText').textContent = `累计调用 AI ${ai} 次（识别图片时每张图占 2 次）；本地规则解析 ${loc} 次。`;
-  $('#statsHint').textContent = DB.settings.apiKey ? '已配置' : '未配置 Key';
-}
-
-function renderSummary() {
-  const exp = DB.tx.filter(t => t.type === 'expense');
-  const box = $('#aiSummary');
-  if (!exp.length) { box.textContent = '暂无消费数据'; $('#summaryMeta').textContent = ''; return; }
-  const n = now();
-  const sd = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-  const sw = new Date(sd); sw.setDate(sd.getDate() - ((n.getDay() || 7) - 1));
-  const sm = new Date(n.getFullYear(), n.getMonth(), 1);
-  const seg = (label, from) => {
-    const a = exp.filter(t => new Date(t.date) >= from), tot = getTotal(a), top = byCat(a)[0];
-    return `${label}：${money(tot)}（${a.length} 笔${top ? '，最多 ' + top[0] + ' ' + Math.round(top[1] / tot * 100) + '%' : ''}）`;
-  };
-  box.textContent = [seg('今日', sd), seg('本周', sw), seg('本月', sm)].join('\n');
-  const mTot = getTotal(exp.filter(t => new Date(t.date) >= sm));
-  $('#summaryMeta').textContent = DB.budget.monthly > 0 ? `本月预算已使用 ${Math.round(mTot / DB.budget.monthly * 100)}%` : '';
-}
-
-function render() {
-  const c = calc(), n = now();
-
-  $('#availableHero').textContent = money(c.available);
-  $('#monthExpense').textContent = money(c.expense);
-  $('#monthIncome').textContent = money(c.income);
-  $('#overviewAvailable').textContent = money(c.available);
-  $('#txCount').textContent = DB.tx.length + ' 笔';
-  $('#accountCount').textContent = DB.accounts.length + ' 个账户';
-  $('#apiStatus').textContent = DB.settings.apiKey ? '已配置' : '未配置';
-  renderStats();
-
-  $('#recentList').innerHTML = DB.tx.slice(0, 30).map(t => {
-    const where = t.account || ((t.from || '') + ' → ' + (t.to || ''));
-    const tg = t.tags?.length ? ' · ' + t.tags.map(x => '#' + x).join(' ') : '';
-    return `
-    <div class="swipe-container">
-      <div class="swipe-delete" data-del="${esc(t.id)}">删除</div>
-      <div class="swipe-content">
-        <div class="left">
-          <div class="ico">${icons[t.category] || '📝'}</div>
-          <div class="meta">
-            <b>${esc(t.note || t.category)}</b>
-            <span>${esc(where)} · ${new Date(t.date).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}${esc(tg)}</span>
-          </div>
-        </div>
-        <div class="value ${t.type === 'expense' ? 'expense' : t.type === 'income' ? 'income' : ''}">
-          ${t.type === 'income' ? '+' : t.type === 'expense' ? '-' : ''}${money(t.amount)}
-        </div>
-      </div>
-    </div>`;
-  }).join('') || '<div class="empty">还没有记录</div>';
-
-  $('#accountList').innerHTML = DB.accounts.map(a => `
-    <div class="row-item">
-      <div class="left">
-        <div class="ico">${a.type === 'credit' ? '💳' : '◉'}</div>
-        <div class="meta"><b>${esc(a.name)}</b><span>${a.type === 'credit' ? '信用卡' : '资金账户'}</span></div>
-      </div>
-      <div class="value ${a.type === 'credit' ? 'expense' : ''}">
-        ${money(a.type === 'credit' ? a.used : a.balance)}
-        <small>${a.type === 'credit' ? '可用 ' + money((a.limit || 0) - (a.used || 0)) : ''}</small>
-      </div>
+function renderChat(){
+  chatEl.innerHTML = chatMessages.map(m => `
+    <div class="chat-msg ${m.role}">
+      <div class="bubble">${m.html}</div>
     </div>
-  `).join('') || '<div class="empty">暂无账户</div>';
+  `).join('');
+  // 滚动到底部
+  requestAnimationFrame(() => {
+    chatScrollEl.scrollTop = chatScrollEl.scrollHeight;
+  });
+}
 
-  const startToday = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-  const startMonth = new Date(n.getFullYear(), n.getMonth(), 1);
-  const expenses = DB.tx.filter(t => t.type === 'expense');
-  const todayExp = expenses.filter(t => new Date(t.date) >= startToday);
-  const monthExp = expenses.filter(t => new Date(t.date) >= startMonth);
+function addMsg(role, html){
+  chatMessages.push({ role, html });
+  renderChat();
+}
 
-  $('#todayExpense').textContent = money(getTotal(todayExp));
-  $('#todayExpenseText').textContent = money(getTotal(todayExp));
-  $('#monthExpenseText').textContent = money(getTotal(monthExp));
+function renderImgChip(){
+  const wrap = document.getElementById('imgChipWrap');
+  if(!pendingImage){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div class="img-chip">
+      <img src="${pendingImage.dataUrl}" alt="">
+      <span class="t">${esc(pendingImage.name)}</span>
+      <button class="x" id="btnRemoveImg">×</button>
+    </div>`;
+  document.getElementById('btnRemoveImg').onclick = () => {
+    pendingImage = null;
+    renderImgChip();
+  };
+}
 
-  const todayK = dateKey(n);
-  let dayBudgetAmt = DB.budget.daily, dayBudgetLabel = '固定预算';
-  if (DB.budget.dailyOverrides) {
-    const ov = DB.budget.dailyOverrides.find(o => o.startDate <= todayK && o.endDate >= todayK);
-    if (ov) { dayBudgetAmt = ov.amount; dayBudgetLabel = '指定预算'; }
+/* ---------- 单词卡片渲染 ---------- */
+function wordCardHTML(w){
+  const syll = (w.syllables && w.syllables.length)
+    ? `<div class="syll">${w.syllables.map((s,i) => (i?'<span class="dot">·</span>':'') + `<span>${esc(s)}</span>`).join('')}</div>`
+    : '';
+  const examples = (w.examples || []).map(ex => `
+    <div class="example">${esc(ex.en || '')}<div class="tr">${esc(ex.cn || '')}</div></div>
+  `).join('');
+  return `
+    <div class="word-preview">${esc(w.w)}</div>
+    ${w.phonetic ? `<div style="font-size:12px;opacity:.55;font-weight:600">${esc(w.phonetic)}</div>` : ''}
+    ${syll}
+    ${w.enDef ? `<div class="def-en">${esc(w.enDef)}</div>` : ''}
+    ${w.cnDef ? `<div class="def-cn">${esc(w.cnDef)}</div>` : ''}
+    ${examples}
+    ${w.note ? `<div style="font-size:11px;opacity:.55;margin-top:5px">${esc(w.note)}</div>` : ''}
+  `;
+}
+
+/* ---------- 单词查询 ---------- */
+function wordPrompt(word){
+  return `你是专业的英语词汇学习助手。请为单词「${word}」生成学习卡，严格返回 JSON，不要任何额外文字或代码块。
+JSON 字段：
+{
+  "word": "原单词",
+  "phonetic": "英式音标，例如 /ɪˈfem(ə)rəl/",
+  "syllables": ["按音节拆分", "的数组"],
+  "enDef": "柯林斯风格的英文释义，1—2 句",
+  "cnDef": "对应中文释义",
+  "examples": [{"en":"英文例句","cn":"中文翻译"},{"en":"英文例句","cn":"中文翻译"}],
+  "note": "可选：词根词缀或记忆钩子"
+}
+要求：syllables 自然拆分，例句贴合学习场景，不要编造。`;
+}
+
+async function lookupWord(word){
+  const raw = await deepseek(
+    [{ role:'user', content: wordPrompt(word) }],
+    { temperature:0.3, max_tokens:700, response_format:{ type:'json_object' }, purpose:'word' }
+  );
+  let obj;
+  try{ obj = JSON.parse(raw); }
+  catch(e){
+    const m = raw.match(/\{[\s\S]*\}/);
+    if(m) obj = JSON.parse(m[0]);
+    else throw new Error('返回格式无法解析');
   }
-  const dayLeft = dayBudgetAmt - getTotal(todayExp);
-  $('#dailyBudgetRemaining').textContent = money(dayLeft);
-  $('#dailyBudgetRemaining').className = dayLeft < 0 ? 'expense' : '';
-  $('#dailyBudgetDetail').textContent = dayBudgetAmt > 0 ? `${dayBudgetLabel} ${money(dayBudgetAmt)}` : '尚未设置日预算';
+  return normalizeWord(obj, word);
+}
 
-  const budgetLeft = DB.budget.monthly > 0 ? DB.budget.monthly - getTotal(monthExp) : c.available;
-  $('#budgetRemaining').textContent = money(budgetLeft);
-  $('#budgetRemaining').className = budgetLeft < 0 ? 'expense' : '';
+function normalizeWord(obj, fallbackWord){
+  return {
+    w: (obj.word || fallbackWord || '').trim(),
+    phonetic: obj.phonetic || '',
+    syllables: Array.isArray(obj.syllables) ? obj.syllables : [],
+    enDef: obj.enDef || '',
+    cnDef: obj.cnDef || '',
+    examples: Array.isArray(obj.examples) ? obj.examples.slice(0,3) : [],
+    note: obj.note || '',
+    count: 0,
+    lastAt: 0,
+    createdAt: realNow()
+  };
+}
 
-  const mkDist = (rows, total) => !rows.length || !total ? '<div class="empty">暂无数据</div>' : rows.map(([name, val]) => `
-    <div class="dist-row"><span>${esc(name)}</span><div class="dist-track"><div class="dist-fill" style="width:${Math.max(2, val / total * 100)}%"></div></div><span class="dist-value">${Math.round(val / total * 100)}%</span></div>
+function offlineWord(w){
+  return {
+    w, phonetic:'', syllables:[w],
+    enDef:'离线模式：暂无英文释义。', cnDef:'离线模式：暂无中文释义。',
+    examples:[], note:'配置 API Key 后可获取完整卡片。',
+    count:0, lastAt:0, createdAt: realNow()
+  };
+}
+
+/* ---------- 图片识别 ---------- */
+async function extractWordsFromImage(base64){
+  const model = settings.visionModel || settings.model;
+  const base = (settings.apiBase || 'https://api.deepseek.com').replace(/\/+$/,'');
+  const res = await fetch(base + '/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + settings.apiKey },
+    body: JSON.stringify({
+      model,
+      messages: [{
+        role:'user',
+        content: [
+          { type:'text', text:'请识别图片中的所有英文单词，每行一个，只返回单词列表，不要其他内容。' },
+          { type:'image_url', image_url:{ url: base64 } }
+        ]
+      }],
+      max_tokens: 500
+    })
+  });
+  if(!res.ok){
+    let detail = '';
+    try{ const j = await res.json(); detail = j.error?.message || JSON.stringify(j); }catch(e){}
+    throw new Error(`图片识别失败 ${res.status}${detail ? ': ' + detail : ''}。请确认已配置支持视觉的模型。`);
+  }
+  const j = await res.json();
+  if(j.usage){
+    apiUsage.push({ ts: realNow(), pt: j.usage.prompt_tokens||0, ct: j.usage.completion_tokens||0, tt: j.usage.total_tokens||0, model, purpose:'vision' });
+    S.set('apiUsage', apiUsage);
+  }
+  return (j.choices?.[0]?.message?.content || '').trim();
+}
+
+/* ---------- 录入按钮 ---------- */
+document.getElementById('btnPickImg').addEventListener('click', () => {
+  document.getElementById('imgFile').click();
+});
+
+document.getElementById('imgFile').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(!f) return;
+  if(f.size > 5 * 1024 * 1024){ toast('图片过大（建议 < 5MB）'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingImage = { dataUrl: reader.result, name: f.name || '图片' };
+    renderImgChip();
+  };
+  reader.readAsDataURL(f);
+  e.target.value = '';
+});
+
+document.getElementById('btnPreviewWords').addEventListener('click', async () => {
+  const raw = document.getElementById('wordInput').value.trim();
+  const btn = document.getElementById('btnPreviewWords');
+  const confirmBtn = document.getElementById('btnConfirmWords');
+
+  if(!raw && !pendingImage){ toast('请输入单词或上传图片'); return; }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 处理中';
+  confirmBtn.disabled = true;
+  pendingWords = [];
+
+  let wordsToProcess = [];
+  if(raw){
+    wordsToProcess = [...new Set(raw.split(/\n+/).map(s=>s.trim()).filter(Boolean))].slice(0, 12);
+  }
+
+  // 图片识别
+  if(pendingImage){
+    addMsg('user', '上传了一张图片：' + esc(pendingImage.name));
+    try{
+      const extracted = await extractWordsFromImage(pendingImage.dataUrl);
+      const list = extracted.split(/\n+/).map(s => s.replace(/[^a-zA-Z\-'\s]/g,'').trim()).filter(Boolean);
+      wordsToProcess = [...new Set([...wordsToProcess, ...list])].slice(0, 12);
+      if(list.length){
+        addMsg('bot', '从图片中识别到 ' + list.length + ' 个单词：' + list.map(esc).join('、'));
+      }else{
+        addMsg('bot', '未从图片中识别到英文单词。');
+      }
+    }catch(e){
+      addMsg('bot', esc(e.message));
+    }
+    pendingImage = null;
+    renderImgChip();
+  }
+
+  if(!wordsToProcess.length){
+    btn.disabled = false; btn.textContent = '查询预览';
+    toast('没有可处理的单词');
+    return;
+  }
+
+  addMsg('user', '查询 ' + wordsToProcess.length + ' 个单词：' + wordsToProcess.map(esc).join('、'));
+
+  let ok = 0, fail = 0;
+  for(const w of wordsToProcess){
+    try{
+      const entry = await lookupWord(w);
+      pendingWords.push(entry);
+      ok++;
+      addMsg('bot', wordCardHTML(entry));
+    }catch(e){
+      const entry = offlineWord(w);
+      pendingWords.push(entry);
+      fail++;
+      addMsg('bot', wordCardHTML(entry) + `<div style="font-size:11px;margin-top:6px;opacity:.55">API 失败，使用离线模板：${esc(e.message.slice(0,80))}</div>`);
+    }
+  }
+
+  btn.disabled = false; btn.textContent = '查询预览';
+  confirmBtn.disabled = pendingWords.length === 0;
+
+  if(ok && !fail) toast(`已生成 ${ok} 张卡片`);
+  else if(ok && fail) toast(`${ok} 成功，${fail} 离线`);
+  else toast('全部使用离线模板');
+});
+
+document.getElementById('btnConfirmWords').addEventListener('click', () => {
+  if(!pendingWords.length){ toast('没有待确认的单词'); return; }
+  let added = 0, updated = 0;
+  for(const entry of pendingWords){
+    const i = words.findIndex(x => x.w.toLowerCase() === entry.w.toLowerCase());
+    if(i >= 0){
+      const count = words[i].count, lastAt = words[i].lastAt;
+      words[i] = { ...entry, count, lastAt };
+      updated++;
+    } else {
+      words.push(entry);
+      added++;
+    }
+  }
+  S.set('words', words);
+  pendingWords = [];
+  document.getElementById('wordInput').value = '';
+  document.getElementById('btnConfirmWords').disabled = true;
+  addMsg('bot', `已确认录入 ${added} 个新单词${updated ? '，更新 ' + updated + ' 个' : ''}。`);
+  toast('已录入');
+  renderInputChart();
+  renderPreview();
+});
+
+/* ---------- 录入页图表 ---------- */
+function renderInputChart(){
+  const days = last7Days();
+  const data = days.map(d => ({
+    label: d.label,
+    value: words.filter(w => dayKey(w.createdAt) === d.key).length
+  }));
+  setTimeout(() => drawBars(document.getElementById('chartInput'), data), 30);
+}
+
+/* ============================================================
+   预览页
+   ============================================================ */
+let previewIdx = 0;
+
+function renderPreview(){
+  const body = document.getElementById('previewBody');
+  const idxEl = document.getElementById('previewIdx');
+  const listEl = document.getElementById('wordList');
+
+  if(!words.length){
+    body.innerHTML = '<div class="card"><div class="empty">先去「录入」添加单词</div></div>';
+    idxEl.textContent = '';
+    listEl.innerHTML = '<div class="empty">暂无单词</div>';
+    renderPreviewChart();
+    return;
+  }
+
+  previewIdx = Math.max(0, Math.min(previewIdx, words.length - 1));
+  const w = words[previewIdx];
+  idxEl.textContent = `${previewIdx + 1} / ${words.length}`;
+
+  const syll = (w.syllables && w.syllables.length)
+    ? `<div class="syllables">${w.syllables.map((s,i) => (i?'<span class="dot">·</span>':'') + `<span>${esc(s)}</span>`).join('')}</div>`
+    : '';
+
+  const examples = (w.examples || []).map(ex => `
+    <div class="example">${esc(ex.en || '')}<div class="tr">${esc(ex.cn || '')}</div></div>
   `).join('');
 
-  $('#todayDist').innerHTML = mkDist(byCat(todayExp), getTotal(todayExp));
-  $('#monthDist').innerHTML = mkDist(byCat(monthExp), getTotal(monthExp));
+  body.innerHTML = `
+    <div class="wcard">
+      <div class="word">${esc(w.w)}</div>
+      ${w.phonetic ? `<div class="phonetic">${esc(w.phonetic)}</div>` : ''}
+      ${syll}
+      ${w.enDef ? `<div class="section-label">Collins</div><div class="en-def">${esc(w.enDef)}</div>` : ''}
+      ${w.cnDef ? `<div class="section-label">中文</div><div class="cn-def">${esc(w.cnDef)}</div>` : ''}
+      ${examples ? `<div class="divider"></div><div class="section-label">例句</div>${examples}` : ''}
+      ${w.note ? `<div class="divider"></div><div style="font-size:12px;opacity:.55;line-height:1.6">${esc(w.note)}</div>` : ''}
+      <div style="margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;opacity:.5;font-weight:700">已学 ${w.count || 0} 遍</span>
+        <span class="chip">${w.lastAt ? '上次 ' + fmtHM(w.lastAt) : '未学'}</span>
+      </div>
+    </div>`;
 
-  const avail = DB.accounts.map(a => [a.name, Math.max(0, a.type === 'credit' ? (a.limit || 0) - (a.used || 0) : a.balance || 0)]).filter(x => x[1] > 0);
-  $('#availableDist').innerHTML = mkDist(avail, avail.reduce((s, x) => s + x[1], 0));
+  // 单词列表（次数越多背景越黑）
+  const sorted = [...words].map((x,i)=>({...x, _i:i})).sort((a,b)=>(b.count||0)-(a.count||0));
+  const maxCount = Math.max(1, ...words.map(x=>x.count||0));
 
-  // 每日消费趋势：只展示近 10 天，更早的记录仍保存在本地
-  const days = [...Array(10)].map((_, i) => new Date(n.getFullYear(), n.getMonth(), n.getDate() - 9 + i));
-  const vals = days.map(d => { const k = dateKey(d); return expenses.filter(t => dateKey(t.date) === k).reduce((a, t) => a + t.amount, 0); });
-  const mx = Math.max(1, ...vals);
-  $('#monthlyTrend').innerHTML = vals.map((v, i) => `<div style="height:${Math.max(4, v / mx * 100)}%" title="${days[i].getMonth() + 1}月${days[i].getDate()}日 ${money(v)}"><em>${days[i].getMonth() + 1}/${days[i].getDate()}</em></div>`).join('');
+  listEl.innerHTML = sorted.map(x => {
+    const c = x.count || 0;
+    const op = c === 0 ? 0 : Math.min(1, 0.15 + 0.85 * (c / Math.max(3, maxCount)));
+    const style = c > 0
+      ? `background:#000;color:#fff;opacity:${op};padding:2px 8px;border-radius:6px;display:inline-block`
+      : `padding:2px 8px;border-radius:6px;display:inline-block;border:1px solid #000`;
+    return `
+      <div class="li" data-widx="${x._i}" style="cursor:pointer">
+        <div class="l">
+          <div class="title" style="${style}">${esc(x.w)}</div>
+          <div class="meta">${esc(x.cnDef ? x.cnDef.slice(0,24) : '')}</div>
+        </div>
+        <div class="r"><span class="chip">${c} 遍</span></div>
+      </div>`;
+  }).join('');
 
-  renderSummary();
+  listEl.querySelectorAll('[data-widx]').forEach(el => {
+    el.addEventListener('click', () => {
+      previewIdx = parseInt(el.dataset.widx, 10);
+      renderPreview();
+      window.scrollTo({ top:0, behavior:'smooth' });
+    });
+  });
+
+  renderPreviewChart();
 }
 
-async function deleteTx(id) {
-  if (!confirm('确认删除这笔记录吗？余额将同步回退。')) return;
-  const t = DB.tx.find(x => x.id === id);
-  if (!t) return;
-  const find = n => DB.accounts.find(x => x.name === n);
-  if (t.type === 'expense') applyDelta(find(t.account), t.amount);
-  else if (t.type === 'income') applyDelta(find(t.account), -t.amount);
-  else { applyDelta(find(t.from), t.amount); applyDelta(find(t.to), -t.amount); }
-  DB.tx = DB.tx.filter(x => x.id !== id);
-  await save();
-  render();
-  toast('已删除记录');
+function renderPreviewChart(){
+  // 按学习次数分布
+  const buckets = [0,0,0,0,0];
+  words.forEach(w => {
+    const c = w.count || 0;
+    if(c === 0) buckets[0]++;
+    else if(c === 1) buckets[1]++;
+    else if(c === 2) buckets[2]++;
+    else if(c === 3) buckets[3]++;
+    else buckets[4]++;
+  });
+  const data = [
+    { label:'0', value:buckets[0] },
+    { label:'1', value:buckets[1] },
+    { label:'2', value:buckets[2] },
+    { label:'3', value:buckets[3] },
+    { label:'4+', value:buckets[4] },
+  ];
+  setTimeout(() => drawBars(document.getElementById('chartPreview'), data), 30);
 }
-$('#recentList').addEventListener('click', e => {
-  const d = e.target.closest('[data-del]');
-  if (d) deleteTx(d.dataset.del);
+
+document.getElementById('btnPrevWord').addEventListener('click', () => {
+  if(previewIdx > 0){ previewIdx--; renderPreview(); }
+});
+document.getElementById('btnNextWord').addEventListener('click', () => {
+  if(previewIdx < words.length - 1){ previewIdx++; renderPreview(); }
+});
+document.getElementById('btnMarkLearned').addEventListener('click', () => {
+  if(!words.length) return;
+  const w = words[previewIdx];
+  w.count = (w.count || 0) + 1;
+  w.lastAt = realNow();
+  S.set('words', words);
+  renderPreview();
+  toast('已记录一遍');
 });
 
-/* ---------- 左滑删除（触屏） ---------- */
-let startX = 0, startY = 0, currentRow = null;
-const scrollBox = $('#recentList');
-scrollBox.addEventListener('touchstart', e => {
-  const row = e.target.closest('.swipe-content');
-  if (!row) return;
-  currentRow = row;
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-  $$('.swipe-content').forEach(el => { if (el !== currentRow) el.style.transform = ''; });
-}, { passive: true });
-scrollBox.addEventListener('touchmove', e => {
-  if (!currentRow) return;
-  const dx = e.touches[0].clientX - startX, dy = e.touches[0].clientY - startY;
-  if (Math.abs(dy) > Math.abs(dx)) { currentRow.style.transform = ''; currentRow = null; return; }
-  if (dx < 0) currentRow.style.transform = `translateX(${Math.max(dx, -80)}px)`;
-}, { passive: true });
-scrollBox.addEventListener('touchend', e => {
-  if (!currentRow) return;
-  const dx = e.changedTouches[0].clientX - startX;
-  currentRow.style.transform = dx < -40 ? 'translateX(-80px)' : '';
-  currentRow = null;
-}, { passive: true });
+/* ============================================================
+   打卡页
+   ============================================================ */
+async function getLocation(){
+  return new Promise((resolve, reject) => {
+    if(!navigator.geolocation) return reject(new Error('浏览器不支持定位'));
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }),
+      err => reject(new Error(err.message || '定位失败')),
+      { enableHighAccuracy:true, timeout:12000, maximumAge:30000 }
+    );
+  });
+}
 
-/* ---------- # / @ 自动补全（向下展开） ---------- */
-const cmd = $('#command'), drop = $('#mentionDropdown');
-let sugStart = -1, sugActive = 0;
-
-function hideSuggest() { drop.style.display = 'none'; sugStart = -1; }
-function updateSuggest() {
-  const pos = cmd.selectionStart, before = cmd.value.slice(0, pos);
-  const m = before.match(/([@#])([^\s@#（）()\\＼]*)$/);
-  if (!m) return hideSuggest();
-  const ch = m[1], q = m[2], ql = q.toLowerCase();
-  sugStart = pos - q.length - 1;
-  let items = [];
-  if (ch === '#') {
-    items = DB.tags.filter(t => t.toLowerCase().includes(ql)).map(t => ({ value: t, label: '#' + t, hint: '标签' }));
-    if (q && !DB.tags.includes(q)) items.push({ value: q, label: '＋ 新标签 #' + q, hint: '新建' });
-  } else {
-    items = [
-      ...DB.accounts.filter(a => a.name.toLowerCase().includes(ql)).map(a => ({ value: a.name, label: a.name, hint: a.type === 'credit' ? '信用卡' : '账户' })),
-      ...DB.tags.filter(t => t.toLowerCase().includes(ql)).map(t => ({ value: t, label: '#' + t, hint: '标签' }))
-    ];
+async function reverseGeocode(lat, lng){
+  try{
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=zh-CN`;
+    const res = await fetch(url, { headers:{ 'Accept':'application/json' } });
+    if(!res.ok) return '';
+    const j = await res.json();
+    return j.display_name || '';
+  }catch(e){
+    return '';
   }
-  if (!items.length) return hideSuggest();
-  sugActive = 0;
-  drop.innerHTML = items.slice(0, 30).map((it, i) => `<div class="mention-item${i === 0 ? ' active' : ''}" data-ch="${ch}" data-value="${esc(it.value)}"><span>${esc(it.label)}</span><em>${it.hint}</em></div>`).join('');
-  drop.style.display = 'block';
 }
-function insertSuggest(ch, value) {
-  const pos = cmd.selectionStart;
-  const before = cmd.value.slice(0, sugStart), after = cmd.value.slice(pos);
-  const ins = ch + value + ' ';
-  cmd.value = before + ins + after;
-  cmd.focus();
-  cmd.selectionStart = cmd.selectionEnd = (before + ins).length;
-  hideSuggest();
+
+async function clockAction(type){
+  const btnMap = { in:'btnClockIn', out:'btnClockOut', break_start:'btnBreakToggle', break_end:'btnBreakToggle' };
+  const btn = document.getElementById(btnMap[type]);
+  const oldHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  let loc = null;
+  try{ loc = await getLocation(); }catch(e){ toast('定位失败，仍记录时间'); }
+
+  let address = '';
+  if(loc){
+    address = await reverseGeocode(loc.lat, loc.lng);
+  }
+
+  clock.push({
+    type,
+    ts: realNow(),
+    lat: loc?.lat ?? null,
+    lng: loc?.lng ?? null,
+    acc: loc?.acc ?? null,
+    address: address || ''
+  });
+  S.set('clock', clock);
+  renderClock();
+  renderClockCalendar();
+  renderClockChart();
+
+  btn.disabled = false;
+  btn.innerHTML = oldHTML;
+  const labelMap = { in:'上班', out:'下班', break_start:'开始休息', break_end:'结束休息' };
+  toast(labelMap[type] + ' 已记录');
 }
-drop.addEventListener('mousedown', e => {
-  e.preventDefault();
-  const it = e.target.closest('.mention-item');
-  if (it) insertSuggest(it.dataset.ch, it.dataset.value);
+
+function calcClockDurations(entries, nowTs=realNow()){
+  const es=[...entries].sort((a,b)=>a.ts-b.ts);let work=0,brk=0,inTs=null,breakTs=null;
+  for(const e of es){
+    if(e.type==='in'){if(inTs==null)inTs=e.ts;breakTs=null}
+    else if(e.type==='break_start'&&inTs!=null&&breakTs==null){work+=Math.max(0,e.ts-inTs);inTs=null;breakTs=e.ts}
+    else if(e.type==='break_end'&&breakTs!=null){brk+=Math.max(0,e.ts-breakTs);breakTs=null;inTs=e.ts}
+    else if(e.type==='out'){if(inTs!=null)work+=Math.max(0,e.ts-inTs);if(breakTs!=null)brk+=Math.max(0,e.ts-breakTs);inTs=null;breakTs=null}
+  }
+  if(inTs!=null)work+=Math.max(0,nowTs-inTs);if(breakTs!=null)brk+=Math.max(0,nowTs-breakTs);return{workMs:work,breakMs:brk};
+}
+function todayEntries(){
+  const t = todayKey();
+  return clock.filter(e => dayKey(e.ts) === t).sort((a,b)=>a.ts-b.ts);
+}
+
+function clockState(){
+  const es = todayEntries();
+  if(!es.length) return 'none';
+  const last = es[es.length - 1];
+  if(last.type === 'out') return 'out';
+  if(last.type === 'break_start') return 'break';
+  return 'in';
+}
+
+function renderClock(){
+  const es = todayEntries();
+  const state = clockState();
+  const stateEl = document.getElementById('clockStateText');
+  const calEl = document.getElementById('clockCalTime');
+  const statusEl = document.getElementById('clockStatus');
+
+  if(calEl) calEl.textContent = settings.lastSync ? fmtHM(settings.lastSync) : '未校准';
+  if(statusEl) statusEl.textContent = clock.length + ' 条记录';
+
+  const labels = {
+    none: '<span class="status-dot off"></span>未打卡',
+    in: '<span class="status-dot"></span>上班中',
+    break: '<span class="status-dot"></span>休息中',
+    out: '<span class="status-dot"></span>已下班'
+  };
+  stateEl.innerHTML = labels[state];
+
+  // 按钮可用性
+  const btnIn = document.getElementById('btnClockIn');
+  const btnOut = document.getElementById('btnClockOut');
+  const btnBreak = document.getElementById('btnBreakToggle');
+  btnIn.disabled = (state === 'in' || state === 'break');
+  btnOut.disabled = (state === 'none' || state === 'out');
+  btnBreak.disabled = (state === 'none' || state === 'out');
+  btnBreak.textContent = state === 'break' ? '结束休息' : '休息';
+  btnBreak.className = state === 'break' ? 'btn sm' : 'btn ghost sm';
+
+  // 今日明细
+  const detail = document.getElementById('clockDetail');
+  if(!es.length){
+    detail.innerHTML = '<div class="empty" style="padding:20px 0">今日暂无打卡</div>';
+  }else{
+    const typeLabels = { in:'上班', out:'下班', break_start:'开始休息', break_end:'结束休息' };
+    let html = '';
+    let {workMs,breakMs}=calcClockDurations(es);
+    let inTs=null,breakStart=null;
+    for(const e of es){
+      if(e.type === 'in'){ inTs = e.ts; }
+      else if(e.type === 'out' && inTs != null){ inTs = null; }
+      else if(e.type === 'break_start'){ breakStart = e.ts; }
+      else if(e.type === 'break_end' && breakStart != null){ breakStart = null; }
+
+      const locInfo = e.lat != null
+        ? `<div class="meta" style="margin-top:2px">${esc(e.address || '地址解析中…')}</div>
+           <div class="meta">${e.lat.toFixed(6)}, ${e.lng.toFixed(6)} · 精度 ±${Math.round(e.acc || 0)}m</div>`
+        : `<div class="meta">未获取定位</div>`;
+
+      html += `
+        <div class="li">
+          <div class="l">
+            <div class="title">${typeLabels[e.type]} <span style="font-weight:600;font-size:12px;opacity:.55">${fmtTime(e.ts)}</span></div>
+            ${locInfo}
+          </div>
+        </div>`;
+    }
+    // 如果正在上班/休息，累计到当前
+    const now = realNow();
+    
+
+    html += `
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <div style="flex:1;border:1px solid #000;border-radius:12px;padding:10px;text-align:center">
+          <div style="font-size:10px;font-weight:800;opacity:.45">工作时长</div>
+          <div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">${workMs > 0 ? fmtDurFull(workMs) : '—'}</div>
+        </div>
+        <div style="flex:1;border:1px solid #000;border-radius:12px;padding:10px;text-align:center">
+          <div style="font-size:10px;font-weight:800;opacity:.45">休息时长</div>
+          <div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">${breakMs > 0 ? fmtDurFull(breakMs) : '—'}</div>
+        </div>
+      </div>`;
+    detail.innerHTML = html;
+  }
+
+  // 近期记录
+  const hist = document.getElementById('clockHistory');
+  const byDay = {};
+  clock.slice().sort((a,b)=>b.ts-a.ts).forEach(e => {
+    const d = dayKey(e.ts);
+    if(!byDay[d]) byDay[d] = [];
+    byDay[d].push(e);
+  });
+  const days = Object.keys(byDay).sort().reverse().slice(0, 7);
+  if(!days.length){
+    hist.innerHTML = '<div class="empty" style="padding:20px 0">暂无记录</div>';
+  }else{
+    hist.innerHTML = days.map(d => {
+      const es = byDay[d].sort((a,b)=>a.ts-b.ts);
+      // 计算当日工时
+      let workMs = 0, inTs = null;
+      for(const e of es){
+        if(e.type === 'in') inTs = e.ts;
+        else if(e.type === 'out' && inTs != null){ inTs = null; }
+      }
+      const first = es[0], last = es[es.length - 1];
+      return `
+        <div class="li">
+          <div class="l">
+            <div class="title">${d}</div>
+            <div class="meta">${fmtTime(first.ts)} → ${fmtTime(last.ts)} · ${es.length} 条</div>
+          </div>
+          <div class="r">${workMs > 0 ? `<span class="chip solid">${fmtDurFull(workMs)}</span>` : ''}</div>
+        </div>`;
+    }).join('');
+  }
+}
+
+/* ---------- 打卡日历 ---------- */
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function renderClockCalendar(){
+  const grid = document.getElementById('calGrid');
+  const monthEl = document.getElementById('calMonth');
+  const first = new Date(calYear, calMonth, 1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+  monthEl.textContent = `${calYear} 年 ${calMonth + 1} 月`;
+
+  // 每天的状态
+  const byDay = {};
+  clock.forEach(e => {
+    const d = dayKey(e.ts);
+    if(!byDay[d]) byDay[d] = [];
+    byDay[d].push(e);
+  });
+
+  function dayStatus(day){
+    const key = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    const es = byDay[key];
+    if(!es || !es.length) return 'none';
+    const hasIn = es.some(e => e.type === 'in');
+    const hasOut = es.some(e => e.type === 'out');
+    if(hasIn && hasOut) return 'full';
+    return 'part';
+  }
+
+  const today = new Date(realNow());
+  const isCurrentMonth = (today.getFullYear() === calYear && today.getMonth() === calMonth);
+
+  let html = '';
+  ['日','一','二','三','四','五','六'].forEach(d => {
+    html += `<div class="cal-head">${d}</div>`;
+  });
+  for(let i = 0; i < startDay; i++) html += '<div class="cal-day blank"></div>';
+  for(let d = 1; d <= daysInMonth; d++){
+    const s = dayStatus(d);
+    const cls = s === 'full' ? 'full' : s === 'part' ? 'part' : '';
+    const todayCls = (isCurrentMonth && d === today.getDate()) ? 'today' : '';
+    html += `<div class="cal-day ${cls} ${todayCls}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+document.getElementById('calPrev').addEventListener('click', () => {
+  calMonth--;
+  if(calMonth < 0){ calMonth = 11; calYear--; }
+  renderClockCalendar();
 });
-drop.addEventListener('touchstart', e => {
-  const it = e.target.closest('.mention-item');
-  if (it) { e.preventDefault(); insertSuggest(it.dataset.ch, it.dataset.value); }
-}, { passive: false });
-cmd.addEventListener('input', updateSuggest);
-cmd.addEventListener('click', updateSuggest);
-cmd.addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleParse(); return; }
-  if (drop.style.display !== 'block') return;
-  const items = [...drop.children];
-  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-    e.preventDefault();
-    sugActive = (sugActive + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
-    items.forEach((el, i) => el.classList.toggle('active', i === sugActive));
-    items[sugActive].scrollIntoView({ block: 'nearest' });
-  } else if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
-    e.preventDefault();
-    const it = items[sugActive];
-    insertSuggest(it.dataset.ch, it.dataset.value);
-  } else if (e.key === 'Escape') hideSuggest();
-});
-document.addEventListener('click', e => { if (!e.target.closest('.input-wrap')) hideSuggest(); });
-
-/* ---------- 其他交互 ---------- */
-$('#quickChips').addEventListener('click', e => {
-  const b = e.target.closest('.chip');
-  if (!b) return;
-  cmd.value = b.dataset.q + ' ' + cmd.value.replace(/^(收入|支出|转账|还款)\s*/, '');
-  cmd.focus();
-  cmd.selectionStart = cmd.selectionEnd = cmd.value.length;
-});
-$('#parseBtn').onclick = handleParse;
-$('#confirmBtn').onclick = confirmActions;
-$('#cancelBtn').onclick = () => {
-  pendingActions = null;
-  $('#previewArea').style.display = 'none';
-  $('#composerCard').style.display = 'block';
-  statusIdle();
-};
-
-$('#imageInput').onchange = async e => {
-  const f = e.target.files[0];
-  if (!f) return;
-  try { setImage(await compressImage(f)); toast('已选图片，点击“记录”识别'); }
-  catch (_) { toast('图片读取失败'); setImage(''); }
-};
-$('#imgRemove').onclick = () => setImage('');
-
-$$('.tab').forEach(b => b.onclick = () => {
-  $$('.tab').forEach(x => x.classList.remove('active'));
-  b.classList.add('active');
-  $$('.view').forEach(v => v.classList.remove('active'));
-  $('#' + b.dataset.view).classList.add('active');
-  window.scrollTo({ top: 0 });
-  render();
+document.getElementById('calNext').addEventListener('click', () => {
+  calMonth++;
+  if(calMonth > 11){ calMonth = 0; calYear++; }
+  renderClockCalendar();
 });
 
-$('#saveApi').onclick = async () => {
-  DB.settings.apiBase = $('#apiBase').value.trim() || 'https://api.deepseek.com';
-  DB.settings.textModel = $('#textModel').value.trim();
-  DB.settings.visionModel = $('#visionModel').value.trim();
-  DB.settings.rememberKey = $('#rememberKey').checked;
-  DB.settings.alwaysAI = $('#alwaysAI').checked;
-  DB.settings.apiKey = $('#apiKey').value.trim();
-  if (DB.settings.rememberKey) sessionStorage.removeItem('flow_api_key');
-  else sessionStorage.setItem('flow_api_key', DB.settings.apiKey);
-  await save();
-  render();
-  toast('API 设置已保存');
-};
+/* ---------- 打卡图表 ---------- */
+function renderClockChart(){
+  const days = last7Days();
+  const data = days.map(d => {
+    const es = clock.filter(e => dayKey(e.ts) === d.key).sort((a,b)=>a.ts-b.ts);
+    let workMs = 0, inTs = null;
+    for(const e of es){
+      if(e.type === 'in') inTs = e.ts;
+      else if(e.type === 'out' && inTs != null){ inTs = null; }
+    }
+    return { label: d.label, value: +(workMs / 3600000).toFixed(1) };
+  });
+  setTimeout(() => drawBars(document.getElementById('chartClock'), data), 30);
+}
 
-$('#resetStats').onclick = async () => {
-  if (!confirm('确定把 AI 调用次数清零吗？')) return;
-  DB.stats = { aiCalls: 0, localRuns: 0 };
-  await save();
-  renderStats();
-  statusIdle();
-  toast('已重置计数');
-};
+/* ============================================================
+   睡眠页
+   ============================================================ */
+let sleepCalYear = new Date().getFullYear();
+let sleepCalMonth = new Date().getMonth();
 
-$('#exportBtn').onclick = () => {
-  const snapshot = JSON.parse(JSON.stringify(DB));
-  snapshot.settings.apiKey = '';
-  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+function currentNight(){
+  const now = realNow();
+  const d = new Date(now);
+  if(d.getHours() < 12) d.setDate(d.getDate() - 1);
+  const key = dayKey(d.getTime());
+  let night = sleepNights.find(n => n.id === key);
+  if(!night){
+    night = { id: key, events: [] };
+    sleepNights.push(night);
+    S.set('sleepNights', sleepNights);
+  }
+  return night;
+}
+
+function lastSleepEvent(night){
+  return night.events.length ? night.events[night.events.length - 1] : null;
+}
+function sleepIsAsleep(night){
+  const e = lastSleepEvent(night);
+  return !!e && e.type === 'asleep';
+}
+
+function sleepSegments(night){
+  const segs = [];
+  let sleepStart = null;
+  const now = realNow();
+  for(const e of night.events){
+    if(e.type === 'asleep') sleepStart = e.ts;
+    else if(e.type === 'awake' && sleepStart != null){
+      segs.push({ start:sleepStart, end:e.ts });
+      sleepStart = null;
+    }
+  }
+  if(sleepStart != null) segs.push({ start:sleepStart, end:now });
+  return segs;
+}
+
+function toggleSleep(){
+  const night = currentNight();
+  const asleep = sleepIsAsleep(night);
+  night.events.push({ type: asleep ? 'awake' : 'asleep', ts: realNow() });
+  S.set('sleepNights', sleepNights);
+  renderSleep();
+  renderSleepCalendar();
+  renderSleepChart();
+  toast(asleep ? '已记录醒来' : '已记录入睡');
+}
+
+function renderSleep(){
+  const night = currentNight();
+  const asleep = sleepIsAsleep(night);
+  const label = document.getElementById('sleepStateLabel');
+  const btn = document.getElementById('btnSleepToggle');
+  const btnLabel = document.getElementById('sleepBtnLabel');
+  const timer = document.getElementById('sleepTimer');
+
+  document.getElementById('sleepDateLabel').textContent = night.id;
+
+  const segs = sleepSegments(night);
+  const total = segs.reduce((a,s)=>a + (s.end - s.start), 0);
+
+  if(asleep){
+    label.textContent = '正在睡眠中';
+    btn.className = 'big-btn awake';
+    btnLabel.textContent = '醒来';
+    const last = lastSleepEvent(night);
+    const tick = () => {
+      if(!sleepIsAsleep(currentNight())) return;
+      const ms = realNow() - last.ts;
+      const s = Math.floor(ms/1000);
+      const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+      timer.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    };
+    tick();
+    if(window._sleepTick) clearInterval(window._sleepTick);
+    window._sleepTick = setInterval(tick, 1000);
+  }else{
+    if(window._sleepTick){ clearInterval(window._sleepTick); window._sleepTick = null; }
+    label.textContent = night.events.length ? '已醒来' : '当前未在记录';
+    btn.className = 'big-btn asleep';
+    btnLabel.textContent = '入睡';
+    timer.textContent = total > 0 ? fmtDur(total) : '00:00:00';
+  }
+
+  document.getElementById('sleepTotal').textContent = total > 0 ? '睡着 ' + fmtDur(total) : '';
+
+  // 时间线
+  const tl = document.getElementById('sleepTimeline');
+  const ev = night.events;
+  if(ev.length < 2){
+    tl.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:10px;opacity:.4;font-weight:600">记录入睡和醒来后显示</div>';
+  }else{
+    const start = ev[0].ts, end = ev[ev.length-1].ts;
+    const span = Math.max(1, end - start);
+    let html = '';
+    for(let i = 0; i < ev.length; i++){
+      const e = ev[i];
+      const next = ev[i+1];
+      const segEnd = next ? next.ts : realNow();
+      const w = Math.max(2, ((segEnd - e.ts) / span) * 100);
+      html += `<div class="tl-seg ${e.type}" style="flex:0 0 ${w}%">${w > 12 ? (e.type === 'asleep' ? '睡' : '醒') : ''}</div>`;
+    }
+    tl.innerHTML = html;
+  }
+
+  // 分段明细
+  const segBox = document.getElementById('sleepSegments');
+  if(!segs.length){
+    segBox.innerHTML = '<div style="font-size:12px;opacity:.4;font-weight:600;padding:4px 0">暂无完整睡眠段</div>';
+  }else{
+    segBox.innerHTML = segs.map((s,i) => `
+      <div class="li">
+        <div class="l">
+          <div class="title">第 ${i+1} 段</div>
+          <div class="meta">${fmtHM(s.start)} → ${asleep && i===segs.length-1 ? '进行中' : fmtHM(s.end)}</div>
+        </div>
+        <div class="r"><span class="chip solid">${fmtDur(s.end - s.start)}</span></div>
+      </div>`).join('');
+  }
+
+  // 近期
+  const hist = document.getElementById('sleepHistory');
+  const past = [...sleepNights].filter(n => n.events.length >= 2).sort((a,b)=>b.id.localeCompare(a.id)).slice(0,7);
+  if(!past.length){
+    hist.innerHTML = '<div class="empty" style="padding:16px 0">暂无睡眠记录</div>';
+  }else{
+    hist.innerHTML = past.map(n => {
+      const ss = sleepSegments(n);
+      const t = ss.reduce((a,s)=>a + (s.end - s.start), 0);
+      return `
+        <div class="li">
+          <div class="l">
+            <div class="title">${n.id}</div>
+            <div class="meta">${n.events.length} 次切换</div>
+          </div>
+          <div class="r"><span class="chip solid">${fmtDur(t)}</span></div>
+        </div>`;
+    }).join('');
+  }
+}
+
+function renderSleepCalendar(){
+  const grid = document.getElementById('sleepCalGrid');
+  const monthEl = document.getElementById('sleepCalMonth');
+  const first = new Date(sleepCalYear, sleepCalMonth, 1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(sleepCalYear, sleepCalMonth + 1, 0).getDate();
+
+  monthEl.textContent = `${sleepCalYear} 年 ${sleepCalMonth + 1} 月`;
+
+  const byId = {};
+  sleepNights.forEach(n => { byId[n.id] = n; });
+
+  function dayStatus(day){
+    const key = sleepCalYear + '-' + String(sleepCalMonth+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    const n = byId[key];
+    if(!n || !n.events.length) return 'none';
+    const segs = sleepSegments(n);
+    if(segs.length > 0) return 'full';
+    return 'part';
+  }
+
+  const today = new Date(realNow());
+  const isCurrent = (today.getFullYear() === sleepCalYear && today.getMonth() === sleepCalMonth);
+
+  let html = '';
+  ['日','一','二','三','四','五','六'].forEach(d => {
+    html += `<div class="cal-head">${d}</div>`;
+  });
+  for(let i = 0; i < startDay; i++) html += '<div class="cal-day blank"></div>';
+  for(let d = 1; d <= daysInMonth; d++){
+    const s = dayStatus(d);
+    const cls = s === 'full' ? 'full' : s === 'part' ? 'part' : '';
+    const todayCls = (isCurrent && d === today.getDate()) ? 'today' : '';
+    html += `<div class="cal-day ${cls} ${todayCls}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+document.getElementById('sleepCalPrev').addEventListener('click', () => {
+  sleepCalMonth--;
+  if(sleepCalMonth < 0){ sleepCalMonth = 11; sleepCalYear--; }
+  renderSleepCalendar();
+});
+document.getElementById('sleepCalNext').addEventListener('click', () => {
+  sleepCalMonth++;
+  if(sleepCalMonth > 11){ sleepCalMonth = 0; sleepCalYear++; }
+  renderSleepCalendar();
+});
+
+function renderSleepChart(){
+  const days = last7Days();
+  const data = days.map(d => {
+    const n = sleepNights.find(x => x.id === d.key);
+    if(!n || !n.events.length) return { label: d.label, value: 0 };
+    const ss = sleepSegments(n);
+    const total = ss.reduce((a,s)=>a + (s.end - s.start), 0);
+    return { label: d.label, value: +(total / 3600000).toFixed(1) };
+  });
+  setTimeout(() => drawBars(document.getElementById('chartSleep'), data), 30);
+}
+
+document.getElementById('btnSleepToggle').addEventListener('click', toggleSleep);
+
+/* ============================================================
+   设置页
+   ============================================================ */
+function renderSettings(){
+  document.getElementById('apiKeyInput').value = settings.apiKey || '';
+  document.getElementById('apiBaseInput').value = settings.apiBase || 'https://api.deepseek.com';
+  document.getElementById('modelInput').value = settings.model || 'deepseek-chat';
+  document.getElementById('visionModelInput').value = settings.visionModel || '';
+  document.getElementById('statWords').textContent = words.length;
+  document.getElementById('statClock').textContent = clock.length;
+  document.getElementById('statSleep').textContent = sleepNights.filter(n => n.events.length >= 2).length;
+
+  // Token 统计
+  let pt = 0, ct = 0, tt = 0;
+  apiUsage.forEach(u => { pt += u.pt || 0; ct += u.ct || 0; tt += u.tt || 0; });
+  document.getElementById('statApiCalls').textContent = apiUsage.length;
+  document.getElementById('statPromptTok').textContent = pt.toLocaleString();
+  document.getElementById('statCompletionTok').textContent = ct.toLocaleString();
+  document.getElementById('statTotalTok').textContent = tt.toLocaleString();
+  document.getElementById('statCost').textContent = '¥' + calcCost(pt, ct).toFixed(4);
+
+  renderSyncLabels();
+  renderTokenChart();
+}
+
+function renderTokenChart(){
+  const days = last7Days();
+  const data = days.map(d => {
+    const sum = apiUsage
+      .filter(u => dayKey(u.ts) === d.key)
+      .reduce((a,u) => a + (u.tt || 0), 0);
+    return { label: d.label, value: sum };
+  });
+  setTimeout(() => drawBars(document.getElementById('chartTokens'), data), 30);
+}
+
+document.getElementById('btnSaveApi').addEventListener('click', () => {
+  settings.apiKey = document.getElementById('apiKeyInput').value.trim();
+  settings.apiBase = document.getElementById('apiBaseInput').value.trim() || 'https://api.deepseek.com';
+  settings.model = document.getElementById('modelInput').value.trim() || 'deepseek-chat';
+  settings.visionModel = document.getElementById('visionModelInput').value.trim();
+  S.set('settings', settings);
+  toast('已保存');
+});
+
+document.getElementById('btnTestApi').addEventListener('click', async () => {
+  const btn = document.getElementById('btnTestApi');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  try{
+    const txt = await deepseek([{ role:'user', content:'只回复两个字：可用' }], { max_tokens:10, purpose:'test' });
+    toast('连接成功：' + txt.trim().slice(0,10));
+  }catch(e){
+    toast('连接失败：' + e.message.slice(0,90));
+  }finally{
+    btn.disabled = false; btn.textContent = '测试连接';
+  }
+});
+
+document.getElementById('btnResync').addEventListener('click', () => syncTime(false));
+
+document.getElementById('btnExport').addEventListener('click', () => {
+  const all = { words, clock, sleepNights, apiUsage, settings, exportedAt:new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(all, null, 2)], { type:'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'flow-ledger-backup.json';
+  a.download = 'study-log-' + todayKey() + '.json';
   a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
+  URL.revokeObjectURL(a.href);
+});
 
-$('#importInput').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = async () => {
-    try {
-      const data = JSON.parse(r.result);
-      DB.accounts = data.accounts || [];
-      DB.tx = data.tx || [];
-      DB.tags = [...new Set([...PRESET_TAGS, ...(data.tags || [])])];
-      DB.budget = data.budget || { daily: 0, monthly: 0, dailyOverrides: [] };
-      DB.stats = { ...DB.stats, ...(data.stats || {}) };
-      const keep = DB.settings.apiKey;
-      DB.settings = { ...DB.settings, ...(data.settings || {}), apiKey: keep };
-      await save();
-      $('#apiBase').value = DB.settings.apiBase;
-      $('#textModel').value = DB.settings.textModel;
-      $('#visionModel').value = DB.settings.visionModel;
-      $('#rememberKey').checked = DB.settings.rememberKey;
-      $('#alwaysAI').checked = DB.settings.alwaysAI;
-      render();
-      statusIdle();
-      toast('导入成功');
-    } catch (_) { toast('文件格式错误'); }
-    finally { e.target.value = ''; }
-  };
-  r.readAsText(file);
-};
+document.getElementById('btnClearAll').addEventListener('click', () => {
+  if(!confirm('确定清空全部数据？此操作不可撤销。')) return;
+  ['words','clock','sleepNights','apiUsage'].forEach(k => localStorage.removeItem('sl_' + k));
+  words = []; clock = []; sleepNights = []; apiUsage = [];
+  S.set('words', words); S.set('clock', clock); S.set('sleepNights', sleepNights); S.set('apiUsage', apiUsage);
+  switchTab('settings');
+  toast('已清空');
+});
 
-$('#clearBtn').onclick = () => {
-  if (confirm('确定清空全部本地数据？此操作不可逆。')) {
-    indexedDB.deleteDatabase(IDB_NAME);
-    localStorage.removeItem('flow_ledger_v3_backup');
-    sessionStorage.removeItem('flow_api_key');
-    location.reload();
-  }
-};
-
-async function init() {
-  await load();
-  DB.tags = [...new Set([...PRESET_TAGS, ...DB.tags])];
-  await save();
-
-  $('#apiBase').value = DB.settings.apiBase;
-  $('#textModel').value = DB.settings.textModel;
-  $('#visionModel').value = DB.settings.visionModel;
-  $('#apiKey').value = DB.settings.apiKey;
-  $('#rememberKey').checked = DB.settings.rememberKey;
-  $('#alwaysAI').checked = DB.settings.alwaysAI;
-
-  render();
-  statusIdle();
+/* ============================================================
+   API 分析（各 tab 通用）
+   ============================================================ */
+function analysisHelper(btnId, boxId, promptBuilder, title){
+  const btn = document.getElementById(btnId);
+  const box = document.getElementById(boxId);
+  btn.addEventListener('click', async () => {
+    const prompt = promptBuilder();
+    if(!prompt){ toast('暂无数据可分析'); return; }
+    btn.disabled = true;
+    const old = btn.textContent;
+    btn.innerHTML = '<span class="spinner"></span> 分析中';
+    try{
+      const txt = await deepseek([{ role:'user', content: prompt }], { temperature:0.5, max_tokens:600, purpose:title });
+      box.style.display = 'block';
+      box.textContent = txt;
+    }catch(e){
+      toast(e.message.slice(0, 100));
+    }finally{
+      btn.disabled = false;
+      btn.textContent = old;
+    }
+  });
 }
-init();
+
+// 录入页分析
+analysisHelper('btnAnalyzeInput', 'analyzeInputBox', () => {
+  if(!words.length) return null;
+  const days = last7Days();
+  const daily = days.map(d => {
+    const n = words.filter(w => dayKey(w.createdAt) === d.key).length;
+    return `${d.key}: ${n} 个`;
+  }).join('\n');
+  const total = words.length;
+  const unlearned = words.filter(w => (w.count||0) === 0).length;
+  return `你是英语学习教练。以下是用户近 7 天的单词录入情况：\n${daily}\n累计 ${total} 个单词，其中 ${unlearned} 个尚未学习。\n请用中文给出 3—4 条简短分析，指出录入节奏是否稳定、是否积压、如何安排复习。基于数据说话，不要编造。`;
+}, '分析录入趋势');
+
+// 预览页分析
+analysisHelper('btnAnalyzePreview', 'analyzePreviewBox', () => {
+  if(!words.length) return null;
+  const maxCount = Math.max(1, ...words.map(w => w.count||0));
+  const avg = (words.reduce((a,w)=>a+(w.count||0),0) / words.length).toFixed(2);
+  const buckets = { 0:0, 1:0, 2:0, 3:0, '4+':0 };
+  words.forEach(w => {
+    const c = w.count||0;
+    if(c === 0) buckets[0]++;
+    else if(c === 1) buckets[1]++;
+    else if(c === 2) buckets[2]++;
+    else if(c === 3) buckets[3]++;
+    else buckets['4+']++;
+  });
+  return `你是英语学习教练。用户当前有 ${words.length} 个单词，平均学习 ${avg} 遍。\n学习次数分布：0 遍 ${buckets[0]} 个，1 遍 ${buckets[1]} 个，2 遍 ${buckets[2]} 个，3 遍 ${buckets[3]} 个，4 遍以上 ${buckets['4+']} 个。\n请用中文给出 3—4 条简短分析：哪些单词需要优先复习、当前节奏是否合理、有什么具体建议。`;
+}, '分析学习进度');
+
+// 打卡页分析
+analysisHelper('btnAnalyzeClock', 'analyzeClockBox', () => {
+  if(!clock.length) return null;
+  const byDay = {};
+  clock.forEach(e => {
+    const d = dayKey(e.ts);
+    if(!byDay[d]) byDay[d] = [];
+    byDay[d].push(e);
+  });
+  const days = Object.keys(byDay).sort().slice(-14);
+  if(!days.length) return null;
+  const lines = days.map(d => {
+    const es = byDay[d].sort((a,b)=>a.ts-b.ts);
+    let workMs = 0, breakMs = 0, inTs = null, breakStart = null;
+    for(const e of es){
+      if(e.type === 'in') inTs = e.ts;
+      else if(e.type === 'out' && inTs != null){ inTs = null; }
+      else if(e.type === 'break_start') breakStart = e.ts;
+      else if(e.type === 'break_end' && breakStart != null){ breakStart = null; }
+    }
+    const first = es[0], last = es[es.length-1];
+    return `${d}: 上班 ${fmtHM(first.ts)}，下班 ${fmtHM(last.ts)}，工时 ${fmtDurFull(workMs)}，休息 ${fmtDurFull(breakMs)}`;
+  }).join('\n');
+  return `你是职场时间管理教练。以下是用户近 ${days.length} 天的打卡记录：\n${lines}\n请用中文给出 3—5 条简短分析：上下班时间是否规律、工时是否偏长、休息是否充分、有什么具体改进建议。基于数据说话。`;
+}, '分析时间规律');
+
+// 睡眠页分析
+analysisHelper('btnAnalyzeSleep', 'analyzeSleepBox', () => {
+  const past = [...sleepNights].filter(n => n.events.length >= 2).sort((a,b)=>a.id.localeCompare(b.id)).slice(-10);
+  if(!past.length) return null;
+  const lines = past.map(n => {
+    const ss = sleepSegments(n);
+    const total = ss.reduce((a,s)=>a + (s.end - s.start), 0);
+    const awakenings = n.events.filter(e => e.type === 'awake').length;
+    const first = n.events[0], last = n.events[n.events.length-1];
+    return `${n.id}: ${fmtHM(first.ts)} → ${fmtHM(last.ts)}，总睡眠 ${fmtDur(total)}，醒来 ${awakenings} 次`;
+  }).join('\n');
+  return `你是睡眠教练。以下是用户近 ${past.length} 夜的睡眠记录：\n${lines}\n请用中文给出 3—5 条简短、可操作的分析与建议：入睡时间是否规律、睡眠时长是否充足、夜间醒来情况、如何改善。基于数字说话，不要编造。`;
+}, '分析睡眠');
+
+// 设置页分析（token 用量）
+analysisHelper('btnAnalyzeTokens', 'analyzeTokensBox', () => {
+  if(!apiUsage.length) return null;
+  let pt = 0, ct = 0, tt = 0;
+  apiUsage.forEach(u => { pt += u.pt||0; ct += u.ct||0; tt += u.tt||0; });
+  const byPurpose = {};
+  apiUsage.forEach(u => {
+    const p = u.purpose || 'other';
+    if(!byPurpose[p]) byPurpose[p] = { calls:0, tok:0 };
+    byPurpose[p].calls++;
+    byPurpose[p].tok += u.tt || 0;
+  });
+  const purposeLines = Object.entries(byPurpose)
+    .map(([k,v]) => `${k}: ${v.calls} 次，${v.tok} tokens`)
+    .join('\n');
+  return `你是 API 成本优化顾问。用户累计调用 DeepSeek ${apiUsage.length} 次，输入 ${pt} tokens，输出 ${ct} tokens，合计 ${tt} tokens。\n按用途拆分：\n${purposeLines}\n请用中文给出 3—4 条简短分析：哪些用途消耗最大、是否存在重复调用浪费、如何降低成本。基于数字说话。`;
+}, '分析用量');
+
+function renderYear(){
+  const now=new Date(realNow()),y=now.getFullYear(),start=new Date(y,0,1),end=new Date(y+1,0,1),total=Math.round((end-start)/86400000),passed=Math.floor((new Date(y,now.getMonth(),now.getDate())-start)/86400000)+1,remain=total-passed;
+  document.getElementById('yearPassed').textContent=passed;document.getElementById('yearRemain').textContent=remain;document.getElementById('yearTotal').textContent=total;document.getElementById('yearPercent').textContent=(passed/total*100).toFixed(1)+'%';document.getElementById('yearLabel').textContent=y+' 年';
+  let h='';for(let i=0;i<total;i++){const cls=i<passed-1?'past':i===passed-1?'today':'';h+=`<div class="year-day ${cls}" title="${dayKey(new Date(y,0,i+1))}"></div>`}document.getElementById('yearGrid').innerHTML=h;
+  const activity={};words.forEach(w=>{const k=dayKey(w.createdAt);activity[k]=activity[k]||{w:0,c:0,s:0};activity[k].w++});clock.forEach(e=>{const k=dayKey(e.ts);activity[k]=activity[k]||{w:0,c:0,s:0};activity[k].c++});sleepNights.forEach(n=>{if(n.events.length){activity[n.id]=activity[n.id]||{w:0,c:0,s:0};activity[n.id].s++}});const rows=Object.entries(activity).filter(([k])=>k.startsWith(y+'-')).sort((a,b)=>b[0].localeCompare(a[0]));document.getElementById('yearDaily').innerHTML=rows.map(([k,v])=>`<div class="li"><div class="l"><div class="title">${k}</div><div class="meta">单词 ${v.w} · 打卡 ${v.c} · 睡眠 ${v.s}</div></div></div>`).join('')||'<div class="empty">今年还没有记录</div>';
+}
+function runAudit(){
+ const rows=[];const sample=[{type:'in',ts:0},{type:'break_start',ts:3600000},{type:'break_end',ts:5400000},{type:'out',ts:9000000}],r=calcClockDurations(sample,9000000);rows.push(['工时计算',r.workMs===7200000&&r.breakMs===1800000,'2h 工作 / 0.5h 休息']);const nd=new Date(realNow());rows.push(['时间校准',Number.isFinite(realNow())&&Math.abs(timeOffset)<86400000,settings.lastSync?'已校准':'使用本地时间']);rows.push(['位置能力',!!navigator.geolocation,navigator.geolocation?'浏览器支持':'不可用']);rows.push(['存储读写',(()=>{try{S.set('_audit',1);return S.get('_audit',0)===1}catch(e){return false}})(),'localStorage']);rows.push(['年度天数',[365,366].includes(Math.round((new Date(nd.getFullYear()+1,0,1)-new Date(nd.getFullYear(),0,1))/86400000)),'闰年自动处理']);document.getElementById('auditList').innerHTML=rows.map(x=>`<div class="audit-row"><span>${x[0]}<small>${x[2]}</small></span><b class="${x[1]?'audit-ok':'audit-bad'}">${x[1]?'通过':'检查'}</b></div>`).join('');return rows;
+}
+document.getElementById('btnAudit').addEventListener('click',()=>{runAudit();toast('校验完成')});
+/* ============================================================
+   Tab 切换
+   ============================================================ */
+function switchTab(name){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.capsule button').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  const tab = document.querySelector(`.capsule button[data-tab="${name}"]`);
+  if(page) page.classList.add('active');
+  if(tab) tab.classList.add('active');
+
+  // 页面渲染 + 延迟绘制图表（确保 canvas 有尺寸）
+  if(name === 'input'){ renderInputChart(); }
+  if(name === 'preview'){ renderPreview(); }
+  if(name === 'clock'){ renderClock(); renderClockCalendar(); renderClockChart(); }
+  if(name === 'sleep'){ renderSleep(); renderSleepCalendar(); renderSleepChart(); }
+  if(name === 'year'){ renderYear(); }
+  if(name === 'settings'){ renderSettings(); }
+}
+
+document.querySelectorAll('.capsule button').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+/* ============================================================
+   PWA manifest
+   ============================================================ */
+(function initPWA(){
+  try{
+    const manifest = {
+      name:'Study', short_name:'Study', display:'standalone',
+      start_url:location.href, background_color:'#ffffff', theme_color:'#ffffff',
+      icons:[]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type:'application/manifest+json' });
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  }catch(e){}
+})();
+
+/* ============================================================
+   启动
+   ============================================================ */
+(async function boot(){
+  renderImgChip();
+  renderChat();
+  renderPreview();
+  renderClock();
+  renderClockCalendar();
+  renderSleep();
+  renderSleepCalendar();
+  renderSettings();
+  renderYear();runAudit();
+
+  // 时间校准
+  await syncTime(true);
+  renderClock();
+
+  // 每小时校准 + 回到前台时校准
+  setInterval(() => syncTime(true), 3600 * 1000);
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden){ syncTime(true); }
+  });
+
+  // 每分钟刷新打卡状态
+  setInterval(() => {
+    if(document.getElementById('page-clock').classList.contains('active')) renderClock();
+  }, 60 * 1000);
+
+  // iOS 添加到主屏幕提示（只提示一次）
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone = window.navigator.standalone === true;
+  if(isIOS && !standalone && !localStorage.getItem('sl_ios_tip')){
+    localStorage.setItem('sl_ios_tip', '1');
+    setTimeout(() => toast('Safari 分享 → 添加到主屏幕'), 1800);
+  }
+})();
 </script>
 </body>
 </html>
