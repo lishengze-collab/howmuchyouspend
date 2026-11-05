@@ -55,19 +55,37 @@
         }
         .content.active { display: block; }
 
-        /* 搜索框 */
+        /* 搜索框容器 (包含图标) */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         .search-box {
             width: 100%;
-            padding: 14px 20px;
+            padding: 14px 45px 14px 45px; /* 留出左右图标的位置 */
             border-radius: 30px;
             border: none;
             background-color: var(--bg-color);
             font-size: 15px;
-            margin-bottom: 20px;
             outline: none;
             transition: background 0.2s;
         }
         .search-box:focus { background-color: #eeeeee; }
+        
+        .icon-search, .icon-add {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            height: 100%;
+            width: 45px;
+        }
+        .icon-search { left: 0; }
+        .icon-add { right: 0; color: var(--primary); }
 
         /* 科目滚动 */
         .subject-scroll {
@@ -97,46 +115,50 @@
             font-weight: 500;
         }
 
-        /* 折叠目录样式 */
-        .chapter-group {
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .chapter-title {
-            padding: 18px 5px;
-            font-size: 16px;
-            font-weight: 600;
+        /* 多级手风琴目录 */
+        .tree-group { border-bottom: none; }
+        .tree-title {
+            padding: 14px 5px;
+            font-size: 15px;
+            font-weight: 500;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             color: var(--text-main);
+            border-bottom: 1px solid #f0f0f0;
         }
-        .chapter-title .arrow {
+        .tree-title.level-1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: none;
+            padding: 18px 5px 10px 5px;
+        }
+        .tree-title.level-2 { padding-left: 15px; font-weight: 600; }
+        .tree-title.level-3 { padding-left: 30px; color: #555; }
+        
+        .tree-title .arrow {
             transition: transform 0.3s;
             color: #ccc;
             font-size: 18px;
+            padding-right: 5px;
         }
-        .chapter-title.active .arrow {
-            transform: rotate(90deg);
-        }
-        .chapter-items {
-            display: none; /* 默认折叠 */
+        .tree-title.active .arrow { transform: rotate(90deg); }
+        
+        .tree-children {
+            display: none;
             background: var(--bg-color);
-            border-radius: 12px;
-            padding: 10px 15px;
-            margin-bottom: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
-        /* 显示状态 */
-        .chapter-items.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
+        .tree-children.show { display: block; animation: fadeIn 0.3s ease; }
+        
         .knowledge-item {
-            padding: 14px 5px;
+            padding: 12px 15px 12px 35px;
             font-size: 14px;
             color: #444;
-            border-bottom: 1px dashed #e0e0e0;
+            border-bottom: 1px solid #fff;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -148,7 +170,7 @@
             margin-right: 8px;
             font-weight: bold;
         }
-        .knowledge-item:active { color: var(--primary); }
+        .knowledge-item:active { background-color: #e8eceb; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-5px); }
@@ -254,7 +276,7 @@
         .markdown-body ul, .markdown-body ol { padding-left: 20px; margin-bottom: 15px; }
         .markdown-body li { margin-bottom: 6px; }
 
-        /* Flash Card 收藏容器 */
+        /* Flash Card */
         .flashcard-container {
             display: flex;
             overflow-x: auto;
@@ -371,7 +393,18 @@
     
     <!-- TAB 1: 查询 -->
     <div class="content active" id="tab-query">
-        <input type="text" class="search-box" id="searchInput" placeholder="直接搜索没列出的知识点...">
+        <!-- 搜索框改造，加入图标 -->
+        <div class="search-container">
+            <div class="icon-search" onclick="triggerSearch()">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <input type="text" class="search-box" id="searchInput" placeholder="搜索知识点或直接询问AI...">
+            <div class="icon-add" onclick="document.getElementById('imageInput').click()">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+        </div>
+        <!-- 隐藏的图像输入框 -->
+        <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;" onchange="handleImageUpload(event)">
         
         <div class="subject-scroll" id="subjectList"></div>
 
@@ -432,99 +465,305 @@
 
     const subjects = ["刑法", "民法", "法理学", "宪法学", "法制史", "政治", "刑诉法", "民诉法"];
     
-    // 使用“章节 -> 细分考点”的树形结构
+    // 精确到4级的树形目录结构
     const knowledgeTree = {
-        "政治": [
-            { title: "马克思主义基本原理", items: [
-                "物质与意识的辩证关系", "实践与认识的辩证关系", "唯物辩证法的三大规律", 
-                "联系与发展的基本环节", "社会存在与社会意识", "生产力与生产关系", 
-                "经济基础与上层建筑", "社会形态更替", "商品的二因素与劳动的二重性", 
-                "剩余价值理论", "资本积累与流通", "垄断资本主义", "社会主义的发展及其规律", 
-                "共产主义崇高理想"
-            ]},
-            { title: "毛泽东思想和中国特色社会主义理论体系", items: [
-                "新民主主义革命理论", "社会主义改造理论", "邓小平理论", 
-                "三个代表重要思想", "科学发展观", "习近平新时代中国特色社会主义思想", 
-                "五位一体总体布局", "四个全面战略布局"
-            ]},
-            { title: "中国近现代史纲要", items: [
-                "鸦片战争及近代中国社会性质", "太平天国与洋务运动", "戊戌变法与辛亥革命", 
-                "新文化运动与五四运动", "中国共产党的成立", "新民主主义革命道路", 
-                "社会主义改造", "改革开放历史进程"
-            ]},
-            { title: "思想道德与法治", items: [
-                "人生观与价值观", "理想信念", "中国精神", "社会主义核心价值观", 
-                "社会主义道德核心与原则", "法治思维", "宪法法律权威"
-            ]}
-        ],
         "刑法": [
-            { title: "刑法总则", items: [
-                "刑法的基本原则", "犯罪的基本特征", "犯罪构成的客观方面", "犯罪构成的主观方面",
-                "正当防卫的成立条件", "紧急避险的成立条件", "犯罪预备", "犯罪未遂", "犯罪中止",
-                "共同犯罪的成立条件", "主犯与从犯", "继续犯与想象竞合犯", "结果加重犯",
-                "累犯的成立条件", "自首与坦白", "立功", "缓刑制度", "减刑制度", "假释制度", "追诉时效"
-            ]},
-            { title: "刑法分则", items: [
-                "交通肇事罪", "危险驾驶罪", "故意杀人罪", "过失致人死亡罪", "强奸罪",
-                "非法拘禁罪", "绑架罪", "抢劫罪", "盗窃罪", "诈骗罪", "抢夺罪", "侵占罪",
-                "职务侵占罪", "敲诈勒索罪", "妨害公务罪", "寻衅滋事罪", "贪污罪", "受贿罪", "滥用职权罪"
-            ]}
+            {
+                title: "第一编 刑法总则",
+                children: [
+                    {
+                        title: "第一章 绪论",
+                        children: [
+                            { title: "第一节 刑法概述", items: ["刑法的概念", "刑法的性质", "刑法的任务", "刑法的体系", "刑法的解释（文义、论理、体系、历史解释等）"] },
+                            { title: "第二节 刑法的基本原则", items: ["罪刑法定原则", "适用刑法人人平等原则", "罪责刑相适应原则"] },
+                            { title: "第三节 刑法的效力", items: ["空间效力（属地、属人、保护、普遍管辖）", "时间效力（从旧兼从轻原则）"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 犯罪概念与犯罪构成",
+                        children: [
+                            { title: "第一节 犯罪概念", items: ["犯罪的形式概念", "犯罪的实质概念", "犯罪的基本特征"] },
+                            { title: "第二节 犯罪构成", items: ["犯罪构成的概念", "犯罪构成的分类"] }
+                        ]
+                    },
+                    {
+                        title: "第三章 犯罪构成要件",
+                        children: [
+                            { title: "第一节 犯罪客体", items: ["犯罪客体的概念", "犯罪客体的分类（一般、同类、直接）", "犯罪对象与犯罪客体的区别"] },
+                            { title: "第二节 犯罪客观方面", items: ["危害行为（作为与不作为）", "不作为犯的成立条件", "危害结果", "刑法上的因果关系", "犯罪的时间、地点、方法"] },
+                            { title: "第三节 犯罪主体", items: ["刑事责任年龄（完全、相对、绝对无责任）", "刑事责任能力（精神病人、醉酒人、生理缺陷者）", "一般主体与特殊主体"] },
+                            { title: "第四节 犯罪主观方面", items: ["犯罪故意（直接、间接）", "犯罪过失（疏忽大意、过于自信）", "无罪过事件（意外事件、不可抗力）", "犯罪目的与动机", "认识错误（事实认识错误、法律认识错误）"] }
+                        ]
+                    },
+                    {
+                        title: "第四章 故意犯罪的停止形态",
+                        children: [
+                            { title: "第一节 概述与预备", items: ["犯罪停止形态概述", "犯罪预备的成立条件与处罚"] },
+                            { title: "第二节 未遂与中止", items: ["犯罪未遂的特征（着手、未得逞、意志外原因）", "犯罪中止的特征（自动性、有效性）", "未遂与中止的区别"] }
+                        ]
+                    },
+                    {
+                        title: "第五章 共同犯罪与罪数",
+                        children: [
+                            { title: "第一节 共同犯罪", items: ["共同犯罪的成立条件", "主犯、从犯、胁从犯、教唆犯的认定与处罚", "共同犯罪的形式"] },
+                            { title: "第二节 罪数形态", items: ["实质的一罪（想象竞合犯、结果加重犯、继续犯）", "法定的一罪（结合犯、集合犯）", "处断的一罪（连续犯、牵连犯、吸收犯）"] }
+                        ]
+                    },
+                    {
+                        title: "第六章 刑罚与刑罚制度",
+                        children: [
+                            { title: "第一节 刑罚概述与量刑", items: ["刑罚的种类（主刑与附加刑）", "量刑情节（法定与酌定、从重从轻减轻免除）", "累犯的成立条件与处罚"] },
+                            { title: "第二节 刑罚执行与消灭", items: ["自首与坦白", "立功", "缓刑制度", "减刑制度", "假释制度", "追诉时效"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                title: "第二编 刑法分则",
+                children: [
+                    {
+                        title: "第一章 危害公共安全罪",
+                        children: [
+                            { title: "第一节 危险方法类犯罪", items: ["放火罪", "决水罪", "爆炸罪", "投放危险物质罪", "以危险方法危害公共安全罪"] },
+                            { title: "第二节 交通类犯罪", items: ["交通肇事罪（逃逸致人死亡的认定）", "危险驾驶罪（追逐竞驶、醉驾等）"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 侵犯人身权利、财产罪",
+                        children: [
+                            { title: "第一节 侵犯人身权利罪", items: ["故意杀人罪", "过失致人死亡罪", "故意伤害罪", "强奸罪", "非法拘禁罪", "绑架罪（与抢劫罪界限）"] },
+                            { title: "第二节 侵犯财产罪", items: ["抢劫罪（转化型抢劫、加重情节）", "盗窃罪（秘密窃取及新型手段）", "诈骗罪（诈骗与盗窃区分）", "抢夺罪", "侵占罪", "职务侵占罪", "敲诈勒索罪"] }
+                        ]
+                    },
+                    {
+                        title: "第三章 贪污贿赂与渎职罪",
+                        children: [
+                            { title: "第一节 贪污贿赂罪", items: ["贪污罪", "挪用公款罪", "受贿罪", "利用影响力受贿罪", "行贿罪"] },
+                            { title: "第二节 渎职罪", items: ["滥用职权罪", "玩忽职守罪", "徇私枉法罪"] }
+                        ]
+                    }
+                ]
+            }
         ],
         "民法": [
-            { title: "民法总则", items: [
-                "民事权利能力与行为能力", "监护制度", "宣告失踪与宣告死亡", "法人的分类",
-                "民事法律行为的效力", "无效民事法律行为", "可撤销民事法律行为", "代理权的行使",
-                "表见代理", "诉讼时效中止与中断"
-            ]},
-            { title: "物权与合同", items: [
-                "物权法定原则", "动产交付与不动产登记", "善意取得", "共有", 
-                "抵押权的设立与效力", "质权", "留置权", "合同的相对性", 
-                "要约与承诺", "缔约过失责任", "违约责任", "情势变更原则", 
-                "买卖合同风险负担", "赠与合同的撤销", "租赁合同", "借款合同"
-            ]},
-            { title: "婚姻继承与侵权", items: [
-                "无效婚姻与可撤销婚姻", "夫妻共同财产", "法定继承", "遗嘱继承", "代位继承",
-                "过错责任原则", "无过错责任原则", "高度危险责任", "饲养动物损害责任"
-            ]}
+            {
+                title: "第一编 民法总则",
+                children: [
+                    {
+                        title: "第一章 民法基础理论",
+                        children: [
+                            { title: "第一节 民法概述", items: ["民法的概念与调整对象", "民法的性质与渊源", "民法典的体系"] },
+                            { title: "第二节 基本原则", items: ["平等原则", "自愿原则", "公平原则", "诚实信用原则", "公序良俗原则", "绿色原则"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 民事法律关系与主体",
+                        children: [
+                            { title: "第一节 民事法律关系", items: ["民事法律关系的要素", "民事权利的分类（支配权、请求权、抗辩权、形成权）", "民事法律事实"] },
+                            { title: "第二节 自然人", items: ["民事权利能力与民事行为能力", "监护制度（设定、变更、撤销）", "宣告失踪与宣告死亡的条件及法律后果"] },
+                            { title: "第三节 法人与非法人组织", items: ["法人的分类（营利、非营利、特别法人）", "法人的能力与机关", "非法人组织的类型与责任承担"] }
+                        ]
+                    },
+                    {
+                        title: "第三章 民事法律行为与代理",
+                        children: [
+                            { title: "第一节 民事法律行为", items: ["意思表示的生效与解释", "民事法律行为的效力（有效、无效、可撤销、效力待定）", "附条件与附期限的民事法律行为"] },
+                            { title: "第二节 代理", items: ["代理的分类（委托、法定、指定）", "无权代理与表见代理", "间接代理"] },
+                            { title: "第三节 诉讼时效", items: ["诉讼时效的适用范围", "诉讼时效的中止、中断与延长", "除斥期间与诉讼时效的区别"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                title: "第二编 物权与合同",
+                children: [
+                    {
+                        title: "第一章 物权编",
+                        children: [
+                            { title: "第一节 物权通则", items: ["物权法定原则与公示公信原则", "物权的变动（不动产登记、动产交付、善意取得）", "物权的保护"] },
+                            { title: "第二节 所有权", items: ["国家、集体、私人所有权", "业主的建筑物区分所有权", "相邻关系", "共有（按份共有与共同共有）"] },
+                            { title: "第三节 用益物权与担保物权", items: ["土地承包经营权、建设用地使用权、宅基地使用权", "居住权", "抵押权（设立、效力、顺位）", "质权（动产、权利质权）", "留置权"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 合同编",
+                        children: [
+                            { title: "第一节 合同通则", items: ["合同的相对性", "要约与承诺的规则", "缔约过失责任", "合同的履行（抗辩权、情势变更）", "债权人的代位权与撤销权", "违约责任（违约金、定金、损害赔偿）"] },
+                            { title: "第二节 典型合同", items: ["买卖合同（风险负担规则、所有权保留）", "赠与合同（任意撤销与法定撤销）", "借款合同", "租赁合同（买卖不破租赁、优先购买权）", "融资租赁合同", "保理合同"] },
+                            { title: "第三节 准合同", items: ["无因管理的成立与效力", "不当得利的构成与返还"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                title: "第三编 侵权与婚姻继承",
+                children: [
+                    {
+                        title: "第一章 侵权责任编",
+                        children: [
+                            { title: "第一节 侵权责任一般规定", items: ["过错责任原则", "无过错责任原则", "公平责任原则", "多数人侵权（共同侵权、分别侵权）"] },
+                            { title: "第二节 特殊侵权责任", items: ["监护人责任", "用人单位责任", "网络侵权责任", "机动车交通事故责任", "医疗损害责任", "高度危险责任", "饲养动物损害责任", "建筑物和物件损害责任"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 婚姻家庭与继承编",
+                        children: [
+                            { title: "第一节 婚姻家庭", items: ["无效婚姻与可撤销婚姻", "夫妻共同财产与个人财产", "离婚的条件与法律后果（冷静期、子女抚养、财产分割）"] },
+                            { title: "第二节 继承", items: ["法定继承的顺序与代位继承、转继承", "遗嘱的形式与效力", "遗赠与遗赠扶养协议", "遗产的处理"] }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "政治": [
+            {
+                title: "第一部分 马克思主义基本原理",
+                children: [
+                    {
+                        title: "第一章 世界的物质性及发展规律",
+                        children: [
+                            { title: "第一节 物质与意识", items: ["哲学的基本问题", "物质范畴及其理论意义", "物质与运动、静止的关系", "意识的起源与本质", "意识的能动作用", "主观能动性与客观规律的统一"] },
+                            { title: "第二节 唯物辩证法", items: ["联系的普遍性、客观性、多样性", "发展的实质", "对立统一规律（矛盾的同一性与斗争性、普遍性与特殊性）", "质量互变规律", "否定之否定规律", "唯物辩证法的基本范畴（五对）"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 实践与认识及其发展规律",
+                        children: [
+                            { title: "第一节 实践与认识", items: ["实践的本质与基本结构", "认识的本质（能动反映论）", "实践与认识的辩证运动（两次飞跃）"] },
+                            { title: "第二节 真理与价值", items: ["真理的客观性、绝对性与相对性", "真理与谬误", "实践是检验真理的唯一标准", "价值及其特性", "真理与价值的辩证统一"] }
+                        ]
+                    },
+                    {
+                        title: "第三章 人类社会及其发展规律",
+                        children: [
+                            { title: "第一节 社会基本矛盾", items: ["社会存在与社会意识", "生产力与生产关系矛盾运动的规律", "经济基础与上层建筑矛盾运动的规律", "社会形态更替的一般规律"] },
+                            { title: "第二节 历史创造者", items: ["人民群众在历史发展中的作用", "个人的历史作用"] }
+                        ]
+                    },
+                    {
+                        title: "第四章 资本主义的本质及规律",
+                        children: [
+                            { title: "第一节 商品经济与剩余价值", items: ["商品的二因素与劳动的二重性", "价值规律及其作用", "资本原始积累", "剩余价值的生产（绝对、相对）", "资本积累与资本循环周转"] },
+                            { title: "第二节 资本主义政治与意识形态", items: ["资本主义经济危机", "资本主义政治制度的本质", "资本主义意识形态的本质"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                title: "第二部分 毛泽东思想和中国特色社会主义理论体系",
+                children: [
+                    {
+                        title: "第一章 毛泽东思想",
+                        children: [
+                            { title: "第一节 新民主主义革命理论", items: ["新民主主义革命的总路线", "新民主主义的基本纲领", "农村包围城市、武装夺取政权道路"] },
+                            { title: "第二节 社会主义改造理论", items: ["过渡时期总路线", "农业、手工业、资本主义工商业的改造经验"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 习近平新时代中国特色社会主义思想",
+                        children: [
+                            { title: "第一节 核心要义与布局", items: ["新时代的社会主要矛盾", "五位一体总体布局（经济、政治、文化、社会、生态）", "四个全面战略布局"] },
+                            { title: "第二节 重要理论", items: ["新发展理念（创新、协调、绿色、开放、共享）", "总体国家安全观", "人类命运共同体"] }
+                        ]
+                    }
+                ]
+            }
         ],
         "法理学": [
-            { title: "法的本体与运行", items: [
-                "法的规范作用", "法的社会作用", "法的价值冲突解决原则", "法律规则的分类",
-                "法律原则的适用条件", "法的效力冲突规则", "法律关系的主客体", 
-                "法律责任的归责原则", "立法体制", "执法与司法的区别", "法律解释的方法"
-            ]}
+            {
+                title: "第一编 法的本体",
+                children: [
+                    {
+                        title: "第一章 法的概念与要素",
+                        children: [
+                            { title: "第一节 法的本质与特征", items: ["法的现象与本质", "法的规范作用与社会作用", "法的价值（秩序、自由、正义）"] },
+                            { title: "第二节 法律要素", items: ["法律规则的分类（授权性/义务性、确定性/委任性/准用性）", "法律原则的适用条件", "法律概念"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 法的渊源与效力",
+                        children: [
+                            { title: "第一节 法的渊源与分类", items: ["正式渊源与非正式渊源", "当代中国法的渊源体系", "法的分类（成文法与不成文法、实体法与程序法等）"] },
+                            { title: "第二节 法的效力", items: ["法对人的效力原则", "法的空间效力", "法的时间效力（法的溯及力）", "法的效力冲突及其解决原则"] }
+                        ]
+                    }
+                ]
+            }
         ],
         "宪法学": [
-            { title: "宪法基本与制度", items: [
-                "宪法的最高效力", "宪法的修改程序", "人民代表大会制度", "选举制度的基本原则",
-                "国家结构形式", "民族区域自治制度", "特别行政区制度", "基层群众自治制度"
-            ]},
-            { title: "公民权利与国家机构", items: [
-                "平等权", "政治权利与自由", "人身自由", "宗教信仰自由", 
-                "全国人大及其常委会的职权", "国家主席的职权", "国务院的职权", "监察委员会的性质"
-            ]}
+            {
+                title: "第一编 宪法基本理论",
+                children: [
+                    {
+                        title: "第一章 宪法概述",
+                        children: [
+                            { title: "第一节 宪法概念与原则", items: ["宪法的形式特征与实质特征", "人民主权原则", "基本人权原则", "法治原则", "权力制约原则"] },
+                            { title: "第二节 宪法历史与实施", items: ["我国宪法的历史发展", "宪法的修改程序", "宪法解释与宪法监督"] }
+                        ]
+                    }
+                ]
+            },
+            {
+                title: "第二编 国家制度与公民权利",
+                children: [
+                    {
+                        title: "第一章 国家基本制度",
+                        children: [
+                            { title: "第一节 政治与经济制度", items: ["人民代表大会制度", "选举制度的基本原则", "国家结构形式（单一制）", "民族区域自治与特别行政区"] },
+                            { title: "第二节 公民基本权利", items: ["平等权", "政治权利与自由", "人身自由与人格尊严", "社会经济权利"] }
+                        ]
+                    }
+                ]
+            }
         ],
         "法制史": [
-            { title: "古代法制", items: [
-                "西周的礼与刑", "《法经》", "汉代文景帝刑制改革", "春秋决狱", 
-                "《唐律疏议》的特点", "唐代的十恶", "宋代的折杖法", "明代的厂卫制度", "清代的秋审"
-            ]},
-            { title: "近现代法制", items: [
-                "《钦定宪法大纲》", "《大清新刑律》", "《中华民国临时约法》"
-            ]}
+            {
+                title: "第一编 古代法制",
+                children: [
+                    {
+                        title: "第一章 早期法制与秦汉",
+                        children: [
+                            { title: "第一节 夏商周法制", items: ["西周的礼与刑", "西周的婚姻继承制度", "春秋决狱与《法经》"] },
+                            { title: "第二节 秦汉法制", items: ["秦代刑罚体系", "汉代文景帝刑制改革", "汉代亲亲得相首匿"] }
+                        ]
+                    },
+                    {
+                        title: "第二章 隋唐至明清法制",
+                        children: [
+                            { title: "第一节 唐代法制", items: ["《唐律疏议》的篇章结构", "十恶制度", "五刑与刑罚原则"] },
+                            { title: "第二节 宋明清法制", items: ["宋代的折杖法与刺配", "明代的厂卫制度与奸党罪", "清代的秋审与朝审"] }
+                        ]
+                    }
+                ]
+            }
         ],
         "刑诉法": [
-            { title: "基本制度与程序", items: [
-                "立案管辖", "级别管辖", "回避的适用对象", "辩护人的范围", 
-                "非法证据排除规则", "取保候审条件", "逮捕的条件", "审查起诉", 
-                "认罪认罚从宽制度", "速裁程序"
-            ]}
+            {
+                title: "第一编 总则",
+                children: [
+                    {
+                        title: "第一章 基本制度",
+                        children: [
+                            { title: "第一节 管辖与回避", items: ["立案管辖（公安、检察院、法院的分工）", "级别管辖", "回避的适用对象与理由"] },
+                            { title: "第二节 辩护与证据", items: ["辩护人的范围与责任", "非法证据排除规则", "证明责任的分配"] }
+                        ]
+                    }
+                ]
+            }
         ],
         "民诉法": [
-            { title: "基本制度与程序", items: [
-                "专属管辖", "协议管辖", "举证责任倒置", "民事诉讼证据种类", 
-                "先予执行条件", "简易程序适用范围", "二审审理范围", "审判监督程序"
-            ]}
+            {
+                title: "第一编 总则与审判程序",
+                children: [
+                    {
+                        title: "第一章 基本制度与管辖",
+                        children: [
+                            { title: "第一节 管辖与当事人", items: ["级别管辖与地域管辖", "专属管辖", "协议管辖", "当事人的诉讼权利能力与行为能力"] },
+                            { title: "第二节 证据与程序", items: ["证明责任的倒置", "先予执行与保全", "简易程序适用范围", "二审审理范围与裁判"] }
+                        ]
+                    }
+                ]
+            }
         ]
     };
 
@@ -557,48 +796,57 @@
         renderCatalog(sub);
     }
 
-    // 渲染折叠目录
+    // 递归渲染多级目录
+    function buildTreeDOM(nodes, level = 1) {
+        return nodes.map(node => {
+            if (node.items) {
+                // 叶子节点：知识点列表
+                return `
+                    <div class="leaf-container">
+                        ${node.items.map(item => `<div class="knowledge-item" onclick="queryAI('${node.title} - ${item}')">${item}</div>`).join('')}
+                    </div>
+                `;
+            } else {
+                // 非叶子节点：可折叠的目录
+                const uniqueId = 'node_' + Math.random().toString(36).substr(2, 9);
+                return `
+                    <div class="tree-group">
+                        <div class="tree-title level-${level}" onclick="toggleNode('${uniqueId}', this)">
+                            <span>${node.title}</span>
+                            <span class="arrow">›</span>
+                        </div>
+                        <div class="tree-children" id="${uniqueId}">
+                            ${buildTreeDOM(node.children, level + 1)}
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+    }
+
     function renderCatalog(sub) {
         const container = document.getElementById('catalogList');
         const chapters = knowledgeTree[sub] || [];
         
         if(chapters.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">暂无数据</div>';
+            container.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">暂无数据，您可以直接在搜索框查询</div>';
             return;
         }
 
-        // 生成手风琴结构
-        container.innerHTML = chapters.map((chapter, index) => `
-            <div class="chapter-group">
-                <div class="chapter-title" onclick="toggleChapter(${index})">
-                    <span>${chapter.title}</span>
-                    <span class="arrow" id="arrow-${index}">›</span>
-                </div>
-                <div class="chapter-items" id="chapter-${index}">
-                    ${chapter.items.map(item => `
-                        <div class="knowledge-item" onclick="queryAI('${sub} - ${item}')">${item}</div>
-                    `).join('')}
-                </div>
-            </div>
-        `).join('');
+        // 渲染树
+        container.innerHTML = buildTreeDOM(chapters, 1);
     }
 
     // 展开/折叠逻辑
-    function toggleChapter(index) {
-        const itemsContainer = document.getElementById(`chapter-${index}`);
-        const arrow = document.getElementById(`arrow-${index}`);
-        const title = arrow.parentElement;
-
+    function toggleNode(id, titleEl) {
+        const itemsContainer = document.getElementById(id);
+        
         if (itemsContainer.classList.contains('show')) {
             itemsContainer.classList.remove('show');
-            title.classList.remove('active');
+            titleEl.classList.remove('active');
         } else {
-            // 可以注释掉下面两行代码来允许多个章节同时展开
-            // document.querySelectorAll('.chapter-items').forEach(el => el.classList.remove('show'));
-            // document.querySelectorAll('.chapter-title').forEach(el => el.classList.remove('active'));
-            
             itemsContainer.classList.add('show');
-            title.classList.add('active');
+            titleEl.classList.add('active');
         }
     }
 
@@ -618,6 +866,93 @@
 
         if(tabId === 'favorites') renderFavorites();
         if(tabId === 'settings') updateStatsUI();
+    }
+
+    // 触发搜索 (点击放大镜)
+    function triggerSearch() {
+        const input = document.getElementById('searchInput');
+        const val = input.value.trim();
+        if (val) {
+            input.blur(); // 收起键盘
+            queryAI(val);
+            input.value = ''; 
+        }
+    }
+
+    // 处理图像上传
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64 = e.target.result;
+            
+            const modal = document.getElementById('aiModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const favBtn = document.getElementById('favBtn');
+            
+            modal.classList.add('active');
+            modalTitle.innerText = "图像解析";
+            modalBody.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📷 正在识别图片内容并生成解析...</div>';
+            favBtn.disabled = true;
+            favBtn.style.opacity = '0.5';
+            currentAIKeyword = "图像内容解析";
+            
+            if (!apiKey) {
+                setTimeout(() => {
+                    currentAIContent = `### 知识点\n图像模拟解析\n\n### 定义\n由于未配置 API Key，无法进行真实的多模态识别。\n\n### 理解\n当前图片已就绪，需配置支持视觉的 API（如兼容 OpenAI 格式的接口）。\n\n### 考点\n图片内通常包含重要知识点或错题。\n\n*(⚠️ 当前为模拟数据)*`;
+                    modalBody.innerHTML = marked.parse(currentAIContent);
+                    favBtn.disabled = false;
+                    favBtn.style.opacity = '1';
+                }, 1000);
+                return;
+            }
+
+            try {
+                // 构造多模态请求
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat", // 提示：DeepSeek 的 chat 模型如果无法处理图像，建议换成支持视觉的模型如 gpt-4o 或 qwen-vl
+                        messages: [
+                            {
+                                "role": "user", 
+                                "content": [
+                                    {"type": "text", "text": "请识别这张图片中的法硕/考研知识点，并严格按照以下Markdown格式输出：\n\n### 定义\n（精准概念）\n\n### 理解\n（通俗拆解法理）\n\n### 考点\n（分点罗列）\n\n### 法条详情\n（引用原文）"},
+                                    {"type": "image_url", "image_url": {"url": base64}}
+                                ]
+                            }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                if(data.choices && data.choices.length > 0) {
+                    currentAIContent = data.choices[0].message.content;
+                    modalBody.innerHTML = marked.parse(currentAIContent);
+                    
+                    stats.apiCalls++;
+                    stats.tokens += 1000; // 图像估算token
+                    saveStats();
+                    favBtn.disabled = false;
+                    favBtn.style.opacity = '1';
+                } else {
+                    modalBody.innerHTML = "<span style='color:red'>API 返回异常。可能是当前模型不支持图像输入，请更换模型。</span>";
+                }
+            } catch (error) {
+                modalBody.innerHTML = `<span style='color:red'>请求失败：${error.message}</span>`;
+            }
+            
+            // 清空 input 允许重复上传同一张图片
+            event.target.value = '';
+        };
+        reader.readAsDataURL(file);
     }
 
     async function queryAI(keyword) {
@@ -793,13 +1128,10 @@
         event.target.value = ''; 
     }
 
+    // 支持键盘回车搜索
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
-            const val = this.value.trim();
-            if(val) {
-                queryAI(val);
-                this.value = ''; 
-            }
+            triggerSearch();
         }
     });
 
