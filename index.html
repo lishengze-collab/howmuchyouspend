@@ -212,7 +212,7 @@
         }
         .nav-item.active { color: var(--primary); font-weight: 600; }
 
-        /* 弹窗 */
+        /* 弹窗基础 */
         .modal {
             display: none;
             position: absolute;
@@ -293,7 +293,7 @@
         .markdown-body ul, .markdown-body ol { padding-left: 20px; margin-bottom: 15px; }
         .markdown-body li { margin-bottom: 6px; }
 
-        /* Flash Card */
+        /* Flash Card 卡片 */
         .flashcard-container {
             display: flex;
             overflow-x: auto;
@@ -334,7 +334,7 @@
             border-bottom: 1px solid #eee;
         }
         .card-title {
-            font-size: 18px;
+            font-size: 19px; /* 标题稍大 */
             font-weight: 600;
             color: var(--primary);
             flex: 1;
@@ -352,7 +352,7 @@
         .card-body {
             flex: 1;
             overflow-y: auto;
-            font-size: 16px;
+            font-size: 17px; /* 放大卡片正文字体 */
             line-height: 1.7;
             color: #444;
             user-select: text;
@@ -537,8 +537,9 @@
         <div class="nav-item" onclick="switchTab('settings')">设置</div>
     </div>
 
+    <!-- 上传菜单 -->
     <div class="modal" id="uploadModal" onclick="hideUploadMenu(event)">
-        <div class="upload-menu" onclick="event.stopPropagation()">
+        <div class="upload-menu" id="uploadMenu" onclick="event.stopPropagation()">
             <div class="upload-option" onclick="document.getElementById('cameraInput').click(); hideUploadMenu(event)">📷 打开相机</div>
             <div class="upload-option" onclick="document.getElementById('imageInput').click(); hideUploadMenu(event)">🖼️ 上传图片</div>
             <div class="upload-option" onclick="document.getElementById('textFileInput').click(); hideUploadMenu(event)">📄 上传文本文件</div>
@@ -546,6 +547,7 @@
         </div>
     </div>
 
+    <!-- AI 弹窗 -->
     <div class="modal" id="aiModal">
         <div class="modal-content" id="modalContent">
             <div class="modal-header" id="modalHeader" onclick="handleTripleClick('modal', event)">
@@ -559,7 +561,8 @@
         </div>
     </div>
 
-    <div class="selection-btn" id="selectionBtn" onmousedown="event.preventDefault()" onclick="querySelection()">AI 查询</div>
+    <!-- 划词悬浮按钮 -->
+    <div class="selection-btn" id="selectionBtn" ontouchstart="event.stopPropagation()" onmousedown="event.stopPropagation()" onclick="querySelection()">AI 查询</div>
 </div>
 
 <script>
@@ -605,12 +608,8 @@
                 ]}
             ]},
             { title: "第二编 刑法分则", children: [
-                { title: "第十三章 各论概述", children: [
-                    { title: "第一节 罪名与法定刑", items: ["罪状分类", "罪名确定", "法定刑种类"] }
-                ]},
-                { title: "第十四章 危害国家安全罪", children: [
-                    { title: "第一节 重点罪名", items: ["分裂国家罪", "颠覆国家政权罪", "间谍罪", "为境外窃取、刺探、收买、非法提供国家秘密、情报罪"] }
-                ]},
+                { title: "第十三章 各论概述", children: [{ title: "第一节 罪名与法定刑", items: ["罪状分类", "罪名确定", "法定刑种类"] }] },
+                { title: "第十四章 危害国家安全罪", children: [{ title: "第一节 重点罪名", items: ["分裂国家罪", "颠覆国家政权罪", "间谍罪", "为境外窃取、刺探、收买、非法提供国家秘密、情报罪"] }] },
                 { title: "第十五章 危害公共安全罪", children: [
                     { title: "第一节 危险方法类", items: ["放火罪", "爆炸罪", "以危险方法危害公共安全罪"] },
                     { title: "第二节 交通与责任事故类", items: ["交通肇事罪", "危险驾驶罪", "重大责任事故罪"] }
@@ -632,56 +631,32 @@
                     { title: "第一节 扰乱公共秩序与妨害司法", items: ["妨害公务罪", "寻衅滋事罪", "伪证罪", "窝藏、包庇罪"] },
                     { title: "第二节 毒品与环境资源", items: ["走私、贩卖、运输、制造毒品罪", "非法采矿罪", "污染环境罪"] }
                 ]},
-                { title: "第二十章 贪污贿赂罪", children: [
-                    { title: "第一节 贪腐类", items: ["贪污罪", "挪用公款罪", "受贿罪", "利用影响力受贿罪", "行贿罪"] }
-                ]},
-                { title: "第二十一章 渎职罪", children: [
-                    { title: "第一节 滥用职权与玩忽职守", items: ["滥用职权罪", "玩忽职守罪", "徇私枉法罪"] }
-                ]}
+                { title: "第二十章 贪污贿赂罪", children: [{ title: "第一节 贪腐类", items: ["贪污罪", "挪用公款罪", "受贿罪", "利用影响力受贿罪", "行贿罪"] }] },
+                { title: "第二十一章 渎职罪", children: [{ title: "第一节 滥用职权与玩忽职守", items: ["滥用职权罪", "玩忽职守罪", "徇私枉法罪"] }] }
             ]}
         ],
         "民法": [
             { title: "第一编 民法总则", children: [
-                { title: "第一章 民法基础理论", children: [
-                    { title: "第一节 概述与原则", items: ["民法调整对象", "平等、自愿、公平、诚信、公序良俗、绿色原则"] }
-                ]},
-                { title: "第二章 民事法律关系", children: [
-                    { title: "第一节 要素与权利", items: ["主体、客体、内容", "支配权、请求权、抗辩权、形成权", "民事法律事实"] }
-                ]},
-                { title: "第三章 自然人", children: [
-                    { title: "第一节 能力与监护", items: ["权利能力与行为能力", "监护的设定与撤销", "宣告失踪与宣告死亡"] }
-                ]},
+                { title: "第一章 民法基础理论", children: [{ title: "第一节 概述与原则", items: ["民法调整对象", "平等、自愿、公平、诚信、公序良俗、绿色原则"] }] },
+                { title: "第二章 民事法律关系", children: [{ title: "第一节 要素与权利", items: ["主体、客体、内容", "支配权、请求权、抗辩权、形成权", "民事法律事实"] }] },
+                { title: "第三章 自然人", children: [{ title: "第一节 能力与监护", items: ["权利能力与行为能力", "监护的设定与撤销", "宣告失踪与宣告死亡"] }] },
                 { title: "第四章 法人与非法人组织", children: [
                     { title: "第一节 法人", items: ["法人分类（营利/非营利/特别）", "法人机关与责任"] },
                     { title: "第二节 非法人组织", items: ["合伙、个人独资企业", "责任承担"] }
                 ]},
-                { title: "第五章 民事法律行为", children: [
-                    { title: "第一节 效力与附款", items: ["意思表示", "有效、无效、可撤销、效力待定", "附条件与附期限"] }
-                ]},
-                { title: "第六章 代理", children: [
-                    { title: "第一节 代理制度", items: ["委托、法定、指定代理", "无权代理", "表见代理"] }
-                ]},
-                { title: "第七章 诉讼时效", children: [
-                    { title: "第一节 时效规则", items: ["诉讼时效中止与中断", "除斥期间"] }
-                ]}
+                { title: "第五章 民事法律行为", children: [{ title: "第一节 效力与附款", items: ["意思表示", "有效、无效、可撤销、效力待定", "附条件与附期限"] }] },
+                { title: "第六章 代理", children: [{ title: "第一节 代理制度", items: ["委托、法定、指定代理", "无权代理", "表见代理"] }] },
+                { title: "第七章 诉讼时效", children: [{ title: "第一节 时效规则", items: ["诉讼时效中止与中断", "除斥期间"] }] }
             ]},
             { title: "第二编 物权", children: [
-                { title: "第八章 物权通则", children: [
-                    { title: "第一节 变动与保护", items: ["不动产登记", "动产交付", "善意取得", "物权保护"] }
-                ]},
-                { title: "第九章 所有权", children: [
-                    { title: "第一节 所有权类型", items: ["国家、集体、私人所有权", "业主的建筑物区分所有权", "相邻关系", "共有"] }
-                ]},
-                { title: "第十章 用益物权", children: [
-                    { title: "第一节 用益物权种类", items: ["土地承包经营权", "建设用地使用权", "宅基地使用权", "居住权", "地役权"] }
-                ]},
+                { title: "第八章 物权通则", children: [{ title: "第一节 变动与保护", items: ["不动产登记", "动产交付", "善意取得", "物权保护"] }] },
+                { title: "第九章 所有权", children: [{ title: "第一节 所有权类型", items: ["国家、集体、私人所有权", "业主的建筑物区分所有权", "相邻关系", "共有"] }] },
+                { title: "第十章 用益物权", children: [{ title: "第一节 用益物权种类", items: ["土地承包经营权", "建设用地使用权", "宅基地使用权", "居住权", "地役权"] }] },
                 { title: "第十一章 担保物权", children: [
                     { title: "第一节 抵押权", items: ["抵押财产范围", "抵押权的顺位与效力"] },
                     { title: "第二节 质权与留置权", items: ["动产质权", "权利质权", "留置权的成立与效力"] }
                 ]},
-                { title: "第十二章 占有", children: [
-                    { title: "第一节 占有制度", items: ["有权占有与无权占有", "占有的保护"] }
-                ]}
+                { title: "第十二章 占有", children: [{ title: "第一节 占有制度", items: ["有权占有与无权占有", "占有的保护"] }] }
             ]},
             { title: "第三编 合同", children: [
                 { title: "第十三章 合同通则", children: [
@@ -694,14 +669,10 @@
                     { title: "第二节 使用与融资类", items: ["租赁合同（买卖不破租赁、优先购买权）", "融资租赁合同", "保理合同"] },
                     { title: "第三节 服务与完成工作类", items: ["承揽合同", "建设工程合同", "运输合同", "保管合同", "委托合同", "物业服务合同"] }
                 ]},
-                { title: "第十五章 准合同", children: [
-                    { title: "第一节 无因管理与不当得利", items: ["无因管理的成立与效力", "不当得利的构成与返还"] }
-                ]}
+                { title: "第十五章 准合同", children: [{ title: "第一节 无因管理与不当得利", items: ["无因管理的成立与效力", "不当得利的构成与返还"] }] }
             ]},
             { title: "第四编 人格权与侵权责任", children: [
-                { title: "第十六章 人格权", children: [
-                    { title: "第一节 具体人格权", items: ["生命权、身体权、健康权", "姓名权、名称权、肖像权", "名誉权、荣誉权、隐私权"] }
-                ]},
+                { title: "第十六章 人格权", children: [{ title: "第一节 具体人格权", items: ["生命权、身体权、健康权", "姓名权、名称权、肖像权", "名誉权、荣誉权、隐私权"] }] },
                 { title: "第十七章 侵权责任", children: [
                     { title: "第一节 一般规定", items: ["过错责任、无过错责任、公平责任", "多数人侵权"] },
                     { title: "第二节 特殊侵权", items: ["监护人责任", "用人单位责任", "网络侵权", "机动车交通事故责任", "医疗损害责任", "高度危险责任", "饲养动物损害责任", "建筑物和物件损害责任"] }
@@ -712,9 +683,7 @@
                     { title: "第一节 结婚与离婚", items: ["无效婚姻与可撤销婚姻", "离婚冷静期与财产分割"] },
                     { title: "第二节 家庭关系", items: ["夫妻共同财产与债务", "父母子女关系"] }
                 ]},
-                { title: "第十九章 继承", children: [
-                    { title: "第一节 继承方式", items: ["法定继承（顺序、代位、转继承）", "遗嘱继承（形式与效力）", "遗赠与遗赠扶养协议"] }
-                ]}
+                { title: "第十九章 继承", children: [{ title: "第一节 继承方式", items: ["法定继承（顺序、代位、转继承）", "遗嘱继承（形式与效力）", "遗赠与遗赠扶养协议"] }] }
             ]}
         ],
         "法理学": [
@@ -760,12 +729,8 @@
                 { title: "第六章 毛泽东思想", children: [{ title: "第一节 革命与改造", items: ["新民主主义革命理论", "社会主义改造理论"] }] },
                 { title: "第七章 习近平新时代中国特色社会主义思想", children: [{ title: "第一节 核心布局", items: ["新时代主要矛盾", "五位一体总体布局", "四个全面战略布局", "新发展理念"] }] }
             ]},
-            { title: "第三部分 中国近现代史纲要", children: [
-                { title: "第八章 近代史", children: [{ title: "第一节 革命历程", items: ["鸦片战争与早期探索", "辛亥革命", "新民主主义革命", "社会主义改造与改革开放"] }] }
-            ]},
-            { title: "第四部分 思想道德与法治", children: [
-                { title: "第九章 思修与法治", children: [{ title: "第一节 价值观与法治", items: ["人生观与价值观", "理想信念", "社会主义核心价值观", "法治思维与宪法权威"] }] }
-            ]}
+            { title: "第三部分 中国近现代史纲要", children: [{ title: "第八章 近代史", children: [{ title: "第一节 革命历程", items: ["鸦片战争与早期探索", "辛亥革命", "新民主主义革命", "社会主义改造与改革开放"] }] }] },
+            { title: "第四部分 思想道德与法治", children: [{ title: "第九章 思修与法治", children: [{ title: "第一节 价值观与法治", items: ["人生观与价值观", "理想信念", "社会主义核心价值观", "法治思维与宪法权威"] }] }] }
         ],
         "刑诉法": [
             { title: "刑事诉讼全流程", children: [
@@ -891,12 +856,18 @@
         }
     }
 
+    // 修复: 显示与隐藏底部菜单
     function showUploadMenu() {
         document.getElementById('uploadModal').classList.add('active');
+        document.getElementById('uploadMenu').classList.add('active');
     }
     function hideUploadMenu(e) {
         if(e) e.stopPropagation();
-        document.getElementById('uploadModal').classList.remove('active');
+        document.getElementById('uploadMenu').classList.remove('active');
+        // 等待动画结束再隐藏遮罩层
+        setTimeout(() => {
+            document.getElementById('uploadModal').classList.remove('active');
+        }, 300);
     }
 
     function handleFileUpload(event, type) {
@@ -1189,10 +1160,19 @@
         }
     }
 
-    document.addEventListener('mouseup', handleSelection);
-    document.addEventListener('touchend', handleSelection);
-    document.addEventListener('mousedown', () => { selectionBtn.style.display = 'none'; });
-    document.addEventListener('touchstart', () => { selectionBtn.style.display = 'none'; });
+    // 修复：点击按钮时，不要让 document 监听器拦截/隐藏了按钮
+    document.addEventListener('mouseup', (e) => {
+        if(e.target !== selectionBtn) handleSelection();
+    });
+    document.addEventListener('touchend', (e) => {
+        if(e.target !== selectionBtn) handleSelection();
+    });
+    document.addEventListener('mousedown', (e) => { 
+        if(e.target !== selectionBtn) selectionBtn.style.display = 'none'; 
+    });
+    document.addEventListener('touchstart', (e) => { 
+        if(e.target !== selectionBtn) selectionBtn.style.display = 'none'; 
+    }, {passive: true});
 
     function querySelection() {
         const text = selectionBtn.dataset.text;
