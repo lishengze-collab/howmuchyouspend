@@ -55,7 +55,7 @@
         }
         .content.active { display: block; }
 
-        /* 搜索框容器 */
+        /* 搜索框 */
         .search-container {
             position: relative;
             display: flex;
@@ -90,15 +90,21 @@
 
         .hidden-input { display: none; }
 
-        /* 科目滚动 */
+        /* 科目与编辑模式行 */
+        .subject-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
         .subject-scroll {
             display: flex;
             overflow-x: auto;
             gap: 12px;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            padding-bottom: 5px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            flex: 1;
         }
         .subject-scroll::-webkit-scrollbar { display: none; }
         
@@ -118,6 +124,23 @@
             font-weight: 500;
         }
 
+        .edit-btn {
+            margin-left: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .edit-btn.active {
+            background: #ff9800;
+            color: white;
+        }
+
         /* 多级手风琴目录 */
         .tree-group { border-bottom: none; }
         .tree-title {
@@ -127,9 +150,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
             color: var(--text-main);
             border-bottom: 1px solid #f0f0f0;
+            position: relative;
         }
         .tree-title.level-1 {
             font-size: 18px;
@@ -140,7 +163,14 @@
         }
         .tree-title.level-2 { padding-left: 15px; font-weight: 600; }
         .tree-title.level-3 { padding-left: 30px; color: #555; }
+        .tree-title.level-4 { padding-left: 45px; color: #666; font-size: 16px; }
         
+        .tree-title .click-area {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            cursor: pointer;
+        }
         .tree-title .arrow {
             transition: transform 0.3s;
             color: #ccc;
@@ -149,6 +179,30 @@
         }
         .tree-title.active .arrow { transform: rotate(90deg); }
         
+        /* 编辑模式操作按钮 */
+        .node-actions {
+            display: none;
+            gap: 8px;
+            padding-left: 10px;
+        }
+        .editing .node-actions { display: flex; }
+        
+        .action-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        .action-icon.danger { color: #ff4d4f; }
+
         .tree-children {
             display: none;
             background: var(--bg-color);
@@ -162,13 +216,19 @@
             font-size: 16px;
             color: #444;
             border-bottom: 1px solid #fff;
-            cursor: pointer;
             display: flex;
             align-items: center;
-            user-select: text;
+            justify-content: space-between;
         }
         .knowledge-item:last-child { border-bottom: none; }
-        .knowledge-item::before {
+        .knowledge-item .click-area {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            cursor: pointer;
+            user-select: text;
+        }
+        .knowledge-item .click-area::before {
             content: '•';
             color: var(--primary);
             margin-right: 8px;
@@ -334,7 +394,7 @@
             border-bottom: 1px solid #eee;
         }
         .card-title {
-            font-size: 19px; /* 标题稍大 */
+            font-size: 19px;
             font-weight: 600;
             color: var(--primary);
             flex: 1;
@@ -352,7 +412,7 @@
         .card-body {
             flex: 1;
             overflow-y: auto;
-            font-size: 17px; /* 放大卡片正文字体 */
+            font-size: 17px;
             line-height: 1.7;
             color: #444;
             user-select: text;
@@ -415,7 +475,23 @@
             font-size: 16px;
         }
 
-        /* 上传菜单弹窗 */
+        /* 添加一级目录按钮 */
+        .add-root-btn {
+            display: none;
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            text-align: center;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .editing .add-root-btn { display: block; }
+
+        /* 上传菜单 */
         .upload-menu {
             position: absolute;
             bottom: -100%;
@@ -500,8 +576,13 @@
         <input type="file" id="imageInput" accept="image/*" class="hidden-input" onchange="handleFileUpload(event, 'image')">
         <input type="file" id="textFileInput" accept=".txt,.md,.json,.csv" class="hidden-input" onchange="handleFileUpload(event, 'text')">
         
-        <div class="subject-scroll" id="subjectList"></div>
+        <div class="subject-bar">
+            <div class="subject-scroll" id="subjectList"></div>
+            <button class="edit-btn" id="editToggleBtn" onclick="toggleEditMode()">✏️ 编辑</button>
+        </div>
+
         <div id="catalogList"></div>
+        <div class="add-root-btn" onclick="addRootNode()">+ 添加一级目录</div>
     </div>
 
     <!-- TAB 2: 收藏 -->
@@ -570,186 +651,65 @@
 
     const subjects = ["刑法", "民法", "法理学", "宪法学", "法制史", "政治", "刑诉法", "民诉法"];
     
-    // 完整数据
-    const knowledgeTree = {
-        "刑法": [
-            { title: "第一编 刑法总则", children: [
-                { title: "第一章 绪论", children: [
-                    { title: "第一节 刑法概述", items: ["刑法的概念与性质", "刑法的任务与体系", "刑法的解释方法"] },
-                    { title: "第二节 基本原则", items: ["罪刑法定原则", "平等适用原则", "罪责刑相适应原则"] },
-                    { title: "第三节 效力范围", items: ["空间效力（属地、属人、保护、普遍管辖）", "时间效力（从旧兼从轻）"] }
+    // 构建初始数据的函数（带ID，方便增删改查）
+    function generateDefaultData() {
+        const rawData = {
+            "刑法": [
+                { title: "第一编 刑法总则", children: [
+                    { title: "第一章 绪论", children: [
+                        { title: "第一节 刑法概述", children: [{title: "刑法的概念与性质"}, {title: "刑法的任务与体系"}] },
+                        { title: "第二节 基本原则", children: [{title: "罪刑法定原则"}, {title: "平等适用原则"}] }
+                    ]},
+                    { title: "第二章 犯罪概念", children: [
+                        { title: "第一节 犯罪概念", children: [{title: "形式概念与实质概念"}, {title: "犯罪的基本特征"}] }
+                    ]}
                 ]},
-                { title: "第二章 犯罪概念与构成", children: [
-                    { title: "第一节 犯罪概念", items: ["形式概念与实质概念", "犯罪的基本特征"] },
-                    { title: "第二节 犯罪构成", items: ["犯罪构成的体系与分类"] }
-                ]},
-                { title: "第三章 构成要件", children: [
-                    { title: "第一节 客体", items: ["客体的概念与分类", "对象与客体的区别"] },
-                    { title: "第二节 客观方面", items: ["危害行为（作为/不作为）", "危害结果", "刑法因果关系"] },
-                    { title: "第三节 主体", items: ["刑事责任年龄", "刑事责任能力"] },
-                    { title: "第四节 主观方面", items: ["故意与过失", "无罪过事件", "认识错误"] }
-                ]},
-                { title: "第四章 正当化事由", children: [
-                    { title: "第一节 正当防卫", items: ["成立条件", "特殊防卫", "防卫过当"] },
-                    { title: "第二节 紧急避险", items: ["成立条件", "避险过当"] }
-                ]},
-                { title: "第五章 停止形态", children: [
-                    { title: "第一节 预备、未遂与中止", items: ["犯罪预备", "犯罪未遂", "犯罪中止"] }
-                ]},
-                { title: "第六章 共同犯罪", children: [
-                    { title: "第一节 共犯形态", items: ["成立条件", "主犯、从犯、胁从犯、教唆犯", "共犯与身份"] }
-                ]},
-                { title: "第七章 罪数", children: [
-                    { title: "第一节 罪数理论", items: ["实质一罪（想象竞合、结果加重、继续犯）", "处断一罪（连续、牵连、吸收）"] }
-                ]},
-                { title: "第八章至第十二章 刑罚论", children: [
-                    { title: "第一节 刑罚体系", items: ["主刑与附加刑", "量刑情节", "累犯"] },
-                    { title: "第二节 刑罚执行与消灭", items: ["自首与立功", "缓刑、减刑、假释", "追诉时效"] }
+                { title: "第二编 刑法分则", children: [
+                    { title: "第十四章 危害国家安全罪", children: [{title: "分裂国家罪"}, {title: "间谍罪"}] },
+                    { title: "第十五章 危害公共安全罪", children: [{title: "放火罪"}, {title: "交通肇事罪"}] }
                 ]}
-            ]},
-            { title: "第二编 刑法分则", children: [
-                { title: "第十三章 各论概述", children: [{ title: "第一节 罪名与法定刑", items: ["罪状分类", "罪名确定", "法定刑种类"] }] },
-                { title: "第十四章 危害国家安全罪", children: [{ title: "第一节 重点罪名", items: ["分裂国家罪", "颠覆国家政权罪", "间谍罪", "为境外窃取、刺探、收买、非法提供国家秘密、情报罪"] }] },
-                { title: "第十五章 危害公共安全罪", children: [
-                    { title: "第一节 危险方法类", items: ["放火罪", "爆炸罪", "以危险方法危害公共安全罪"] },
-                    { title: "第二节 交通与责任事故类", items: ["交通肇事罪", "危险驾驶罪", "重大责任事故罪"] }
+            ],
+            "民法": [
+                { title: "第一编 民法总则", children: [
+                    { title: "第一章 民法基础理论", children: [{title: "民法调整对象"}, {title: "基本原则"}] }
                 ]},
-                { title: "第十六章 破坏社会主义市场经济秩序罪", children: [
-                    { title: "第一节 生产销售伪劣商品罪", items: ["生产、销售伪劣产品罪", "生产、销售、提供假药罪"] },
-                    { title: "第二节 金融与税收犯罪", items: ["集资诈骗罪", "信用卡诈骗罪", "逃税罪", "洗钱罪"] },
-                    { title: "第三节 知识产权与市场秩序", items: ["假冒注册商标罪", "侵犯商业秘密罪", "合同诈骗罪", "非法经营罪"] }
-                ]},
-                { title: "第十七章 侵犯人身权利、民主权利罪", children: [
-                    { title: "第一节 生命健康与自由", items: ["故意杀人罪", "故意伤害罪", "非法拘禁罪", "绑架罪"] },
-                    { title: "第二节 妇女儿童与人格名誉", items: ["强奸罪", "拐卖妇女、儿童罪", "侮辱罪", "诽谤罪"] }
-                ]},
-                { title: "第十八章 侵犯财产罪", children: [
-                    { title: "第一节 占有与毁坏类", items: ["抢劫罪", "盗窃罪", "诈骗罪", "抢夺罪", "侵占罪", "故意毁坏财物罪"] },
-                    { title: "第二节 职务与敲诈类", items: ["职务侵占罪", "挪用资金罪", "敲诈勒索罪"] }
-                ]},
-                { title: "第十九章 妨害社会管理秩序罪", children: [
-                    { title: "第一节 扰乱公共秩序与妨害司法", items: ["妨害公务罪", "寻衅滋事罪", "伪证罪", "窝藏、包庇罪"] },
-                    { title: "第二节 毒品与环境资源", items: ["走私、贩卖、运输、制造毒品罪", "非法采矿罪", "污染环境罪"] }
-                ]},
-                { title: "第二十章 贪污贿赂罪", children: [{ title: "第一节 贪腐类", items: ["贪污罪", "挪用公款罪", "受贿罪", "利用影响力受贿罪", "行贿罪"] }] },
-                { title: "第二十一章 渎职罪", children: [{ title: "第一节 滥用职权与玩忽职守", items: ["滥用职权罪", "玩忽职守罪", "徇私枉法罪"] }] }
-            ]}
-        ],
-        "民法": [
-            { title: "第一编 民法总则", children: [
-                { title: "第一章 民法基础理论", children: [{ title: "第一节 概述与原则", items: ["民法调整对象", "平等、自愿、公平、诚信、公序良俗、绿色原则"] }] },
-                { title: "第二章 民事法律关系", children: [{ title: "第一节 要素与权利", items: ["主体、客体、内容", "支配权、请求权、抗辩权、形成权", "民事法律事实"] }] },
-                { title: "第三章 自然人", children: [{ title: "第一节 能力与监护", items: ["权利能力与行为能力", "监护的设定与撤销", "宣告失踪与宣告死亡"] }] },
-                { title: "第四章 法人与非法人组织", children: [
-                    { title: "第一节 法人", items: ["法人分类（营利/非营利/特别）", "法人机关与责任"] },
-                    { title: "第二节 非法人组织", items: ["合伙、个人独资企业", "责任承担"] }
-                ]},
-                { title: "第五章 民事法律行为", children: [{ title: "第一节 效力与附款", items: ["意思表示", "有效、无效、可撤销、效力待定", "附条件与附期限"] }] },
-                { title: "第六章 代理", children: [{ title: "第一节 代理制度", items: ["委托、法定、指定代理", "无权代理", "表见代理"] }] },
-                { title: "第七章 诉讼时效", children: [{ title: "第一节 时效规则", items: ["诉讼时效中止与中断", "除斥期间"] }] }
-            ]},
-            { title: "第二编 物权", children: [
-                { title: "第八章 物权通则", children: [{ title: "第一节 变动与保护", items: ["不动产登记", "动产交付", "善意取得", "物权保护"] }] },
-                { title: "第九章 所有权", children: [{ title: "第一节 所有权类型", items: ["国家、集体、私人所有权", "业主的建筑物区分所有权", "相邻关系", "共有"] }] },
-                { title: "第十章 用益物权", children: [{ title: "第一节 用益物权种类", items: ["土地承包经营权", "建设用地使用权", "宅基地使用权", "居住权", "地役权"] }] },
-                { title: "第十一章 担保物权", children: [
-                    { title: "第一节 抵押权", items: ["抵押财产范围", "抵押权的顺位与效力"] },
-                    { title: "第二节 质权与留置权", items: ["动产质权", "权利质权", "留置权的成立与效力"] }
-                ]},
-                { title: "第十二章 占有", children: [{ title: "第一节 占有制度", items: ["有权占有与无权占有", "占有的保护"] }] }
-            ]},
-            { title: "第三编 合同", children: [
-                { title: "第十三章 合同通则", children: [
-                    { title: "第一节 订立与效力", items: ["要约与承诺", "缔约过失责任", "合同相对性"] },
-                    { title: "第二节 履行与保全", items: ["双务合同抗辩权", "情势变更", "代位权与撤销权"] },
-                    { title: "第三节 违约责任", items: ["违约金", "定金", "损害赔偿"] }
-                ]},
-                { title: "第十四章 典型合同", children: [
-                    { title: "第一节 转移财产类", items: ["买卖合同（风险负担、所有权保留）", "赠与合同（任意/法定撤销）", "借款合同"] },
-                    { title: "第二节 使用与融资类", items: ["租赁合同（买卖不破租赁、优先购买权）", "融资租赁合同", "保理合同"] },
-                    { title: "第三节 服务与完成工作类", items: ["承揽合同", "建设工程合同", "运输合同", "保管合同", "委托合同", "物业服务合同"] }
-                ]},
-                { title: "第十五章 准合同", children: [{ title: "第一节 无因管理与不当得利", items: ["无因管理的成立与效力", "不当得利的构成与返还"] }] }
-            ]},
-            { title: "第四编 人格权与侵权责任", children: [
-                { title: "第十六章 人格权", children: [{ title: "第一节 具体人格权", items: ["生命权、身体权、健康权", "姓名权、名称权、肖像权", "名誉权、荣誉权、隐私权"] }] },
-                { title: "第十七章 侵权责任", children: [
-                    { title: "第一节 一般规定", items: ["过错责任、无过错责任、公平责任", "多数人侵权"] },
-                    { title: "第二节 特殊侵权", items: ["监护人责任", "用人单位责任", "网络侵权", "机动车交通事故责任", "医疗损害责任", "高度危险责任", "饲养动物损害责任", "建筑物和物件损害责任"] }
+                { title: "第二编 物权", children: [
+                    { title: "第八章 物权通则", children: [{title: "不动产登记"}, {title: "动产交付"}] }
                 ]}
-            ]},
-            { title: "第五编 婚姻家庭与继承", children: [
-                { title: "第十八章 婚姻家庭", children: [
-                    { title: "第一节 结婚与离婚", items: ["无效婚姻与可撤销婚姻", "离婚冷静期与财产分割"] },
-                    { title: "第二节 家庭关系", items: ["夫妻共同财产与债务", "父母子女关系"] }
-                ]},
-                { title: "第十九章 继承", children: [{ title: "第一节 继承方式", items: ["法定继承（顺序、代位、转继承）", "遗嘱继承（形式与效力）", "遗赠与遗赠扶养协议"] }] }
-            ]}
-        ],
-        "法理学": [
-            { title: "法的本体与运行", children: [
-                { title: "第一章 法的概念", children: [{ title: "第一节 本质与特征", items: ["法的现象与本质", "规范作用与社会作用", "法的价值（秩序、自由、正义）"] }] },
-                { title: "第二章 法的要素", children: [{ title: "第一节 规则与原则", items: ["法律规则的分类", "法律原则的适用条件", "法律概念"] }] },
-                { title: "第三章 法的渊源与效力", children: [{ title: "第一节 渊源与效力", items: ["正式与非正式渊源", "法的溯及力", "效力冲突解决原则"] }] },
-                { title: "第四章 法律体系与实施", children: [{ title: "第一节 立法与实施", items: ["立法体制", "执法与司法", "法律解释与推理"] }] },
-                { title: "第五章 法律关系与责任", children: [{ title: "第一节 关系与责任", items: ["法律关系要素", "法律责任的归责与免责"] }] },
-                { title: "第六章 法治与社会", children: [{ title: "第一节 法治理论", items: ["法治与法制", "社会主义法治理念", "法与文化、道德、科技的关系"] }] }
-            ]}
-        ],
-        "宪法学": [
-            { title: "宪法基本理论与制度", children: [
-                { title: "第一章 基本理论", children: [{ title: "第一节 概念与原则", items: ["宪法特征", "人民主权、基本人权、法治、权力制约原则"] }] },
-                { title: "第二章 制定与实施", children: [{ title: "第一节 实施与监督", items: ["宪法修改程序", "宪法解释", "合宪性审查"] }] },
-                { title: "第三章 国家基本制度", children: [{ title: "第一节 政治与经济制度", items: ["人民代表大会制度", "选举制度", "国家结构形式（单一制）", "民族区域自治与特别行政区"] }] },
-                { title: "第四章 公民基本权利", children: [{ title: "第一节 权利体系", items: ["平等权", "政治权利与自由", "人身自由", "社会经济权利"] }] },
-                { title: "第五章 国家机构", children: [{ title: "第一节 机构职权", items: ["全国人大及其常委会", "国家主席", "国务院", "监察委员会", "人民法院与检察院"] }] }
-            ]}
-        ],
-        "法制史": [
-            { title: "第一部分 古代法制", children: [
-                { title: "第一章 夏商西周", children: [{ title: "第一节 礼与刑", items: ["西周的礼刑关系", "婚姻继承制度"] }] },
-                { title: "第二章 秦汉至南北朝", children: [{ title: "第一节 刑罚演变", items: ["秦代刑罚体系", "汉文帝景帝刑制改革", "亲亲得相首匿"] }] },
-                { title: "第三章 隋唐宋", children: [{ title: "第一节 唐律", items: ["《唐律疏议》结构", "十恶制度", "五刑与刑罚原则"] }, { title: "第二节 宋代", items: ["折杖法", "刺配"] }] },
-                { title: "第四章 元明清", children: [{ title: "第一节 明清制度", items: ["明代厂卫与奸党罪", "清代秋审与朝审"] }] }
-            ]},
-            { title: "第二部分 近现代法制", children: [
-                { title: "第五章 清末民初", children: [{ title: "第一节 修律与宪法", items: ["《钦定宪法大纲》", "《大清新刑律》", "《中华民国临时约法》"] }] },
-                { title: "第六章 南京国民政府", children: [{ title: "第一节 立法体系", items: ["六法全书"] }] }
-            ]}
-        ],
-        "政治": [
-            { title: "第一部分 马克思主义基本原理", children: [
-                { title: "第一章 辩证唯物论", children: [{ title: "第一节 物质与意识", items: ["物质范畴", "意识的能动作用", "主观能动性与客观规律"] }] },
-                { title: "第二章 唯物辩证法", children: [{ title: "第一节 三大规律", items: ["对立统一规律", "质量互变规律", "否定之否定规律"] }] },
-                { title: "第三章 认识论", children: [{ title: "第一节 实践与真理", items: ["实践与认识的两次飞跃", "真理的绝对性与相对性", "实践是检验真理的唯一标准"] }] },
-                { title: "第四章 唯物史观", children: [{ title: "第一节 社会矛盾", items: ["生产力与生产关系", "经济基础与上层建筑", "人民群众的历史作用"] }] },
-                { title: "第五章 资本主义与社会主义", children: [{ title: "第一节 商品经济", items: ["商品二因素与劳动二重性", "剩余价值理论", "垄断资本主义", "科学社会主义"] }] }
-            ]},
-            { title: "第二部分 毛中特与习思想", children: [
-                { title: "第六章 毛泽东思想", children: [{ title: "第一节 革命与改造", items: ["新民主主义革命理论", "社会主义改造理论"] }] },
-                { title: "第七章 习近平新时代中国特色社会主义思想", children: [{ title: "第一节 核心布局", items: ["新时代主要矛盾", "五位一体总体布局", "四个全面战略布局", "新发展理念"] }] }
-            ]},
-            { title: "第三部分 中国近现代史纲要", children: [{ title: "第八章 近代史", children: [{ title: "第一节 革命历程", items: ["鸦片战争与早期探索", "辛亥革命", "新民主主义革命", "社会主义改造与改革开放"] }] }] },
-            { title: "第四部分 思想道德与法治", children: [{ title: "第九章 思修与法治", children: [{ title: "第一节 价值观与法治", items: ["人生观与价值观", "理想信念", "社会主义核心价值观", "法治思维与宪法权威"] }] }] }
-        ],
-        "刑诉法": [
-            { title: "刑事诉讼全流程", children: [
-                { title: "第一章 总则", children: [{ title: "第一节 基础制度", items: ["专门机关与诉讼参与人", "立案管辖与级别管辖", "回避制度", "辩护与代理"] }] },
-                { title: "第二章 证据与强制措施", children: [{ title: "第一节 证据规则", items: ["非法证据排除规则", "证明责任"] }, { title: "第二节 强制措施", items: ["拘传、取保候审、监视居住", "拘留与逮捕"] }] },
-                { title: "第三章 审判前程序", children: [{ title: "第一节 侦查与起诉", items: ["侦查行为", "审查起诉", "认罪认罚从宽"] }] },
-                { title: "第四章 审判与执行", children: [{ title: "第一节 审判程序", items: ["一审、二审", "死刑复核", "审判监督程序"] }, { title: "第二节 执行与特别程序", items: ["执行程序", "未成年人刑事案件程序", "缺席审判"] }] }
-            ]}
-        ],
-        "民诉法": [
-            { title: "民事诉讼全流程", children: [
-                { title: "第一章 总则与管辖", children: [{ title: "第一节 管辖与当事人", items: ["级别管辖与地域管辖", "专属管辖", "协议管辖", "当事人的诉讼权利能力"] }] },
-                { title: "第二章 证据与保障", children: [{ title: "第一节 证据与保全", items: ["证明责任倒置", "先予执行与保全"] }] },
-                { title: "第三章 审判与执行程序", children: [{ title: "第一节 审理程序", items: ["一审普通程序", "简易程序", "二审审理范围", "审判监督程序"] }, { title: "第二节 执行程序", items: ["执行措施", "执行异议"] }] }
-            ]}
-        ]
-    };
+            ],
+            "法理学": [], "宪法学": [], "法制史": [], "政治": [], "刑诉法": [], "民诉法": []
+        };
+
+        // 递归添加 ID
+        function addIds(nodes) {
+            return nodes.map(node => {
+                const newNode = {
+                    id: 'n_' + Math.random().toString(36).substr(2, 9),
+                    title: node.title
+                };
+                if (node.children && node.children.length > 0) {
+                    newNode.children = addIds(node.children);
+                }
+                return newNode;
+            });
+        }
+
+        const result = {};
+        for (let sub in rawData) {
+            result[sub] = addIds(rawData[sub]);
+        }
+        return result;
+    }
+
+    // 核心数据
+    let appData = JSON.parse(localStorage.getItem('fs_tree_data'));
+    if (!appData) {
+        appData = generateDefaultData();
+        localStorage.setItem('fs_tree_data', JSON.stringify(appData));
+    }
 
     let currentSubject = "刑法";
+    let isEditMode = false;
     let currentAIContent = "";
     let currentAIKeyword = "";
 
@@ -760,6 +720,7 @@
     let clickCount = 0;
     let clickTimer = null;
 
+    // 初始化
     function init() {
         renderSubjects();
         renderCatalog(currentSubject);
@@ -781,21 +742,154 @@
         renderCatalog(sub);
     }
 
+    // --- 编辑模式逻辑 ---
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        const btn = document.getElementById('editToggleBtn');
+        const catalog = document.getElementById('catalogList');
+        
+        if (isEditMode) {
+            btn.classList.add('active');
+            btn.innerText = '完成';
+            catalog.classList.add('editing');
+            alert('已开启编辑模式：\n点击右侧 + 添加子节点\n点击 ✎ 重命名\n点击 - 删除节点');
+        } else {
+            btn.classList.remove('active');
+            btn.innerText = '✏️ 编辑';
+            catalog.classList.remove('editing');
+            saveTreeData();
+        }
+        renderCatalog(currentSubject); // 重新渲染以显示/隐藏按钮
+    }
+
+    // 添加一级目录
+    function addRootNode() {
+        const title = prompt("请输入新的一级目录名称（如：第三编 XX）：");
+        if (title && title.trim()) {
+            appData[currentSubject].push({
+                id: 'n_' + Date.now(),
+                title: title.trim(),
+                children: []
+            });
+            saveTreeData();
+            renderCatalog(currentSubject);
+        }
+    }
+
+    // 添加子节点
+    function addChildNode(parentId, event) {
+        event.stopPropagation();
+        const title = prompt("请输入子节点名称（留空则不添加）：");
+        if (title && title.trim()) {
+            const parentNode = findNode(appData[currentSubject], parentId);
+            if (parentNode) {
+                if (!parentNode.children) parentNode.children = [];
+                parentNode.children.push({
+                    id: 'n_' + Date.now(),
+                    title: title.trim(),
+                    children: []
+                });
+                saveTreeData();
+                renderCatalog(currentSubject);
+                // 添加后自动展开父节点
+                const domId = `node_${parentId}`;
+                const container = document.getElementById(domId);
+                if (container) {
+                    container.classList.add('show');
+                    container.previousElementSibling.classList.add('active');
+                }
+            }
+        }
+    }
+
+    // 编辑/删除节点
+    function editNode(id, event) {
+        event.stopPropagation();
+        const node = findNode(appData[currentSubject], id);
+        if (!node) return;
+
+        const action = prompt(`正在操作：“${node.title}”\n\n1. 输入新名称：重命名\n2. 输入 "delete"：删除该节点及子节点\n\n请输入：`);
+        
+        if (action === null) return; // 取消
+        
+        if (action.toLowerCase() === 'delete') {
+            if (confirm(`确定要删除“${node.title}”及其所有子节点吗？`)) {
+                removeNode(appData[currentSubject], id);
+                saveTreeData();
+                renderCatalog(currentSubject);
+            }
+        } else if (action.trim() !== "") {
+            node.title = action.trim();
+            saveTreeData();
+            renderCatalog(currentSubject);
+        }
+    }
+
+    // 递归查找节点
+    function findNode(nodes, id) {
+        for (let node of nodes) {
+            if (node.id === id) return node;
+            if (node.children) {
+                const found = findNode(node.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    // 递归删除节点
+    function removeNode(nodes, id) {
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i].id === id) {
+                nodes.splice(i, 1);
+                return true;
+            }
+            if (nodes[i].children) {
+                if (removeNode(nodes[i].children, id)) return true;
+            }
+        }
+        return false;
+    }
+
+    function saveTreeData() {
+        localStorage.setItem('fs_tree_data', JSON.stringify(appData));
+    }
+
+    // --- 渲染树形目录 ---
     function buildTreeDOM(nodes, level = 1) {
         return nodes.map(node => {
-            if (node.items) {
+            const hasChildren = node.children && node.children.length > 0;
+            const isLeaf = !hasChildren;
+            
+            // 编辑模式操作按钮
+            const actionsHTML = `
+                <div class="node-actions">
+                    <div class="action-icon" onclick="addChildNode('${node.id}', event)">+</div>
+                    <div class="action-icon danger" onclick="editNode('${node.id}', event)">✎</div>
+                </div>
+            `;
+
+            if (isLeaf) {
+                // 叶子节点（知识点）
                 return `
-                    <div class="leaf-container">
-                        ${node.items.map(item => `<div class="knowledge-item" onclick="queryAI('${node.title} - ${item}')">${item}</div>`).join('')}
+                    <div class="knowledge-item">
+                        <div class="click-area" onclick="${isEditMode ? `editNode('${node.id}', event)` : `queryAI('${node.title}')`}">
+                            ${node.title}
+                        </div>
+                        ${isEditMode ? actionsHTML : ''}
                     </div>
                 `;
             } else {
-                const uniqueId = 'node_' + Math.random().toString(36).substr(2, 9);
+                // 非叶子节点（章节）
+                const uniqueId = `node_${node.id}`;
                 return `
                     <div class="tree-group">
-                        <div class="tree-title level-${level}" onclick="toggleNode('${uniqueId}', this)">
-                            <span>${node.title}</span>
-                            <span class="arrow">›</span>
+                        <div class="tree-title level-${level}">
+                            <div class="click-area" onclick="toggleNode('${uniqueId}', this)">
+                                <span>${node.title}</span>
+                                <span class="arrow">›</span>
+                            </div>
+                            ${isEditMode ? actionsHTML : ''}
                         </div>
                         <div class="tree-children" id="${uniqueId}">
                             ${buildTreeDOM(node.children, level + 1)}
@@ -808,10 +902,10 @@
 
     function renderCatalog(sub) {
         const container = document.getElementById('catalogList');
-        const chapters = knowledgeTree[sub] || [];
+        const chapters = appData[sub] || [];
         
         if(chapters.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px; font-size:16px;">暂无数据，可直接在搜索框查询</div>';
+            container.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px; font-size:16px;">暂无数据，点击下方按钮添加</div>';
             return;
         }
         container.innerHTML = buildTreeDOM(chapters, 1);
@@ -821,13 +915,14 @@
         const itemsContainer = document.getElementById(id);
         if (itemsContainer.classList.contains('show')) {
             itemsContainer.classList.remove('show');
-            titleEl.classList.remove('active');
+            titleEl.parentElement.classList.remove('active');
         } else {
             itemsContainer.classList.add('show');
-            titleEl.classList.add('active');
+            titleEl.parentElement.classList.add('active');
         }
     }
 
+    // --- 切换Tab ---
     function switchTab(tabId) {
         document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -856,7 +951,7 @@
         }
     }
 
-    // 修复: 显示与隐藏底部菜单
+    // --- 上传菜单 ---
     function showUploadMenu() {
         document.getElementById('uploadModal').classList.add('active');
         document.getElementById('uploadMenu').classList.add('active');
@@ -864,7 +959,6 @@
     function hideUploadMenu(e) {
         if(e) e.stopPropagation();
         document.getElementById('uploadMenu').classList.remove('active');
-        // 等待动画结束再隐藏遮罩层
         setTimeout(() => {
             document.getElementById('uploadModal').classList.remove('active');
         }, 300);
@@ -893,7 +987,7 @@
                 const textContent = e.target.result;
                 if (!apiKey) {
                     setTimeout(() => {
-                        currentAIContent = `### 文档模拟解析\n\n由于未配置 API Key，无法进行真实解析。\n\n### 文档内容摘要\n${textContent.substring(0, 100)}...`;
+                        currentAIContent = `### 文档模拟解析\n\n未配置 API Key。\n\n### 文档内容摘要\n${textContent.substring(0, 100)}...`;
                         modalBody.innerHTML = marked.parse(currentAIContent);
                         favBtn.disabled = false;
                         favBtn.style.opacity = '1';
@@ -907,8 +1001,8 @@
                         body: JSON.stringify({
                             model: "deepseek-chat",
                             messages: [
-                                {"role": "system", "content": "你是法硕考研/考研政治专家。请解析以下上传的文本内容，提取知识点并按照Markdown格式输出：\n\n### 定义\n（精准概念）\n\n### 理解\n（通俗拆解）\n\n### 考点\n（分点罗列）\n\n### 法条详情/核心表述\n（引用原文）"},
-                                {"role": "user", "content": `以下是上传的文件内容：\n${textContent}`}
+                                {"role": "system", "content": "你是法硕考研/考研政治专家。解析文本并按照Markdown格式输出：\n\n### 定义\n（概念）\n\n### 理解\n（拆解）\n\n### 考点\n（罗列）\n\n### 法条详情\n（原文）"},
+                                {"role": "user", "content": `内容：\n${textContent}`}
                             ]
                         })
                     });
@@ -929,7 +1023,7 @@
                 const base64 = e.target.result;
                 if (!apiKey) {
                     setTimeout(() => {
-                        currentAIContent = `### 图像模拟解析\n\n由于未配置 API Key，无法进行多模态识别。\n\n建议配置支持视觉的模型（如 GPT-4o, Qwen-VL 等）。`;
+                        currentAIContent = `### 图像模拟解析\n\n未配置 API Key。`;
                         modalBody.innerHTML = marked.parse(currentAIContent);
                         favBtn.disabled = false;
                         favBtn.style.opacity = '1';
@@ -946,7 +1040,7 @@
                                 {
                                     "role": "user", 
                                     "content": [
-                                        {"type": "text", "text": "请识别这张图片中的法硕/考研知识点，并严格按照以下Markdown格式输出：\n\n### 定义\n（精准概念）\n\n### 理解\n（通俗拆解）\n\n### 考点\n（分点罗列）\n\n### 法条详情\n（引用原文）"},
+                                        {"type": "text", "text": "识别图片中的知识点，并输出：\n\n### 定义\n### 理解\n### 考点\n### 法条详情"},
                                         {"type": "image_url", "image_url": {"url": base64}}
                                     ]
                                 }
@@ -963,7 +1057,7 @@
                         favBtn.disabled = false;
                         favBtn.style.opacity = '1';
                     } else {
-                        modalBody.innerHTML = "<span style='color:red'>API 返回异常，请确认您的模型是否支持图像输入。</span>";
+                        modalBody.innerHTML = "<span style='color:red'>API 异常（可能当前模型不支持图片）。</span>";
                     }
                 } catch (error) {
                     modalBody.innerHTML = `<span style='color:red'>请求失败：${error.message}</span>`;
@@ -979,7 +1073,10 @@
         }
     }
 
+    // --- 查询AI ---
     async function queryAI(keyword) {
+        if(isEditMode) return; // 编辑模式下不触发
+
         stats.clicks++;
         saveStats();
 
@@ -999,7 +1096,7 @@
 
         if (!apiKey) {
             setTimeout(() => {
-                currentAIContent = `### 知识点\n${keyword}\n\n### 定义\n这是关于“${keyword}”的法学/政治核心概念。\n\n### 理解\n具有法定性、强制性。需结合具体语境拆解。\n\n### 考点\n常考简答题、选择题。注意区分相邻概念。\n\n### 法条详情/核心表述\n《XXX》第X条...\n\n*(⚠️ 当前为模拟数据，请在设置中填入API Key)*`;
+                currentAIContent = `### 知识点\n${keyword}\n\n### 定义\n这是关于“${keyword}”的核心概念。\n\n### 理解\n需结合具体语境拆解。\n\n### 考点\n常考简答题、选择题。\n\n### 法条详情\n《XXX》第X条...\n\n*(⚠️ 请设置API Key)*`;
                 modalBody.innerHTML = marked.parse(currentAIContent);
                 favBtn.disabled = false;
                 favBtn.style.opacity = '1';
@@ -1043,6 +1140,7 @@
         resetFullscreen('modal');
     }
 
+    // 三击全屏
     function handleTripleClick(type, event) {
         if(event.target.tagName.toLowerCase() === 'span' && event.target.innerText === '×') return; 
 
@@ -1137,6 +1235,7 @@
         }
     }
 
+    // 划词查询
     const selectionBtn = document.getElementById('selectionBtn');
     
     function handleSelection() {
@@ -1160,7 +1259,6 @@
         }
     }
 
-    // 修复：点击按钮时，不要让 document 监听器拦截/隐藏了按钮
     document.addEventListener('mouseup', (e) => {
         if(e.target !== selectionBtn) handleSelection();
     });
@@ -1183,6 +1281,7 @@
         }
     }
 
+    // 系统设置
     function saveApiKey() {
         const key = document.getElementById('apiKeyInput').value.trim();
         apiKey = key;
@@ -1206,7 +1305,12 @@
     }
 
     function exportData() {
-        const data = { favorites, stats, exportTime: new Date().toISOString() };
+        const data = { 
+            treeData: appData,
+            favorites: favorites, 
+            stats: stats, 
+            exportTime: new Date().toISOString() 
+        };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1224,6 +1328,11 @@
             try {
                 const data = JSON.parse(e.target.result);
                 if(data.favorites && data.stats) {
+                    if (data.treeData) {
+                        appData = data.treeData;
+                        saveTreeData();
+                        renderCatalog(currentSubject);
+                    }
                     favorites = data.favorites;
                     stats = data.stats;
                     saveFavorites();
