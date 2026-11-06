@@ -109,7 +109,8 @@ mark{background:rgba(183,121,31,.28);color:inherit;border-radius:3px;padding:0 1
 .layer{position:fixed;inset:0;background:rgba(18,28,24,.48);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .layer.show{display:flex}
 .layer.center{align-items:center;padding:20px}
-.layer.full-bg{background:#fff}
+#reader{background:#e4e9e6}
+#reader.full-bg{background:#fff}
 .sheet{width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom));max-height:90vh;max-height:90dvh;overflow-y:auto;animation:up .25s ease}
 .layer.center .sheet{border-radius:20px;padding-bottom:20px}
 @keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
@@ -1383,14 +1384,22 @@ function safeMd(text){
 
 /* ====================== 状态栏颜色同步 ====================== */
 const THEME_LIGHT='#ffffff';
-const THEME_DIM='#8d9290'; /* 白色叠加 rgba(18,28,24,.48) 遮罩后的颜色 */
+const THEME_DIM='#8d9290';    /* 白色叠加 rgba(18,28,24,.48) 遮罩后的颜色（通用弹窗） */
+const THEME_READER='#e4e9e6'; /* 半屏阅读器的不透明底色，与 #reader 背景一致 */
 function syncThemeColor(){
-  const meta=$('themeColorMeta');if(!meta)return;
   const readerOpen=$('reader').classList.contains('show');
   const layerOpen=$('layer').classList.contains('show');
   let c=THEME_LIGHT;
-  if(layerOpen||(readerOpen&&!readerFull))c=THEME_DIM;
-  meta.setAttribute('content',c);
+  if(layerOpen)c=THEME_DIM;
+  else if(readerOpen)c=readerFull?THEME_LIGHT:THEME_READER;
+  /* 重建 meta，确保系统状态栏即时刷新 */
+  const old=document.querySelector('meta[name="theme-color"]');
+  const m=document.createElement('meta');m.name='theme-color';m.content=c;m.id='themeColorMeta';
+  if(old)old.replaceWith(m);else document.head.appendChild(m);
+  /* 页面底色同步，供 iOS 按页面顶部取色 */
+  const bg=(c===THEME_LIGHT)?'':c;
+  document.documentElement.style.background=bg;
+  document.body.style.background=bg;
 }
 
 /* ====================== 状态 ====================== */
